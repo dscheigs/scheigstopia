@@ -11,15 +11,20 @@ This is a Next.js 15 application with TypeScript, using the App Router architect
 - `yarn dev` - Start development server with Turbopack for faster builds
 - `yarn build` - Build the application for production
 - `yarn start` - Start the production server
-- `yarn lint` - Run ESLint to check code quality
+- `yarn lint` - Run Next.js linter to check code quality
+- `yarn lint:fix` - Auto-fix linting issues
+- `yarn type-check` - Check TypeScript without building
+- `yarn format` - Format all files with Prettier
+- `yarn format:check` - Check if files are formatted
+- `yarn clean` - Clean build artifacts and cache
 
 ## Code Quality & Git Workflow
 
 The project enforces code quality through:
 
-- **Pre-commit hooks**: Automatically runs `lint-staged` which formats code with Prettier and lints TypeScript/JavaScript files with ESLint
+- **Pre-commit hooks**: Automatically runs `lint-staged` which formats code with Prettier and lints TypeScript/JavaScript files with Next.js linter (includes Next.js-specific rules)
 - **Commit message convention**: All commits must follow conventional commit format: `<type>: <description>` where type is one of: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert
-- **Automatic formatting**: Prettier formats all files on commit, ESLint fixes auto-fixable issues
+- **Automatic formatting**: Prettier formats all files on commit, Next.js linter fixes auto-fixable issues and enforces Next.js best practices
 
 ## Architecture
 

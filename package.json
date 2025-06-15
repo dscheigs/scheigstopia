@@ -7,6 +7,11 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
+        "lint:fix": "next lint --fix",
+        "type-check": "tsc --noEmit",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "clean": "rm -rf .next out node_modules/.cache",
         "prepare": "husky"
     },
     "dependencies": {
@@ -30,6 +35,6 @@
     },
     "lint-staged": {
         "**/*": "prettier --write --ignore-unknown",
-        "*.{ts,tsx,js,cjs,mjs}": "eslint --fix"
+        "*.{ts,tsx,js,cjs,mjs}": "next lint --fix --file"
     }
 }
