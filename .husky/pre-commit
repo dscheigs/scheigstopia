@@ -1,0 +1,24 @@
+npx lint-staged
+commit_regex='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,}'
+
+. "$(dirname -- "$0")/_/husky.sh"
+
+commit_regex='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,}'
+
+if [ -f ".git/COMMIT_EDITMSG" ]; then
+    commit_message=$(cat .git/COMMIT_EDITMSG)
+else
+    echo "Note: Conventional commit validation will happen on commit-msg hook"
+    exit 0
+fi
+
+if ! echo "$commit_message" | grep -qE "$commit_regex"; then
+    echo "❌ Invalid commit message format!"
+    echo "📝 Use: <type>: <description>"
+    echo "🔧 Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+    echo "✅ Example: chore: hi i am an example message"
+    echo "💡 Your message: $commit_message"
+    exit 1
+fi
+
+echo "✅ Commit message format is valid"

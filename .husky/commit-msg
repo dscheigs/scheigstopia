@@ -1,0 +1,16 @@
+# Conventional commit regex
+commit_regex='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,}'
+
+# Get commit message (husky passes it as $1)
+commit_message=$(head -1 "$1")
+
+if ! echo "$commit_message" | grep -qE "$commit_regex"; then
+    echo "❌ Invalid commit message format!"
+    echo "📝 Use: <type>: <description>"  
+    echo "🔧 Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+    echo "✅ Example: chore: hi i am an example message"
+    echo "💡 Your message: $commit_message"
+    exit 1
+fi
+
+echo "✅ Commit message format is valid"
