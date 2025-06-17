@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
     title: 'Daniel Scheigert', //TODO: would be neat to have this dynamic
     description:
-        'This corner of the internet is mine. I sometimes write about things I find interesting, share my projects, and showcase my skills.',
+        'Welcome to my humble internet cottage. I sometimes write about things I find interesting, share my projects, and showcase my skills.',
 };
 
 export default function RootLayout({
