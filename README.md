@@ -1,6 +1,6 @@
 # Scheigstopia
 
-A Next.js application built with TypeScript and Tailwind CSS.
+A Next.js application built with TypeScript and Tailwind CSS. My humble internet cottage
 
 ## Getting Started
 
