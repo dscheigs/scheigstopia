@@ -1,5 +1,4 @@
-@import 'tailwindcss';
-
+/* Color Variables */
 :root {
     --background: #1a1a1a;
     --foreground: #f8fafc;
@@ -19,6 +18,7 @@
     --error: #ef4444;
 }
 
+/* Color Theme Mapping */
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -33,12 +33,4 @@
     --color-success: var(--success);
     --color-warning: var(--warning);
     --color-error: var(--error);
-    --font-sans: var(--font-geist-sans);
-    --font-mono: var(--font-geist-mono);
-}
-
-body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
