@@ -22,7 +22,7 @@ export default function Header() {
                     <div className="flex items-center">
                         <Link
                             href="/"
-                            className="text-xl font-bold text-foreground"
+                            className="text-section-title font-bold text-foreground"
                         >
                             Scheigstopia
                         </Link>
@@ -35,7 +35,7 @@ export default function Header() {
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className="text-muted hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                                    className="text-lead hover:text-foreground px-3 py-2 transition-colors"
                                 >
                                     {item.name}
                                 </Link>
@@ -105,7 +105,7 @@ export default function Header() {
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className={`text-muted hover:text-foreground block px-3 py-2 rounded-md text-base font-medium transition-all duration-500 ${
+                                className={`hover:text-foreground block px-3 py-2  transition-all duration-500 ${
                                     isMenuOpen
                                         ? 'opacity-100 translate-y-0'
                                         : 'opacity-0 -translate-y-6'
