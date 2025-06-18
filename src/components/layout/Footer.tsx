@@ -1,14 +1,8 @@
 export default function Footer() {
-    const currentYear = new Date().getFullYear();
-
     return (
         <footer className="bg-surface border-t border-border mt-auto">
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <div className="flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
-                    <div className="text-sm text-muted">
-                        © {currentYear} Scheigstopia. All rights reserved.
-                    </div>
-
+                <div className="flex flex-col items-center sm:flex-row sm:justify-end">
                     <div className="flex space-x-6">
                         <a
                             href="https://github.com"
