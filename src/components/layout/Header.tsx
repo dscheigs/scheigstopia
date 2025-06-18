@@ -22,9 +22,10 @@ export default function Header() {
                     <div className="flex items-center">
                         <Link
                             href="/"
-                            className="text-section-title font-bold text-foreground"
+                            className="text-section-title text-foreground"
                         >
-                            Scheigstopia
+                            <span className="font-bold">Scheigs</span>
+                            <span className="font-extralight">topia</span>
                         </Link>
                     </div>
 
@@ -35,7 +36,7 @@ export default function Header() {
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className="text-lead hover:text-foreground px-3 py-2 transition-colors"
+                                    className="text-body font-medium px-4 py-2 rounded-full hover:bg-surface-hover transition-colors"
                                 >
                                     {item.name}
                                 </Link>
