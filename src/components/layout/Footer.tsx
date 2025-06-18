@@ -5,7 +5,7 @@ export default function Footer() {
                 <div className="flex flex-col items-center sm:flex-row sm:justify-end">
                     <div className="flex space-x-6">
                         <a
-                            href="https://github.com"
+                            href="https://github.com/dscheigs"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-muted hover:text-foreground transition-colors"
@@ -26,7 +26,7 @@ export default function Footer() {
                         </a>
 
                         <a
-                            href="https://linkedin.com"
+                            href="https://linkedin.com/in/daniel-scheigert-657278b8"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-muted hover:text-foreground transition-colors"
@@ -43,7 +43,7 @@ export default function Footer() {
                         </a>
 
                         <a
-                            href="mailto:contact@example.com"
+                            href="mailto:daniel.scheigert@gmail.com"
                             className="text-muted hover:text-foreground transition-colors"
                             aria-label="Email"
                         >
