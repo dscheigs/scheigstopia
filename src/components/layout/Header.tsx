@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import GnomeIcon from '@/components/icons/GnomeIcon';
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const navigation = [
-        { name: 'Home', href: '/' },
         { name: 'About', href: '/about' },
         { name: 'Skills', href: '/skills' },
     ];
@@ -22,10 +22,13 @@ export default function Header() {
                     <div className="flex items-center">
                         <Link
                             href="/"
-                            className="text-section-title text-foreground"
+                            className="flex items-center gap-3 text-section-title text-foreground"
                         >
-                            <span className="font-bold">Scheigs</span>
-                            <span className="font-extralight">topia</span>
+                            <GnomeIcon size={32} className="flex-shrink-0" />
+                            <div>
+                                <span className="font-bold">Scheigs</span>
+                                <span className="font-extralight">topia</span>
+                            </div>
                         </Link>
                     </div>
 
