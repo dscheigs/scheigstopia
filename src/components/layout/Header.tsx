@@ -33,6 +33,7 @@ export default function Header() {
                     </div>
 
                     {/* Desktop navigation */}
+                    {/* TODO: look into utilizing anchors for underline animation */}
                     <div className="hidden md:block">
                         <div className="ml-10 flex items-baseline space-x-4">
                             {navigation.map((item) => (
