@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import './colors.css';
 @import './typography.css';
+@import './animations.css';
 
 body {
     background: var(--background);

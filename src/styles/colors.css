@@ -1,11 +1,12 @@
-/* Color Variables */
 :root {
-    --background: #1a1a1a;
-    --foreground: #f8fafc;
-    --surface: #1e1e2e;
-    --surface-hover: #2d2d3f;
-    --border: #3d3d4d;
-    --muted: #6b7280;
+    color-scheme: dark;
+
+    --background: light-dark(#dfd7ca, #1a1a1a);
+    --foreground: light-dark(#1a1a1a, #f8fafc);
+    --surface: light-dark(#efd7b1, #1e1e2e);
+    --surface-hover: light-dark(#f1f5f9, #2d2d3f);
+    --border: light-dark(#e2e8f0, #3d3d4d);
+    --muted: light-dark(#64748b, #6b7280);
 
     --primary: #5d19f7;
     --primary-hover: #4a15c7;
