@@ -12,13 +12,16 @@ export default function HeroSection() {
                 </h1>
                 <h2
                     className="text-page-title sm:text-hero opacity-0 animate-slide-in-right"
-                    style={{ animationDelay: '0.525s' }}
+                    style={{ animationDelay: '0.325s' }}
                 >
                     I&apos;m Daniel
                 </h2>
             </div>
 
-            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8 mb-6">
+            <div
+                className="flex flex-col lg:flex-row items-center lg:items-start gap-8 mb-6 opacity-0 animate-slide-in-up"
+                style={{ animationDelay: '0.8s' }}
+            >
                 {/* Photo */}
                 <div className="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden flex-shrink-0">
                     <Image
