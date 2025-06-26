@@ -5,7 +5,6 @@ import OutlineButton from './OutlineButton';
 export default function HeroSection() {
     return (
         <div className="flex flex-col items-center max-w-6xl mx-auto">
-            {/* Hi and I'm Daniel on same line */}
             <div className="flex items-center gap-2 mb-6">
                 <h1 className="text-page-title sm:text-hero opacity-0 animate-slide-in-left">
                     Hi,
