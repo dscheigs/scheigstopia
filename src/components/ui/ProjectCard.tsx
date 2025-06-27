@@ -2,26 +2,24 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import ProjectModal from './ProjectModal';
+import { Project } from '@/types/project';
 
 interface ProjectCardProps {
-    companyLogo: string;
-    projectName: string;
-    briefDescription: string;
-    detailedDescription: string;
-    technologies: string[];
-    contributions: string[];
+    project: Project;
 }
 
-export default function ProjectCard({
-    companyLogo,
-    projectName,
-    briefDescription,
-    detailedDescription,
-    technologies,
-    contributions,
-}: ProjectCardProps) {
+export default function ProjectCard({ project }: ProjectCardProps) {
+    const {
+        companyLogo,
+        projectName,
+        briefDescription,
+        detailedDescription,
+        technologies,
+        contributions,
+    } = project;
     const [isFlipped, setIsFlipped] = useState(false);
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleFlip = () => {
         setIsFlipped(!isFlipped);
@@ -29,15 +27,11 @@ export default function ProjectCard({
 
     const handleReadMore = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setIsExpanded(!isExpanded);
+        setIsModalOpen(true);
     };
 
     return (
-        <div
-            className={`relative w-full max-w-sm mx-auto group transition-all duration-500 ease-in-out ${
-                isExpanded ? 'h-auto' : 'h-80'
-            }`}
-        >
+        <div className="relative w-full max-w-sm mx-auto group h-80">
             {/* Card Container with 3D perspective */}
             <div
                 className="relative w-full h-full cursor-pointer hover:scale-105 transition-transform duration-300"
@@ -143,23 +137,6 @@ export default function ProjectCard({
                                         {detailedDescription}
                                     </p>
                                 </div>
-
-                                {/* Technologies */}
-                                <div>
-                                    <h4 className="text-subheading font-medium text-foreground mb-2">
-                                        Technologies
-                                    </h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {technologies.map((tech, index) => (
-                                            <span
-                                                key={index}
-                                                className="px-2 py-1 bg-foreground/10 text-foreground text-xs rounded-md border border-border"
-                                            >
-                                                {tech}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
                             </div>
 
                             {/* Fixed Bottom Section */}
@@ -168,7 +145,7 @@ export default function ProjectCard({
                                     onClick={handleReadMore}
                                     className="px-4 py-2 bg-foreground text-background hover:bg-foreground/90 rounded-lg transition-all duration-200 text-sm font-medium"
                                 >
-                                    {isExpanded ? 'Show Less' : 'Read More'}
+                                    Read More
                                 </button>
                             </div>
                         </div>
@@ -176,61 +153,17 @@ export default function ProjectCard({
                 </div>
             </div>
 
-            {/* Expanded Content */}
-            <div
-                className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                    isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                }`}
-            >
-                <div className="bg-surface border border-t-0 border-border rounded-b-lg p-6 space-y-6">
-                    {/* Project Overview */}
-                    <div>
-                        <h3 className="text-heading font-medium text-foreground mb-3">
-                            Project Overview
-                        </h3>
-                        <p className="text-body text-muted leading-relaxed">
-                            {detailedDescription}
-                        </p>
-                    </div>
-
-                    {/* Technologies Used */}
-                    <div>
-                        <h3 className="text-heading font-medium text-foreground mb-3">
-                            Technologies Used
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                            {technologies.map((tech, index) => (
-                                <span
-                                    key={index}
-                                    className="px-3 py-2 bg-foreground/10 text-foreground text-sm rounded-lg border border-border font-medium"
-                                >
-                                    {tech}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Key Contributions */}
-                    <div>
-                        <h3 className="text-heading font-medium text-foreground mb-3">
-                            Key Contributions
-                        </h3>
-                        <ul className="space-y-2">
-                            {contributions.map((contribution, index) => (
-                                <li
-                                    key={index}
-                                    className="text-body text-muted flex items-start gap-3"
-                                >
-                                    <span className="text-foreground text-sm mt-1 flex-shrink-0">
-                                        •
-                                    </span>
-                                    {contribution}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            {/* Modal */}
+            <ProjectModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                project={{
+                    projectName,
+                    detailedDescription,
+                    technologies,
+                    contributions,
+                }}
+            />
         </div>
     );
 }
