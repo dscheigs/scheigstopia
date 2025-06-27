@@ -6,10 +6,7 @@ import { Project } from '@/types/project';
 interface ProjectModalProps {
     isOpen: boolean;
     onClose: () => void;
-    project: Pick<
-        Project,
-        'projectName' | 'detailedDescription' | 'technologies' | 'contributions'
-    >;
+    project: Project;
 }
 
 export default function ProjectModal({
@@ -17,8 +14,7 @@ export default function ProjectModal({
     onClose,
     project,
 }: ProjectModalProps) {
-    const { projectName, detailedDescription, technologies, contributions } =
-        project;
+    const { projectName, detailedDescription, technologies } = project;
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -100,41 +96,107 @@ export default function ProjectModal({
                     </div>
 
                     {/* Technologies Used */}
-                    <div>
-                        <h3 className="text-section-title font-semibold text-foreground mb-3">
-                            Technologies Used
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                            {technologies.map((tech, index) => (
-                                <span
-                                    key={index}
-                                    className="px-3 py-2 bg-foreground/10 text-foreground text-sm rounded-lg border border-border font-medium"
-                                >
-                                    {tech}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Key Contributions */}
-                    <div>
-                        <h3 className="text-section-title font-semibold text-foreground mb-3">
-                            Key Contributions
-                        </h3>
-                        <ul className="space-y-3">
-                            {contributions.map((contribution, index) => (
-                                <li
-                                    key={index}
-                                    className="text-body text-muted flex items-start gap-3"
-                                >
-                                    <span className="text-foreground text-sm mt-1 flex-shrink-0">
-                                        •
+                    {technologies && technologies.length > 0 && (
+                        <div>
+                            <h3 className="text-section-title font-semibold text-foreground mb-3">
+                                Technologies Used
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                                {technologies.map((tech, index) => (
+                                    <span
+                                        key={index}
+                                        className="px-3 py-2 bg-foreground/10 text-foreground text-sm rounded-lg border border-border font-medium"
+                                    >
+                                        {tech}
                                     </span>
-                                    {contribution}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Key Contributions (Professional projects only) */}
+                    {project.type === 'professional' && (
+                        <div>
+                            <h3 className="text-section-title font-semibold text-foreground mb-3">
+                                Key Contributions
+                            </h3>
+                            <ul className="space-y-3">
+                                {project.contributions.map(
+                                    (contribution, index) => (
+                                        <li
+                                            key={index}
+                                            className="text-body text-muted flex items-start gap-3"
+                                        >
+                                            <span className="text-foreground text-sm mt-1 flex-shrink-0">
+                                                •
+                                            </span>
+                                            {contribution}
+                                        </li>
+                                    )
+                                )}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Personal Project Details */}
+                    {project.type === 'personal' && (
+                        <div className="space-y-4">
+                            {project.status && (
+                                <div>
+                                    <h3 className="text-section-title font-semibold text-foreground mb-3">
+                                        Status
+                                    </h3>
+                                    <span
+                                        className={`px-3 py-2 text-sm rounded-lg font-medium ${
+                                            project.status === 'completed'
+                                                ? 'bg-green-100 text-green-800 border border-green-200'
+                                                : project.status ===
+                                                    'in-progress'
+                                                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                                                  : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                                        }`}
+                                    >
+                                        {project.status === 'in-progress'
+                                            ? 'In Progress'
+                                            : project.status
+                                                  .charAt(0)
+                                                  .toUpperCase() +
+                                              project.status.slice(1)}
+                                    </span>
+                                </div>
+                            )}
+
+                            {(project.githubUrl || project.liveUrl) && (
+                                <div>
+                                    <h3 className="text-section-title font-semibold text-foreground mb-3">
+                                        Links
+                                    </h3>
+                                    <div className="flex gap-3">
+                                        {project.githubUrl && (
+                                            <a
+                                                href={project.githubUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-4 py-2 bg-foreground text-background hover:bg-foreground/90 rounded-lg transition-colors text-sm font-medium"
+                                            >
+                                                GitHub
+                                            </a>
+                                        )}
+                                        {project.liveUrl && (
+                                            <a
+                                                href={project.liveUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-4 py-2 border border-foreground text-foreground hover:bg-foreground hover:text-background rounded-lg transition-colors text-sm font-medium"
+                                            >
+                                                Live Demo
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

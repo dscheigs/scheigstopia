@@ -10,14 +10,7 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
-    const {
-        companyLogo,
-        projectName,
-        briefDescription,
-        detailedDescription,
-        technologies,
-        contributions,
-    } = project;
+    const { image, projectName, briefDescription } = project;
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleReadMore = (e: React.MouseEvent) => {
@@ -35,11 +28,11 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-md flex items-center justify-center border border-border flex-shrink-0">
                                 <span className="text-foreground font-medium text-sm">
-                                    {companyLogo && (
+                                    {image && (
                                         <Image
                                             width={10}
                                             height={10}
-                                            src={companyLogo}
+                                            src={image}
                                             alt={`${projectName} logo`}
                                             className="w-10 h-10 object-cover rounded-md"
                                         />
@@ -75,12 +68,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             <ProjectModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                project={{
-                    projectName,
-                    detailedDescription,
-                    technologies,
-                    contributions,
-                }}
+                project={project}
             />
         </div>
     );
