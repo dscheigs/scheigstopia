@@ -69,7 +69,7 @@ export default function ProjectModal({
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-foreground/10 rounded-lg transition-colors"
+                        className="p-2 hover:bg-foreground/10 rounded-lg transition-colors cursor-pointer"
                     >
                         <svg
                             className="w-5 h-5 text-muted hover:text-foreground"
