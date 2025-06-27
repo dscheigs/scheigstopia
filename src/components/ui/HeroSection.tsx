@@ -46,7 +46,9 @@ export default function HeroSection() {
                     <div className="flex flex-col sm:flex-row items-center gap-12 justify-center lg:justify-start">
                         <div className="flex gap-4">
                             <OutlineButton href="/about">About</OutlineButton>
-                            <OutlineButton href="/skills">Skills</OutlineButton>
+                            <OutlineButton href="/projects">
+                                Projects
+                            </OutlineButton>
                         </div>
                         <SocialLinks />
                     </div>
