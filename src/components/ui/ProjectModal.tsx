@@ -56,19 +56,19 @@ export default function ProjectModal({
 
             {/* Modal */}
             <div
-                className={`relative bg-surface border border-border rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden transition-all duration-300 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+                className={`relative bg-surface-minimal border border-border-minimal rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden transition-all duration-300 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-border">
+                <div className="flex items-center justify-between p-6 border-b border-border-minimal">
                     <h2 className="text-page-title font-semibold text-foreground">
                         {projectName}
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-foreground/10 rounded-lg transition-colors cursor-pointer"
+                        className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
                     >
                         <svg
-                            className="w-5 h-5 text-muted hover:text-foreground"
+                            className="w-5 h-5 text-text-minimal hover:text-foreground"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -90,7 +90,7 @@ export default function ProjectModal({
                         <h3 className="text-section-title font-semibold text-foreground mb-3">
                             Project Overview
                         </h3>
-                        <p className="text-body text-muted leading-relaxed">
+                        <p className="text-body text-text-minimal leading-relaxed">
                             {detailedDescription}
                         </p>
                     </div>
@@ -105,7 +105,7 @@ export default function ProjectModal({
                                 {technologies.map((tech, index) => (
                                     <span
                                         key={index}
-                                        className="px-3 py-2 bg-foreground/10 text-foreground text-sm rounded-lg border border-border font-medium"
+                                        className="px-3 py-2 bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-sm rounded-lg border border-border-minimal font-medium"
                                     >
                                         {tech}
                                     </span>
@@ -125,7 +125,7 @@ export default function ProjectModal({
                                     (contribution, index) => (
                                         <li
                                             key={index}
-                                            className="text-body text-muted flex items-start gap-3"
+                                            className="text-body text-text-minimal flex items-start gap-3"
                                         >
                                             <span className="text-foreground text-sm mt-1 flex-shrink-0">
                                                 •
@@ -149,11 +149,11 @@ export default function ProjectModal({
                                     <span
                                         className={`px-3 py-2 text-sm rounded-lg font-medium ${
                                             project.status === 'completed'
-                                                ? 'bg-green-100 text-green-800 border border-green-200'
+                                                ? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 border border-border-minimal'
                                                 : project.status ===
                                                     'in-progress'
-                                                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                                                  : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                                                  ? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 border border-border-minimal'
+                                                  : 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 border border-border-minimal'
                                         }`}
                                     >
                                         {project.status === 'in-progress'
@@ -177,7 +177,7 @@ export default function ProjectModal({
                                                 href={project.githubUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="px-4 py-2 bg-foreground text-background hover:bg-foreground/90 rounded-lg transition-colors text-sm font-medium"
+                                                className="px-4 py-2 bg-neutral-800 text-neutral-100 hover:bg-neutral-700 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300 rounded-lg transition-colors text-sm font-medium"
                                             >
                                                 GitHub
                                             </a>
@@ -187,7 +187,7 @@ export default function ProjectModal({
                                                 href={project.liveUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="px-4 py-2 border border-foreground text-foreground hover:bg-foreground hover:text-background rounded-lg transition-colors text-sm font-medium"
+                                                className="px-4 py-2 border border-neutral-800 text-neutral-800 hover:bg-neutral-800 hover:text-neutral-100 dark:border-neutral-200 dark:text-neutral-200 dark:hover:bg-neutral-200 dark:hover:text-neutral-900 rounded-lg transition-colors text-sm font-medium"
                                             >
                                                 Live Demo
                                             </a>

@@ -22,11 +22,11 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         <div className="relative w-full max-w-sm mx-auto group h-80">
             {/* Card Container */}
             <div className="relative w-full h-full hover:scale-105 transition-transform duration-300">
-                <div className="w-full h-full bg-surface border border-border rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div className="w-full h-full bg-surface-minimal border border-border-minimal rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
                     <div className="space-y-6 h-full flex flex-col">
                         {/* Project Name with Company Logo */}
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md flex items-center justify-center border border-border flex-shrink-0">
+                            <div className="w-10 h-10 rounded-md flex items-center justify-center border border-border-minimal flex-shrink-0">
                                 <span className="text-foreground font-medium text-sm">
                                     {image && (
                                         <Image
@@ -46,7 +46,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
                         {/* Brief Description */}
                         <div className="flex-1">
-                            <p className="text-body text-muted leading-relaxed">
+                            <p className="text-body text-text-minimal leading-relaxed">
                                 {briefDescription}
                             </p>
                         </div>
@@ -55,7 +55,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         <div className="flex justify-center">
                             <button
                                 onClick={handleReadMore}
-                                className="px-4 py-2 bg-foreground text-background hover:bg-foreground/90 rounded-lg transition-all duration-200 text-sm font-medium cursor-pointer"
+                                className="px-4 py-2 bg-neutral-800 text-neutral-100 hover:bg-neutral-700 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300 rounded-lg transition-all duration-200 text-sm font-medium cursor-pointer"
                             >
                                 Read More
                             </button>
