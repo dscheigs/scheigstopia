@@ -58,3 +58,64 @@ The project uses custom typography classes with responsive clamp() sizing. **ALW
 - `src/styles/globals.css` - Main imports and body styles
 - `src/styles/colors.css` - Color system and variables
 - `src/styles/typography.css` - Font system and typography classes
+
+## Color System & Design Philosophy
+
+The project follows a **minimalistic color approach** with strategic use of color:
+
+### Design Philosophy
+
+- **Minimal body colors**: Content areas (cards, modals, forms) use neutral black/white/gray colors
+- **Accent colors for navigation**: Headers, navigation, and primary actions use the green theme
+- **Clean contrast**: High contrast between text and backgrounds for readability
+- **Consistent neutrals**: Use the defined neutral scale for all non-accent elements
+
+### Color Usage Guidelines
+
+**ALWAYS use these neutral colors for content:**
+
+- `bg-surface-minimal` - Main surface backgrounds (cards, modals)
+- `bg-surface-minimal-hover` - Hover states for surfaces
+- `border-border-minimal` - Borders for content containers
+- `text-text-minimal` - Subdued text (descriptions, secondary content)
+- `bg-neutral-*` classes - For buttons, tags, and UI elements
+
+**Use theme colors ONLY for:**
+
+- Navigation headers
+- Primary action buttons
+- Active states in navigation
+- Brand elements
+
+### Available Neutral Colors
+
+```css
+--neutral-50: #fafafa (lightest) --neutral-100: #f5f5f5 --neutral-200: #e5e5e5
+    --neutral-300: #d4d4d4 --neutral-400: #a3a3a3 --neutral-500: #737373
+    --neutral-600: #525252 --neutral-700: #404040 --neutral-800: #262626
+    --neutral-900: #171717 --neutral-950: #0a0a0a (darkest);
+```
+
+### Semantic Color Variables
+
+- `--surface-minimal` - Auto-adjusting surface for light/dark mode
+- `--surface-minimal-hover` - Hover state for minimal surfaces
+- `--border-minimal` - Neutral borders
+- `--text-minimal` - Subdued text color
+
+**Example Usage:**
+
+```tsx
+// ✅ Good - Content with minimal colors
+<div className="bg-surface-minimal border border-border-minimal">
+  <p className="text-text-minimal">Description text</p>
+  <button className="bg-neutral-800 text-neutral-100 dark:bg-neutral-200 dark:text-neutral-900">
+    Action
+  </button>
+</div>
+
+// ❌ Avoid - Using theme colors for content
+<div className="bg-surface border border-border">
+  <p className="text-muted">Description text</p>
+</div>
+```

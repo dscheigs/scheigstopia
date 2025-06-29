@@ -4,6 +4,19 @@
     --animate-slide-in-up: slide-in-up 0.8s ease-out forwards;
 }
 
+/* 3D Card Flip Utilities */
+.preserve-3d {
+    transform-style: preserve-3d;
+}
+
+.backface-hidden {
+    backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+    transform: rotateY(180deg);
+}
+
 @keyframes slide-in-left {
     from {
         opacity: 0;
