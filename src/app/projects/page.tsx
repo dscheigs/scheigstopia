@@ -15,7 +15,7 @@ export default function Projects() {
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-page-title mb-6">Projects</h1>
-            <p className="text-body text-text-minimal text-center mb-10 max-w-2xl mx-auto">
+            <p className="text-lead text-foreground font-medium text-center mb-10 max-w-4xl mx-auto">
                 I believe one of the most enjoyable aspects of life is learning
                 new things. Here are some of my various projects that showcase
                 my journey and the skills I&apos;ve acquired along the way.
