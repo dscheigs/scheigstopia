@@ -25,7 +25,7 @@ export default function Projects() {
                     options={['Professional', 'Personal']}
                     value={selectedSection}
                     onChange={setSelectedSection}
-                    className="w-[60vw] max-w-2xl"
+                    className="w-full max-w-md mx-4 sm:w-[60vw] sm:max-w-2xl"
                 />
             </div>
 
