@@ -20,7 +20,7 @@ export default function Projects() {
                 <Download
                     title="Resume"
                     content={'TODO: resume download'}
-                    filename={`${selectedSection.toLowerCase()}-projects.txt`}
+                    filename={`Daniel-Scheigert-Resume.pdf`}
                 />
             </div>
             <p className="text-lead text-foreground font-medium text-center mb-10 max-w-4xl mx-auto">
