@@ -17,10 +17,7 @@ export default function HeroSection() {
                 </h2>
             </div>
 
-            <div
-                className="flex flex-col lg:flex-row items-center lg:items-start gap-8 mb-6 opacity-0 animate-slide-in-up"
-                style={{ animationDelay: '0.8s' }}
-            >
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8 mb-6 opacity-0 animate-slide-in-up">
                 {/* Photo */}
                 <div className="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden flex-shrink-0">
                     <Image
