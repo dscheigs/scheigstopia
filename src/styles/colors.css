@@ -1,6 +1,6 @@
 :root {
-    color-scheme: dark;
-    --background: light-dark(#e9eadc, #060f06);
+    color-scheme: light dark;
+    --background: light-dark(#e9eadc, #030803);
     --foreground: light-dark(#1a1a1a, #e8f5e8);
     --surface: light-dark(#d4edda, #101d10);
     --surface-hover: light-dark(#c3e6cb, #2d4a2d);
@@ -10,6 +10,8 @@
     --primary-hover: #2e7d32;
     --primary-dark: #0d4d14;
     --accent: #66bb6a;
+    --accent-muted: #3d6b4a;
+    --accent-muted-hover: #4a7c59;
 
     /* Neutral colors for minimal design */
     --neutral-50: #fafafa;
@@ -48,6 +50,8 @@
     --color-primary-hover: var(--primary-hover);
     --color-primary-dark: var(--primary-dark);
     --color-accent: var(--accent);
+    --color-accent-muted: var(--accent-muted);
+    --color-accent-muted-hover: var(--accent-muted-hover);
     --color-success: var(--success);
     --color-warning: var(--warning);
     --color-error: var(--error);
