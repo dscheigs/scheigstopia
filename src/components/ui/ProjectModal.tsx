@@ -56,16 +56,16 @@ export default function ProjectModal({
 
             {/* Modal */}
             <div
-                className={`relative bg-surface-minimal border border-border-minimal rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden transition-all duration-300 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+                className={`relative bg-surface-minimal border border-border-minimal rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col transition-all duration-300 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-border-minimal">
-                    <h2 className="text-page-title font-semibold text-foreground">
+                <div className="flex items-start justify-between p-6 border-b border-border-minimal flex-shrink-0">
+                    <h2 className="text-page-title font-semibold text-foreground pr-4 leading-tight">
                         {projectName}
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-surface-minimal-hover rounded-lg transition-colors cursor-pointer"
+                        className="p-2 hover:bg-surface-minimal-hover rounded-lg transition-colors cursor-pointer flex-shrink-0"
                     >
                         <svg
                             className="w-5 h-5 text-text-minimal hover:text-foreground"
@@ -84,7 +84,7 @@ export default function ProjectModal({
                 </div>
 
                 {/* Content */}
-                <div className="p-6 overflow-y-auto max-h-[calc(90vh-8rem)] space-y-6">
+                <div className="p-6 overflow-y-auto flex-1 min-h-0 space-y-6">
                     {/* Project Overview */}
                     <div>
                         <h3 className="text-section-title font-semibold text-foreground mb-3">
