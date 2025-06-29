@@ -16,8 +16,6 @@ export interface ProfessionalProject extends BaseProject {
 // Personal project extends base with personal-specific fields
 export interface PersonalProject extends BaseProject {
     type: 'personal';
-    githubUrl?: string;
-    liveUrl?: string;
     status?: 'completed' | 'in-progress' | 'planned';
 }
 

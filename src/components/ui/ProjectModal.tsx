@@ -165,36 +165,6 @@ export default function ProjectModal({
                                     </span>
                                 </div>
                             )}
-
-                            {(project.githubUrl || project.liveUrl) && (
-                                <div>
-                                    <h3 className="text-section-title font-semibold text-foreground mb-3">
-                                        Links
-                                    </h3>
-                                    <div className="flex gap-3">
-                                        {project.githubUrl && (
-                                            <a
-                                                href={project.githubUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="px-4 py-2 bg-neutral-800 text-neutral-100 hover:bg-neutral-700 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300 rounded-lg transition-colors text-sm font-medium"
-                                            >
-                                                GitHub
-                                            </a>
-                                        )}
-                                        {project.liveUrl && (
-                                            <a
-                                                href={project.liveUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="px-4 py-2 border border-neutral-800 text-neutral-800 hover:bg-neutral-800 hover:text-neutral-100 dark:border-neutral-200 dark:text-neutral-200 dark:hover:bg-neutral-200 dark:hover:text-neutral-900 rounded-lg transition-colors text-sm font-medium"
-                                            >
-                                                Live Demo
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>

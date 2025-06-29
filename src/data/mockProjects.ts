@@ -116,8 +116,6 @@ const personalProjects: PersonalProject[] = [
             'MDX',
             'Vercel',
         ],
-        githubUrl: 'https://github.com/username/personal-blog',
-        liveUrl: 'https://myblog.dev',
         status: 'completed',
     },
     {
@@ -136,8 +134,6 @@ const personalProjects: PersonalProject[] = [
             'MongoDB',
             'Express',
         ],
-        githubUrl: 'https://github.com/username/task-manager',
-        liveUrl: 'https://taskmanager.dev',
         status: 'completed',
     },
     {
@@ -155,7 +151,6 @@ const personalProjects: PersonalProject[] = [
             'Mapbox',
             'Redux Toolkit',
         ],
-        githubUrl: 'https://github.com/username/weather-app',
         status: 'completed',
     },
     {
@@ -173,7 +168,6 @@ const personalProjects: PersonalProject[] = [
             'CoinGecko API',
             'Chart.js',
         ],
-        githubUrl: 'https://github.com/username/crypto-tracker',
         status: 'in-progress',
     },
     {
