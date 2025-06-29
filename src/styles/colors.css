@@ -2,9 +2,9 @@
     color-scheme: dark;
     --background: light-dark(#e9eadc, #060f06);
     --foreground: light-dark(#1a1a1a, #e8f5e8);
-    --surface: light-dark(#d4edda, #1a2e1a);
+    --surface: light-dark(#d4edda, #101d10);
     --surface-hover: light-dark(#c3e6cb, #2d4a2d);
-    --border: light-dark(#a3d3a8, #3d5d3d);
+    --border: light-dark(#a3d3a8, #314b31);
     --muted: light-dark(#5a7c5a, #7a997a);
     --primary: #1b5e20;
     --primary-hover: #2e7d32;
