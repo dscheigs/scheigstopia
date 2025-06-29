@@ -12,9 +12,7 @@ export default function SegmentedControl({
     className = '',
 }: SegmentedControlProps) {
     return (
-        <div
-            className={`flex bg-neutral-100 dark:bg-neutral-700 rounded-2xl p-1 ${className}`}
-        >
+        <div className={`flex rounded-2xl p-1 bg-surface-minimal ${className}`}>
             {options.map((option) => (
                 <button
                     key={option}

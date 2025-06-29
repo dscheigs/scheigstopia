@@ -65,7 +65,7 @@ export default function ProjectModal({
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
+                        className="p-2 hover:bg-surface-minimal-hover rounded-lg transition-colors cursor-pointer"
                     >
                         <svg
                             className="w-5 h-5 text-text-minimal hover:text-foreground"
@@ -105,7 +105,7 @@ export default function ProjectModal({
                                 {technologies.map((tech, index) => (
                                     <span
                                         key={index}
-                                        className="px-3 py-2 bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-sm rounded-lg border border-border-minimal font-medium"
+                                        className="px-3 py-2 bg-surface-minimal text-foreground text-sm rounded-lg border border-border-minimal font-medium"
                                     >
                                         {tech}
                                     </span>
@@ -149,11 +149,11 @@ export default function ProjectModal({
                                     <span
                                         className={`px-3 py-2 text-sm rounded-lg font-medium ${
                                             project.status === 'completed'
-                                                ? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 border border-border-minimal'
+                                                ? 'bg-surface-minimal text-foreground border border-border-minimal'
                                                 : project.status ===
                                                     'in-progress'
-                                                  ? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 border border-border-minimal'
-                                                  : 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 border border-border-minimal'
+                                                  ? 'bg-surface-minimal text-foreground border border-border-minimal'
+                                                  : 'bg-surface-minimal text-foreground border border-border-minimal'
                                         }`}
                                     >
                                         {project.status === 'in-progress'
