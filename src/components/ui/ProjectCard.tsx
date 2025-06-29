@@ -19,7 +19,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     };
 
     return (
-        <div className="relative w-full max-w-sm mx-auto group h-80">
+        <div className="relative w-full max-w-sm mx-auto group min-h-70 h-auto">
             {/* Card Container */}
             <div className="relative w-full h-full hover:scale-105 transition-transform duration-300">
                 <div className="w-full h-full bg-surface-minimal border border-border-minimal rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -39,14 +39,14 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                                     )}
                                 </span>
                             </div>
-                            <h3 className="text-heading font-semibold text-foreground">
+                            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-foreground leading-tight">
                                 {projectName}
                             </h3>
                         </div>
 
                         {/* Brief Description */}
                         <div className="flex-1">
-                            <p className="text-body text-text-minimal leading-relaxed">
+                            <p className="text-sm sm:text-base text-text-minimal leading-relaxed">
                                 {briefDescription}
                             </p>
                         </div>
