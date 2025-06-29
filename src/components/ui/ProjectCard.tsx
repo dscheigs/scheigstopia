@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import ProjectModal from './ProjectModal';
+import Button from './Button';
 import { Project } from '@/types/project';
 
 interface ProjectCardProps {
@@ -53,12 +54,13 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
                         {/* Read More Button */}
                         <div className="flex justify-center">
-                            <button
+                            <Button
                                 onClick={handleReadMore}
-                                className="px-4 py-2 bg-accent-muted text-neutral-50 hover:bg-accent-muted-hover rounded-lg transition-all duration-200 text-sm font-medium cursor-pointer"
+                                variant="accent"
+                                className="text-sm"
                             >
                                 Read More
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

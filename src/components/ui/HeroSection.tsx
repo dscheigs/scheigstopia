@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import SocialLinks from './SocialLinks';
-import OutlineButton from './OutlineButton';
+import Button from './Button';
 
 export default function HeroSection() {
     return (
@@ -45,10 +45,22 @@ export default function HeroSection() {
                     {/* Social Links and Nav Buttons */}
                     <div className="flex flex-col sm:flex-row items-center gap-12 justify-center lg:justify-start">
                         <div className="flex gap-4">
-                            <OutlineButton href="/about">About</OutlineButton>
-                            <OutlineButton href="/projects">
+                            <Button
+                                as="link"
+                                href="/about"
+                                variant="outline"
+                                className="px-6 py-3 text-body"
+                            >
+                                About
+                            </Button>
+                            <Button
+                                as="link"
+                                href="/projects"
+                                variant="outline"
+                                className="px-6 py-3 text-body"
+                            >
                                 Projects
-                            </OutlineButton>
+                            </Button>
                         </div>
                         <SocialLinks />
                     </div>
