@@ -55,7 +55,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         <div className="flex justify-center">
                             <button
                                 onClick={handleReadMore}
-                                className="px-4 py-2 bg-neutral-800 text-neutral-100 hover:bg-neutral-700 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300 rounded-lg transition-all duration-200 text-sm font-medium cursor-pointer"
+                                className="px-4 py-2 bg-accent-muted text-neutral-50 hover:bg-accent-muted-hover rounded-lg transition-all duration-200 text-sm font-medium cursor-pointer"
                             >
                                 Read More
                             </button>

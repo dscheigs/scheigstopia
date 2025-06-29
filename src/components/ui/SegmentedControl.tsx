@@ -13,15 +13,15 @@ export default function SegmentedControl({
 }: SegmentedControlProps) {
     return (
         <div
-            className={`flex bg-neutral-100 dark:bg-neutral-700 rounded-xl p-1 ${className}`}
+            className={`flex bg-neutral-100 dark:bg-neutral-700 rounded-2xl p-1 ${className}`}
         >
             {options.map((option) => (
                 <button
                     key={option}
                     onClick={() => onChange(option)}
-                    className={`flex-1 px-4 py-2 text-lead font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                    className={`flex-1 px-4 py-2 text-lead font-medium rounded-xl transition-all duration-200 cursor-pointer ${
                         value === option
-                            ? 'bg-neutral-50 dark:bg-neutral-900 text-foreground shadow-sm'
+                            ? 'bg-accent-muted text-neutral-50 shadow-sm'
                             : 'text-text-minimal hover:text-foreground'
                     }`}
                 >
