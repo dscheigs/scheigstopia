@@ -30,7 +30,7 @@
     --surface-minimal: light-dark(var(--neutral-50), var(--neutral-900));
     --surface-minimal-hover: light-dark(var(--neutral-100), var(--neutral-800));
     --border-minimal: light-dark(var(--neutral-200), var(--neutral-700));
-    --text-minimal: light-dark(var(--neutral-600), var(--neutral-400));
+    --text-minimal: light-dark(var(--neutral-500), var(--neutral-300));
 
     /* Semantic colors */
     --success: #10b981;
