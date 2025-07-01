@@ -1,17 +1,36 @@
 :root {
-    color-scheme: dark;
+    color-scheme: light dark;
+    --background: light-dark(#e9eadc, #030803);
+    --foreground: light-dark(#1a1a1a, #e8f5e8);
+    --surface: light-dark(#b7cdbd, #101d10);
+    --surface-hover: light-dark(#c8d8ce, #2d4a2d);
+    --border: light-dark(#a3d3a8, #314b31);
+    --muted: light-dark(#5a7c5a, #7a997a);
+    --primary: #1b5e20;
+    --primary-hover: #2e7d32;
+    --primary-dark: #0d4d14;
+    --accent: #66bb6a;
+    --accent-muted: #3d6b4a;
+    --accent-muted-hover: #4a7c59;
 
-    --background: light-dark(#dfd7ca, #1a1a1a);
-    --foreground: light-dark(#1a1a1a, #f8fafc);
-    --surface: light-dark(#efd7b1, #1e1e2e);
-    --surface-hover: light-dark(#f1f5f9, #2d2d3f);
-    --border: light-dark(#e2e8f0, #3d3d4d);
-    --muted: light-dark(#64748b, #6b7280);
+    /* Neutral colors for minimal design */
+    --neutral-50: #fafafa;
+    --neutral-100: #f5f5f5;
+    --neutral-200: #e5e5e5;
+    --neutral-300: #d4d4d4;
+    --neutral-400: #a3a3a3;
+    --neutral-500: #737373;
+    --neutral-600: #525252;
+    --neutral-700: #404040;
+    --neutral-800: #262626;
+    --neutral-900: #171717;
+    --neutral-950: #0a0a0a;
 
-    --primary: #5d19f7;
-    --primary-hover: #4a15c7;
-    --primary-dark: #3a0f99;
-    --accent: #9f92d1;
+    /* Minimal surface colors */
+    --surface-minimal: light-dark(var(--neutral-50), var(--neutral-900));
+    --surface-minimal-hover: light-dark(var(--neutral-100), var(--neutral-800));
+    --border-minimal: light-dark(var(--neutral-200), var(--neutral-700));
+    --text-minimal: light-dark(var(--neutral-500), var(--neutral-300));
 
     /* Semantic colors */
     --success: #10b981;
@@ -31,7 +50,28 @@
     --color-primary-hover: var(--primary-hover);
     --color-primary-dark: var(--primary-dark);
     --color-accent: var(--accent);
+    --color-accent-muted: var(--accent-muted);
+    --color-accent-muted-hover: var(--accent-muted-hover);
     --color-success: var(--success);
     --color-warning: var(--warning);
     --color-error: var(--error);
+
+    /* Neutral colors */
+    --color-neutral-50: var(--neutral-50);
+    --color-neutral-100: var(--neutral-100);
+    --color-neutral-200: var(--neutral-200);
+    --color-neutral-300: var(--neutral-300);
+    --color-neutral-400: var(--neutral-400);
+    --color-neutral-500: var(--neutral-500);
+    --color-neutral-600: var(--neutral-600);
+    --color-neutral-700: var(--neutral-700);
+    --color-neutral-800: var(--neutral-800);
+    --color-neutral-900: var(--neutral-900);
+    --color-neutral-950: var(--neutral-950);
+
+    /* Minimal surface colors */
+    --color-surface-minimal: var(--surface-minimal);
+    --color-surface-minimal-hover: var(--surface-minimal-hover);
+    --color-border-minimal: var(--border-minimal);
+    --color-text-minimal: var(--text-minimal);
 }

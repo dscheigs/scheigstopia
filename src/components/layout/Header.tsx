@@ -9,11 +9,11 @@ export default function Header() {
 
     const navigation = [
         { name: 'About', href: '/about' },
-        { name: 'Skills', href: '/skills' },
+        { name: 'Projects', href: '/projects' },
     ];
 
     return (
-        <header className="relative bg-surface border-b border-border">
+        <header className="relative bg-surface">
             <nav
                 className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
                 aria-label="Global"
@@ -95,7 +95,7 @@ export default function Header() {
 
                 {/* Mobile menu */}
                 <div
-                    className={`absolute top-16 left-0 right-0 z-50 bg-surface border-b border-border shadow-lg md:hidden transition-all duration-400 ease-in-out ${
+                    className={`absolute top-16 left-0 right-0 z-50 bg-surface shadow-lg md:hidden transition-all duration-400 ease-in-out ${
                         isMenuOpen
                             ? 'scale-y-100 opacity-100'
                             : 'scale-y-0 opacity-90'

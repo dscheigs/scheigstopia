@@ -1,11 +1,10 @@
 import Image from 'next/image';
 import SocialLinks from './SocialLinks';
-import OutlineButton from './OutlineButton';
+import Button from './Button';
 
 export default function HeroSection() {
     return (
         <div className="flex flex-col items-center max-w-6xl mx-auto">
-            {/* Hi and I'm Daniel on same line */}
             <div className="flex items-center gap-2 mb-6">
                 <h1 className="text-page-title sm:text-hero opacity-0 animate-slide-in-left">
                     Hi,
@@ -18,10 +17,7 @@ export default function HeroSection() {
                 </h2>
             </div>
 
-            <div
-                className="flex flex-col lg:flex-row items-center lg:items-start gap-8 mb-6 opacity-0 animate-slide-in-up"
-                style={{ animationDelay: '0.8s' }}
-            >
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8 mb-6 opacity-0 animate-slide-in-up">
                 {/* Photo */}
                 <div className="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden flex-shrink-0">
                     <Image
@@ -46,8 +42,22 @@ export default function HeroSection() {
                     {/* Social Links and Nav Buttons */}
                     <div className="flex flex-col sm:flex-row items-center gap-12 justify-center lg:justify-start">
                         <div className="flex gap-4">
-                            <OutlineButton href="/about">About</OutlineButton>
-                            <OutlineButton href="/skills">Skills</OutlineButton>
+                            <Button
+                                as="link"
+                                href="/about"
+                                variant="outline"
+                                className="px-6 py-3 text-body"
+                            >
+                                About
+                            </Button>
+                            <Button
+                                as="link"
+                                href="/projects"
+                                variant="outline"
+                                className="px-6 py-3 text-body"
+                            >
+                                Projects
+                            </Button>
                         </div>
                         <SocialLinks />
                     </div>
