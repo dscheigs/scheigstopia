@@ -26,8 +26,10 @@ export default function Header() {
                         >
                             <GnomeIcon size={32} className="flex-shrink-0" />
                             <div>
-                                <span className="font-bold">Scheigs</span>
-                                <span className="font-extralight">topia</span>
+                                <span className="font-bold">Daniel</span>
+                                <span className="font-extralight">
+                                    &nbsp;Scheigert
+                                </span>
                             </div>
                         </Link>
                     </div>

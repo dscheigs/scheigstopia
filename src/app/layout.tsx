@@ -14,9 +14,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-    title: 'Daniel Scheigert', //TODO: would be neat to have this dynamic
+    title: 'Daniel Scheigert',
     description:
-        'Welcome to my humble internet cottage. I sometimes write about things I find interesting, share my projects, and showcase my skills.',
+        'A place to share my projects, thoughts, and experiences as a software engineer.',
 };
 
 export default function RootLayout({
