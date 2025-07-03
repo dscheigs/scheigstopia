@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
-type ButtonVariant = 'outline' | 'solid' | 'accent';
+export type ButtonVariant = 'outline' | 'solid' | 'accent';
 
 interface BaseButtonProps {
     children: ReactNode;
