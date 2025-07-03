@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Download from '@/components/ui/Download';
 import ProjectsList from '@/components/ui/ProjectsList';
 
 export const metadata: Metadata = {
@@ -13,11 +12,6 @@ export default function Projects() {
         <div className="container mx-auto px-4 py-8">
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-page-title">Projects</h1>
-                <Download
-                    title="Resume"
-                    content={'TODO: resume download'}
-                    filename={`Daniel-Scheigert-Resume.pdf`}
-                />
             </div>
             <p className="text-lead text-foreground font-medium text-center mb-10 max-w-4xl mx-auto">
                 I believe one of the most enjoyable aspects of life is learning
