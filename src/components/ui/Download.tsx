@@ -1,6 +1,6 @@
 'use client';
 
-import Button from './Button';
+import Button, { ButtonVariant } from './Button';
 
 interface DownloadProps {
     title?: string;
@@ -8,6 +8,7 @@ interface DownloadProps {
     filename: string;
     mimeType?: string;
     className?: string;
+    variant?: ButtonVariant;
 }
 
 export default function Download({
@@ -15,6 +16,7 @@ export default function Download({
     content,
     filename,
     mimeType = 'text/plain',
+    variant = 'accent',
     className = '',
 }: DownloadProps) {
     const handleDownload = async () => {
@@ -48,7 +50,7 @@ export default function Download({
     return (
         <Button
             onClick={handleDownload}
-            variant="accent"
+            variant={variant}
             className={`inline-flex items-center ${title ? 'gap-2' : ''} ${className}`}
         >
             {title && <span>{title}</span>}
