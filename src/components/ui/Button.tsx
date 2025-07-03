@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
-type ButtonVariant = 'outline' | 'solid' | 'accent';
+export type ButtonVariant = 'outline' | 'solid' | 'accent';
 
 interface BaseButtonProps {
     children: ReactNode;
@@ -25,7 +25,7 @@ type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 const variantStyles = {
     outline:
-        'border border-foreground text-foreground hover:bg-foreground hover:text-background',
+        'border text-foreground hover:bg-accent-muted-hover hover:border-accent-muted',
     solid: 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300',
     accent: 'bg-accent-muted text-neutral-50 hover:bg-accent-muted-hover',
 };

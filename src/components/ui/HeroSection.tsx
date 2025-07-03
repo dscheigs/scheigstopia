@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import SocialLinks from './SocialLinks';
-import Button from './Button';
+import Download from './Download';
 
 export default function HeroSection() {
     return (
@@ -41,25 +41,13 @@ export default function HeroSection() {
 
                     {/* Social Links and Nav Buttons */}
                     <div className="flex flex-col sm:flex-row items-center gap-12 justify-center lg:justify-start">
-                        <div className="flex gap-4">
-                            <Button
-                                as="link"
-                                href="/about"
-                                variant="outline"
-                                className="px-6 py-3 text-body"
-                            >
-                                About
-                            </Button>
-                            <Button
-                                as="link"
-                                href="/projects"
-                                variant="outline"
-                                className="px-6 py-3 text-body"
-                            >
-                                Projects
-                            </Button>
-                        </div>
                         <SocialLinks />
+                        <Download
+                            title="Resume"
+                            variant="outline"
+                            content={'TODO: resume download'}
+                            filename={`Daniel-Scheigert-Resume.pdf`}
+                        />
                     </div>
                 </div>
             </div>
