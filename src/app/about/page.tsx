@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
+import { createPageMetadata } from '@/utils/metadata';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
     title: 'About | Daniel Scheigert',
     description: 'Learn more about me. Daniel Scheigert',
-};
+});
 
 export default function About() {
     return (

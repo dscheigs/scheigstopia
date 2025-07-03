@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import ProjectsList from '@/components/ui/ProjectsList';
+import { createPageMetadata } from '@/utils/metadata';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
     title: 'Projects | Daniel Scheigert',
     description:
         'I like to build things. Here are some things I have done and am currently doing.',
-};
+});
 
 export default function Projects() {
     return (

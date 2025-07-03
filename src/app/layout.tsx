@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import '../styles/globals.css';
 import Header from '@/components/layout/Header';
+import { createPageMetadata } from '@/utils/metadata';
 
 const inter = Inter({
     variable: '--font-inter',
@@ -13,11 +14,11 @@ const jetbrainsMono = JetBrains_Mono({
     subsets: ['latin'],
 });
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
     title: 'Daniel Scheigert',
     description:
         'A place to share my projects, thoughts, and experiences as a software engineer.',
-};
+});
 
 export default function RootLayout({
     children,
