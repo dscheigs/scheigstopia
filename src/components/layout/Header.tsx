@@ -13,7 +13,7 @@ export default function Header() {
     ];
 
     return (
-        <header className="relative bg-surface">
+        <header className="sticky top-0 z-50 bg-surface border-b border-border">
             <nav
                 className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
                 aria-label="Global"
