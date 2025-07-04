@@ -15,9 +15,9 @@ export default function Projects() {
                 <h1 className="text-page-title">Projects</h1>
             </div>
             <p className="text-lead text-foreground font-medium text-center mb-10 max-w-4xl mx-auto">
-                I believe one of the most enjoyable aspects of life is learning
-                new things. Here are some of my various projects that showcase
-                my journey and the skills I&apos;ve acquired along the way.
+                I find one of the most enjoyable aspects of life is learning new
+                things. Here are some of my various projects that showcase my
+                journey and the skills I&apos;ve acquired along the way.
             </p>
 
             <ProjectsList />
