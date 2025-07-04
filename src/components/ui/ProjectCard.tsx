@@ -40,14 +40,14 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                                     )}
                                 </span>
                             </div>
-                            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-foreground leading-tight">
+                            <h3 className="text-subheading font-semibold text-foreground leading-tight">
                                 {projectName}
                             </h3>
                         </div>
 
                         {/* Brief Description */}
                         <div className="flex-1">
-                            <p className="text-sm sm:text-base text-text-minimal leading-relaxed">
+                            <p className="text-body text-text-minimal leading-relaxed">
                                 {briefDescription}
                             </p>
                         </div>

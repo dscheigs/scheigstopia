@@ -21,11 +21,13 @@ export default function Header() {
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center">
                         <Link
+                            title="(It's pronounced Shy-gert)"
+                            aria-label="Daniel Scheigert - Home"
                             href="/"
                             className="flex items-center gap-3 text-section-title text-foreground"
                         >
                             <GnomeIcon size={32} className="flex-shrink-0" />
-                            <div>
+                            <div style={{ fontFamily: 'var(--font-sans)' }}>
                                 <span className="font-bold">Daniel</span>
                                 <span className="font-extralight">
                                     &nbsp;Scheigert
