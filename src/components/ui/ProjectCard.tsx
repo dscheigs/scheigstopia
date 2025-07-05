@@ -1,22 +1,20 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
-import ProjectModal from './ProjectModal';
 import Button from './Button';
 import { Project } from '@/types/project';
 
 interface ProjectCardProps {
     project: Project;
+    onReadMore: () => void;
 }
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default function ProjectCard({ project, onReadMore }: ProjectCardProps) {
     const { image, projectName, briefDescription } = project;
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleReadMore = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setIsModalOpen(true);
+        onReadMore();
     };
 
     return (
@@ -65,13 +63,6 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                     </div>
                 </div>
             </div>
-
-            {/* Modal */}
-            <ProjectModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                project={project}
-            />
         </div>
     );
 }

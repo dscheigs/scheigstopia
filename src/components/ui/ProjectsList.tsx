@@ -2,11 +2,16 @@
 
 import { useState } from 'react';
 import ProjectCard from '@/components/ui/ProjectCard';
+import ProjectModal from '@/components/ui/ProjectModal';
 import SegmentedControl from '@/components/ui/SegmentedControl';
 import { mockProjects } from '@/data/mockProjects';
+import { Project } from '@/types/project';
 
 export default function ProjectsList() {
     const [selectedSection, setSelectedSection] = useState('Professional');
+    const [selectedProject, setSelectedProject] = useState<Project | null>(
+        null
+    );
 
     const filteredProjects = mockProjects.filter(
         (project) => project.type === selectedSection.toLowerCase()
@@ -40,10 +45,22 @@ export default function ProjectsList() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredProjects.map((project, index) => (
                     <div key={index} className="scroll-fade-in">
-                        <ProjectCard project={project} />
+                        <ProjectCard
+                            project={project}
+                            onReadMore={() => setSelectedProject(project)}
+                        />
                     </div>
                 ))}
             </div>
+
+            {/* Modal rendered at list level */}
+            {selectedProject && (
+                <ProjectModal
+                    isOpen={!!selectedProject}
+                    onClose={() => setSelectedProject(null)}
+                    project={selectedProject}
+                />
+            )}
         </>
     );
 }
