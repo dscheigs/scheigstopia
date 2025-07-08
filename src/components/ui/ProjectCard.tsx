@@ -18,11 +18,11 @@ export default function ProjectCard({ project, onReadMore }: ProjectCardProps) {
     };
 
     return (
-        <div className="relative w-full max-w-sm mx-auto group min-h-70 h-auto">
+        <div className="relative w-full max-w-sm mx-auto group h-75">
             {/* Card Container */}
             <div className="relative w-full h-full hover:scale-105 transition-transform duration-300">
                 <div className="w-full h-full bg-surface-minimal border border-border-minimal rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                    <div className="space-y-6 h-full flex flex-col">
+                    <div className="space-y-4 h-full flex flex-col">
                         {/* Project Name with Company Logo */}
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-md flex items-center justify-center border border-border-minimal flex-shrink-0">
