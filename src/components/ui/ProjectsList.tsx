@@ -7,25 +7,73 @@ import SegmentedControl from '@/components/ui/SegmentedControl';
 import { mockProjects } from '@/data/mockProjects';
 import { Project } from '@/types/project';
 
+/**
+ * NOTE: This component uses the experimental View Transitions API for animations.
+ * This is intentionally more complex than using simple CSS transitions. For learning purposes.
+ */
 export default function ProjectsList() {
     const [selectedSection, setSelectedSection] = useState('Professional');
     const [selectedProject, setSelectedProject] = useState<Project | null>(
         null
     );
 
-    const filteredProjects = mockProjects.filter(
-        (project) => project.type === selectedSection.toLowerCase()
+    const professionalProjects = mockProjects.filter(
+        (project) => project.type === 'professional'
+    );
+
+    const personalProjects = mockProjects.filter(
+        (project) => project.type === 'personal'
     );
 
     const handleSelectSection = (section: string) => {
+        // Don't animate if selecting the same section
+        if (section === selectedSection) {
+            return;
+        }
+
         if (!document.startViewTransition) {
             setSelectedSection(section);
             return;
         }
 
+        // Set transition direction BEFORE starting transition
+        const isGoingBackward =
+            selectedSection === 'Personal' && section === 'Professional';
+
+        console.log(
+            'Setting direction:',
+            isGoingBackward ? 'backward' : 'forward'
+        );
+
+        if (isGoingBackward) {
+            document.documentElement.setAttribute(
+                'data-transition-direction',
+                'backward'
+            );
+        } else {
+            document.documentElement.removeAttribute(
+                'data-transition-direction'
+            );
+        }
+
+        // Force a reflow to ensure attribute is set
+        void document.documentElement.offsetHeight;
+
+        console.log(
+            'Attribute set:',
+            document.documentElement.getAttribute('data-transition-direction')
+        );
+
         // With a transition:
-        document.startViewTransition(() => {
+        const transition = document.startViewTransition(() => {
             setSelectedSection(section);
+        });
+
+        transition.finished.finally(() => {
+            // Clean up after transition
+            document.documentElement.removeAttribute(
+                'data-transition-direction'
+            );
         });
     };
 
@@ -51,29 +99,50 @@ export default function ProjectsList() {
                     view-transition-name: project-grid;
                 }
                 
+                /* Base animations with CSS variables */
                 ::view-transition-old(project-grid),
                 ::view-transition-new(project-grid) {
-                    animation-duration: 0.4s;
+                    animation-duration: 0.2s;
                 }
                 
                 ::view-transition-old(project-grid) {
-                    animation-name: slide-out-down;
+                    animation-name: var(--slide-out-animation, slide-out-left);
                 }
                 
                 ::view-transition-new(project-grid) {
-                    animation-name: slide-in-up;
+                    animation-name: var(--slide-in-animation, slide-in-right);
                 }
                 
-                @keyframes slide-out-down {
+                /* Set animations based on direction */
+                html[data-transition-direction="backward"] {
+                    --slide-out-animation: slide-out-right;
+                    --slide-in-animation: slide-in-left;
+                }
+                
+                @keyframes slide-out-left {
                     to {
-                        transform: translateY(20px);
+                        transform: translateX(-30px);
                         opacity: 0;
                     }
                 }
                 
-                @keyframes slide-in-up {
+                @keyframes slide-in-left {
                     from {
-                        transform: translateY(20px);
+                        transform: translateX(-30px);
+                        opacity: 0;
+                    }
+                }
+                
+                @keyframes slide-out-right {
+                    to {
+                        transform: translateX(30px);
+                        opacity: 0;
+                    }
+                }
+                
+                @keyframes slide-in-right {
+                    from {
+                        transform: translateX(30px);
                         opacity: 0;
                     }
                 }
@@ -90,14 +159,29 @@ export default function ProjectsList() {
 
             {/* Project Cards Grid */}
             <div className="project-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredProjects.map((project, index) => (
-                    <div key={index} className="scroll-fade-in">
-                        <ProjectCard
-                            project={project}
-                            onReadMore={() => setSelectedProject(project)}
-                        />
-                    </div>
-                ))}
+                {selectedSection === 'Professional'
+                    ? professionalProjects.map((project, index) => (
+                          <div
+                              key={`professional-${index}`}
+                              className="scroll-fade-in"
+                          >
+                              <ProjectCard
+                                  project={project}
+                                  onReadMore={() => setSelectedProject(project)}
+                              />
+                          </div>
+                      ))
+                    : personalProjects.map((project, index) => (
+                          <div
+                              key={`personal-${index}`}
+                              className="scroll-fade-in"
+                          >
+                              <ProjectCard
+                                  project={project}
+                                  onReadMore={() => setSelectedProject(project)}
+                              />
+                          </div>
+                      ))}
             </div>
 
             {/* Modal rendered at list level */}
