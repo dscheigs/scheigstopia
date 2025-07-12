@@ -42,7 +42,8 @@ export default function HomeLink() {
 
     return (
         <>
-            <style>{`
+            <style>{
+                /*css*/ `
                 .name-fade {
                     opacity: 1;
                     transform: scaleX(1) rotateY(0deg);
@@ -60,7 +61,8 @@ export default function HomeLink() {
                 .s-letter.animated {
                     transform: translateX(-58%);
                 }
-            `}</style>
+            `
+            }</style>
             <div ref={triggerRef}>
                 <Link
                     title="(It's pronounced Shy-gert)"

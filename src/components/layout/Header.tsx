@@ -17,7 +17,8 @@ export default function Header() {
             {/* Fun little bit of css I stole from 
         https://developer.chrome.com/blog/new-in-web-ui-io-2024#anchor_positioning
         */}
-            <style>{`
+            <style>{
+                /*css*/ `
                 .nav-links::before {
                     content: '';
                     position: absolute;
@@ -62,7 +63,8 @@ export default function Header() {
                     position: relative;
                 }
                     
-            `}</style>
+            `
+            }</style>
             <header className="sticky top-0 z-50 bg-surface">
                 <nav
                     className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"

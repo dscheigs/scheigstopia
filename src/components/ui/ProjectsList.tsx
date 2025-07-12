@@ -31,7 +31,9 @@ export default function ProjectsList() {
 
     return (
         <>
-            <style>{`
+            <style>{
+                /*css*/ `
+            /* Scroll fade-in styles */
                 .scroll-fade-in {
                     animation: fade-in-out linear both;
                     animation-timeline: view();
@@ -75,7 +77,8 @@ export default function ProjectsList() {
                         opacity: 0;
                     }
                 }
-            `}</style>
+            `
+            }</style>
             <div className="flex justify-center mb-8">
                 <SegmentedControl
                     options={['Professional', 'Personal']}
