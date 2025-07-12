@@ -1,30 +1,28 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
-import ProjectModal from './ProjectModal';
 import Button from './Button';
 import { Project } from '@/types/project';
 
 interface ProjectCardProps {
     project: Project;
+    onReadMore: () => void;
 }
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default function ProjectCard({ project, onReadMore }: ProjectCardProps) {
     const { image, projectName, briefDescription } = project;
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleReadMore = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setIsModalOpen(true);
+        onReadMore();
     };
 
     return (
-        <div className="relative w-full max-w-sm mx-auto group min-h-70 h-auto">
+        <div className="relative w-full max-w-sm mx-auto group h-75">
             {/* Card Container */}
             <div className="relative w-full h-full hover:scale-105 transition-transform duration-300">
                 <div className="w-full h-full bg-surface-minimal border border-border-minimal rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                    <div className="space-y-6 h-full flex flex-col">
+                    <div className="space-y-4 h-full flex flex-col">
                         {/* Project Name with Company Logo */}
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-md flex items-center justify-center border border-border-minimal flex-shrink-0">
@@ -40,14 +38,14 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                                     )}
                                 </span>
                             </div>
-                            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-foreground leading-tight">
+                            <h3 className="text-subheading font-semibold text-foreground leading-tight">
                                 {projectName}
                             </h3>
                         </div>
 
                         {/* Brief Description */}
                         <div className="flex-1">
-                            <p className="text-sm sm:text-base text-text-minimal leading-relaxed">
+                            <p className="text-body text-text-minimal leading-relaxed">
                                 {briefDescription}
                             </p>
                         </div>
@@ -65,13 +63,6 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                     </div>
                 </div>
             </div>
-
-            {/* Modal */}
-            <ProjectModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                project={project}
-            />
         </div>
     );
 }
