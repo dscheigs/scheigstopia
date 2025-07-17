@@ -1,6 +1,13 @@
+type Image = {
+    src: string;
+    alt: string;
+    width?: number;
+    height?: number;
+};
+
 // Base project interface with common fields
 export interface BaseProject {
-    image: string;
+    headerImage?: Omit<Image, 'width' | 'height'>; // Optional header image
     projectName: string;
     briefDescription: string;
     detailedDescription: string;
@@ -17,6 +24,7 @@ export interface ProfessionalProject extends BaseProject {
 export interface PersonalProject extends BaseProject {
     type: 'personal';
     status?: 'completed' | 'in-progress' | 'planned';
+    images?: Image[];
 }
 
 // Union type for all projects

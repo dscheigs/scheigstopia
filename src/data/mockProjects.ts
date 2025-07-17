@@ -3,7 +3,10 @@ import { Project, ProfessionalProject, PersonalProject } from '@/types/project';
 const professionalProjects: ProfessionalProject[] = [
     {
         type: 'professional',
-        image: '/company-logo.png',
+        headerImage: {
+            src: '/CVNA.png',
+            alt: 'Carvana company logo',
+        },
         projectName: 'E-commerce Platform',
         briefDescription:
             'A comprehensive e-commerce solution with modern UX and robust backend infrastructure supporting thousands of concurrent users.',
@@ -27,7 +30,10 @@ const professionalProjects: ProfessionalProject[] = [
     },
     {
         type: 'professional',
-        image: '/startup-logo.png',
+        headerImage: {
+            src: '/GM.png',
+            alt: 'General Motors company logo',
+        },
         projectName: 'Mobile Analytics Dashboard',
         briefDescription:
             'Real-time analytics dashboard providing actionable insights for mobile app performance and user behavior analysis.',
@@ -51,7 +57,10 @@ const professionalProjects: ProfessionalProject[] = [
     },
     {
         type: 'professional',
-        image: '/enterprise-logo.png',
+        headerImage: {
+            src: '/CVNA.png',
+            alt: 'Carvana company logo',
+        },
         projectName: 'Microservices Architecture',
         briefDescription:
             'Enterprise-grade microservices architecture enabling scalable, maintainable, and fault-tolerant distributed systems.',
@@ -76,7 +85,10 @@ const professionalProjects: ProfessionalProject[] = [
     },
     {
         type: 'professional',
-        image: '/fintech-logo.png',
+        headerImage: {
+            src: '/GM.png',
+            alt: 'General Motors company logo',
+        },
         projectName: 'Financial Trading Platform',
         briefDescription:
             'High-frequency trading platform with real-time market data processing and algorithmic trading capabilities.',
@@ -103,7 +115,6 @@ const professionalProjects: ProfessionalProject[] = [
 const personalProjects: PersonalProject[] = [
     {
         type: 'personal',
-        image: '/personal-blog.png',
         projectName: 'Personal Blog & Portfolio',
         briefDescription:
             'A modern, responsive blog and portfolio site built with Next.js, featuring markdown support and dynamic content management.',
@@ -120,7 +131,6 @@ const personalProjects: PersonalProject[] = [
     },
     {
         type: 'personal',
-        image: '/task-manager.png',
         projectName: 'Task Management App',
         briefDescription:
             'A full-stack task management application with real-time collaboration, drag-and-drop functionality, and team workspaces.',
@@ -138,7 +148,6 @@ const personalProjects: PersonalProject[] = [
     },
     {
         type: 'personal',
-        image: '/weather-app.png',
         projectName: 'Weather Forecast App',
         briefDescription:
             'A beautiful weather application with location-based forecasts, interactive maps, and severe weather alerts.',
@@ -155,7 +164,6 @@ const personalProjects: PersonalProject[] = [
     },
     {
         type: 'personal',
-        image: '/crypto-tracker.png',
         projectName: 'Cryptocurrency Tracker',
         briefDescription:
             'Real-time cryptocurrency portfolio tracker with price alerts, news integration, and advanced analytics.',
@@ -172,7 +180,6 @@ const personalProjects: PersonalProject[] = [
     },
     {
         type: 'personal',
-        image: '/recipe-app.png',
         projectName: 'Recipe Sharing Platform',
         briefDescription:
             'A social platform for sharing and discovering recipes with meal planning, shopping lists, and nutrition tracking.',

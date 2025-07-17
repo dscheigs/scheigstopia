@@ -10,7 +10,7 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, onReadMore }: ProjectCardProps) {
-    const { image, projectName, briefDescription } = project;
+    const { headerImage, projectName, briefDescription } = project;
 
     const handleReadMore = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -25,19 +25,19 @@ export default function ProjectCard({ project, onReadMore }: ProjectCardProps) {
                     <div className="space-y-4 h-full flex flex-col">
                         {/* Project Name with Company Logo */}
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md flex items-center justify-center border border-border-minimal flex-shrink-0">
-                                <span className="text-foreground font-medium text-sm">
-                                    {image && (
+                            {headerImage && (
+                                <div className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0">
+                                    <span className="text-foreground font-medium text-sm">
                                         <Image
+                                            src={headerImage.src}
+                                            alt={headerImage.alt}
                                             width={10}
                                             height={10}
-                                            src={image}
-                                            alt={`${projectName} logo`}
                                             className="w-10 h-10 object-cover rounded-md"
                                         />
-                                    )}
-                                </span>
-                            </div>
+                                    </span>
+                                </div>
+                            )}
                             <h3 className="text-subheading font-semibold text-foreground leading-tight">
                                 {projectName}
                             </h3>
