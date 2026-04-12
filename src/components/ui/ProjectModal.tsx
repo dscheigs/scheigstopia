@@ -50,9 +50,47 @@ export default function ProjectModal({
                     <h3 className="text-section-title font-semibold text-foreground mb-3">
                         Project Overview
                     </h3>
-                    <p className="text-body text-text-minimal leading-relaxed">
-                        {detailedDescription}
-                    </p>
+                    {typeof detailedDescription === 'string' ? (
+                        <p className="text-body text-text-minimal leading-relaxed">
+                            {detailedDescription}
+                        </p>
+                    ) : (
+                        <div className="space-y-4">
+                            {detailedDescription.map((block, index) => {
+                                if (block.type === 'paragraph') {
+                                    return (
+                                        <p
+                                            key={index}
+                                            className="text-body text-text-minimal leading-relaxed"
+                                        >
+                                            {block.content}
+                                        </p>
+                                    );
+                                }
+                                if (block.type === 'list') {
+                                    return (
+                                        <ul
+                                            key={index}
+                                            className="space-y-2 ml-4"
+                                        >
+                                            {block.items.map((item, i) => (
+                                                <li
+                                                    key={i}
+                                                    className="text-body text-text-minimal flex items-start gap-3"
+                                                >
+                                                    <span className="text-foreground text-sm mt-1 flex-shrink-0">
+                                                        •
+                                                    </span>
+                                                    {item}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    );
+                                }
+                                return null;
+                            })}
+                        </div>
+                    )}
                 </div>
 
                 {/* Technologies Used */}

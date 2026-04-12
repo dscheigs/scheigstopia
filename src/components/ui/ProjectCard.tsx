@@ -27,15 +27,13 @@ export default function ProjectCard({ project, onReadMore }: ProjectCardProps) {
                         <div className="flex items-center gap-3">
                             {headerImage && (
                                 <div className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0">
-                                    <span className="text-foreground font-medium text-sm">
-                                        <Image
-                                            src={headerImage.src}
-                                            alt={headerImage.alt}
-                                            width={10}
-                                            height={10}
-                                            className="w-10 h-10 object-cover rounded-md"
-                                        />
-                                    </span>
+                                    <Image
+                                        src={headerImage.src}
+                                        alt={headerImage.alt}
+                                        width={80}
+                                        height={80}
+                                        className="w-10 h-10 object-contain rounded-md"
+                                    />
                                 </div>
                             )}
                             <h3 className="text-subheading font-semibold text-foreground leading-tight">

@@ -131,68 +131,26 @@ const personalProjects: PersonalProject[] = [
     },
     {
         type: 'personal',
-        projectName: 'Task Management App',
+        projectName: 'Hot Sauce Project',
         briefDescription:
-            'A full-stack task management application with real-time collaboration, drag-and-drop functionality, and team workspaces.',
-        detailedDescription:
-            'Built a comprehensive task management application inspired by modern productivity tools. Features include real-time collaboration, drag-and-drop task organization, team workspaces, file attachments, and notification system. Uses WebSocket for real-time updates.',
-        technologies: [
-            'React',
-            'TypeScript',
-            'Node.js',
-            'Socket.io',
-            'MongoDB',
-            'Express',
+            'Growing jalapeño and cayenne peppers in the Phoenix desert to produce homemade hot sauce, experimenting with cultivation techniques and desert agriculture.',
+        detailedDescription: [
+            {
+                type: 'paragraph',
+                content:
+                    'I grow jalapeño and cayenne peppers with the goal of producing my own hot sauce. What started as a few plants in pots has grown into a more deliberate setup. I recently moved everything into galvanized raised beds, dialing in soil composition, irrigation, and shade management for the desert heat.',
+            },
+            {
+                type: 'paragraph',
+                content:
+                    "Along the way I've worked through the usual challenges: transplant shock, pest management, and figuring out what actually keeps plants healthy through a Phoenix summer. It's an ongoing experiment, and the hot sauce is the goal that keeps it interesting.",
+            },
+            {
+                type: 'paragraph',
+                content:
+                    "I'm still working on nailing down a recipe I actually like. It's been a lot of trial and error, tweaking fermentation times, adjusting spice ratios, and figuring out what balance of heat and flavor works best. Each batch teaches me something new.",
+            },
         ],
-        status: 'completed',
-    },
-    {
-        type: 'personal',
-        projectName: 'Weather Forecast App',
-        briefDescription:
-            'A beautiful weather application with location-based forecasts, interactive maps, and severe weather alerts.',
-        detailedDescription:
-            'Developed a modern weather application that provides detailed forecasts, interactive weather maps, and push notifications for severe weather alerts. Features location-based forecasts, historical weather data, and beautiful data visualizations.',
-        technologies: [
-            'React Native',
-            'TypeScript',
-            'OpenWeather API',
-            'Mapbox',
-            'Redux Toolkit',
-        ],
-        status: 'completed',
-    },
-    {
-        type: 'personal',
-        projectName: 'Cryptocurrency Tracker',
-        briefDescription:
-            'Real-time cryptocurrency portfolio tracker with price alerts, news integration, and advanced analytics.',
-        detailedDescription:
-            'Currently building a comprehensive cryptocurrency portfolio tracker that provides real-time price updates, portfolio analytics, price alerts, and integrated news feed. Features include portfolio diversification analysis and automated trading strategies.',
-        technologies: [
-            'Vue.js',
-            'TypeScript',
-            'Firebase',
-            'CoinGecko API',
-            'Chart.js',
-        ],
-        status: 'in-progress',
-    },
-    {
-        type: 'personal',
-        projectName: 'Recipe Sharing Platform',
-        briefDescription:
-            'A social platform for sharing and discovering recipes with meal planning, shopping lists, and nutrition tracking.',
-        detailedDescription:
-            'Planning to create a social recipe sharing platform where users can discover, save, and share recipes. Will include features like meal planning, automatic shopping list generation, nutrition tracking, and recipe rating system.',
-        technologies: [
-            'Next.js',
-            'TypeScript',
-            'Prisma',
-            'PostgreSQL',
-            'NextAuth.js',
-        ],
-        status: 'planned',
     },
 ];
 
