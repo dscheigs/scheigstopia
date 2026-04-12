@@ -3,99 +3,127 @@ import { Project, ProfessionalProject, PersonalProject } from '@/types/project';
 const professionalProjects: ProfessionalProject[] = [
     {
         type: 'professional',
-        image: '/company-logo.png',
-        projectName: 'E-commerce Platform',
+        headerImage: {
+            src: '/CVNA.png',
+            alt: 'Carvana company logo',
+        },
+        projectName: 'Vehicle Inspection Platform',
         briefDescription:
-            'A comprehensive e-commerce solution with modern UX and robust backend infrastructure supporting thousands of concurrent users.',
-        detailedDescription:
-            'Built a full-stack e-commerce platform from the ground up, featuring user authentication, product catalog management, shopping cart functionality, secure payment processing, and order tracking. The platform handles high traffic volumes with optimized database queries and caching strategies.',
-        technologies: [
-            'React',
-            'TypeScript',
-            'Node.js',
-            'PostgreSQL',
-            'Redis',
-            'Stripe API',
+            'Web application for vehicle inspection workflows, featuring real-time collaboration and third-party device integrations.',
+        detailedDescription: [
+            {
+                type: 'paragraph',
+                content:
+                    'Developed a web application for vehicle inspection workflows as part of a small team. The platform evolved from a focused tool into a comprehensive solution used across multiple facilities.',
+            },
+            {
+                type: 'paragraph',
+                content:
+                    'Contributed to building real-time collaboration features and integrating third-party scanning capabilities. Focused on creating intuitive user experiences that required minimal training. Promoted from Engineer II to Senior Engineer based on contributions to the project.',
+            },
         ],
+        technologies: ['React', 'TypeScript', 'SignalR'],
         contributions: [
-            'Led frontend development team of 4 developers',
-            'Implemented secure authentication and authorization system',
-            'Optimized database queries reducing load times by 60%',
-            'Integrated payment processing with multiple providers',
-            'Built responsive design supporting mobile and desktop',
+            'Built real-time collaborative features for inspection workflows',
+            'Integrated third-party device SDKs',
+            'Designed intuitive user interfaces requiring minimal training',
+            'Promoted from Engineer II to Senior Engineer',
         ],
     },
     {
         type: 'professional',
-        image: '/startup-logo.png',
-        projectName: 'Mobile Analytics Dashboard',
+        headerImage: {
+            src: '/CVNA.png',
+            alt: 'Carvana company logo',
+        },
+        projectName: 'Vehicle Tracking Application',
         briefDescription:
-            'Real-time analytics dashboard providing actionable insights for mobile app performance and user behavior analysis.',
-        detailedDescription:
-            'Developed a comprehensive analytics platform that processes millions of events daily, providing real-time insights into user behavior, app performance, and business metrics. The dashboard features customizable widgets, automated reporting, and advanced data visualization.',
-        technologies: [
-            'Vue.js',
-            'Python',
-            'Django',
-            'MongoDB',
-            'D3.js',
-            'WebSocket',
+            'Greenfield location tracking application with barcode scanning capabilities and real-time updates.',
+        detailedDescription: [
+            {
+                type: 'paragraph',
+                content:
+                    'Led frontend development for a greenfield tracking application designed to improve operational efficiency. Built support for multiple scanning methods and real-time location updates.',
+            },
         ],
+        technologies: ['React', 'TypeScript'],
         contributions: [
-            'Built mobile-responsive interface with custom data visualizations',
-            'Developed high-performance REST API handling 10K+ requests/minute',
-            'Implemented real-time features using WebSocket connections',
-            'Created automated reporting system with email notifications',
-            'Optimized database aggregation queries for large datasets',
+            'Led frontend development as Senior Engineer I',
+            'Built scanning integration supporting multiple input methods',
+            'Implemented real-time tracking features',
+            'Developed greenfield application from concept to production',
         ],
     },
     {
         type: 'professional',
-        image: '/enterprise-logo.png',
-        projectName: 'Microservices Architecture',
+        headerImage: {
+            src: '/GM.png',
+            alt: 'General Motors company logo',
+        },
+        projectName: 'Accessories eCommerce Platform',
         briefDescription:
-            'Enterprise-grade microservices architecture enabling scalable, maintainable, and fault-tolerant distributed systems.',
-        detailedDescription:
-            'Architected and implemented a comprehensive microservices ecosystem for a large enterprise application, breaking down a monolithic system into 12 independent services. The architecture includes service discovery, load balancing, circuit breakers, and comprehensive monitoring.',
-        technologies: [
-            'Angular',
-            'Java',
-            'Spring Boot',
-            'MySQL',
-            'Docker',
-            'Kubernetes',
-            'Jenkins',
+            'Led frontend modernization of GM accessories eCommerce platform, migrating from legacy AngularJS to React while maintaining WebSphere Commerce backend.',
+        detailedDescription: [
+            {
+                type: 'paragraph',
+                content:
+                    'Part of a large team responsible for creating and maintaining an accessories eCommerce platform for GM. Originally built on WebSphere Commerce (formerly IBM) with a Java backend and AngularJS frontend, a significant portion of my work involved leading the frontend migration to React while the Java backend remained largely unchanged.',
+            },
+            {
+                type: 'paragraph',
+                content:
+                    'The complete UI rewrite significantly improved the user experience in both speed and flow. A key challenge was getting the entire team up to speed with React within an aggressive timeline, requiring rapid knowledge sharing and establishing new development patterns.',
+            },
+            {
+                type: 'paragraph',
+                content:
+                    'Beyond the frontend work, I integrated various third-party services including payment gateways like Klarna, and connected inventory and content management systems. I also built and maintained the image server infrastructure, including writing scripts that processed and uploaded product images nightly, ensuring optimal performance and scalability.',
+            },
         ],
+        technologies: ['React', 'Java', 'WebSphere Commerce', 'AngularJS'],
         contributions: [
-            'Architected microservices breaking down monolithic application',
-            'Mentored team of 8 junior developers on best practices',
-            'Improved system performance by 40% and reduced deployment time by 70%',
-            'Implemented comprehensive monitoring and alerting system',
-            'Established CI/CD pipeline with automated testing and deployment',
+            'Led frontend migration from AngularJS to React for 40-person team',
+            'Completed full UI rewrite improving user experience and performance',
+            'Built automated nightly image processing and upload system',
+            'Integrated payment gateways including Klarna',
+            'Connected inventory and content management systems',
+            'Maintained high-performance image server infrastructure',
         ],
     },
     {
         type: 'professional',
-        image: '/fintech-logo.png',
-        projectName: 'Financial Trading Platform',
+        headerImage: {
+            src: '/GM.png',
+            alt: 'General Motors company logo',
+        },
+        projectName: 'Shop Click Drive',
         briefDescription:
-            'High-frequency trading platform with real-time market data processing and algorithmic trading capabilities.',
-        detailedDescription:
-            'Built a sophisticated trading platform capable of processing thousands of trades per second with sub-millisecond latency. The system includes real-time market data feeds, risk management, portfolio tracking, and automated trading algorithms with comprehensive audit trails.',
-        technologies: [
-            'React',
-            'C++',
-            'Python',
-            'Apache Kafka',
-            'InfluxDB',
-            'WebSocket',
+            'Digital showroom and lead generation platform for GM vehicles, transitioning from frontend development to Application Owner role leading DevOps initiatives.',
+        detailedDescription: [
+            {
+                type: 'paragraph',
+                content:
+                    'Part of a team responsible for maintaining a digital showroom and lead generation application for GM vehicles. The platform allowed users to explore different vehicle models, view detailed specifications, and schedule test drives, serving as a critical tool for dealership lead generation.',
+            },
+            {
+                type: 'paragraph',
+                content:
+                    'Initially focused on frontend development, ensuring the Angular application was responsive and user-friendly. As the project evolved, I transitioned into an Application Owner role, taking on broader responsibilities for the platform health and deployment infrastructure.',
+            },
+            {
+                type: 'paragraph',
+                content:
+                    'In this expanded role, I led our team initial foray into DevOps practices. This included setting up CI/CD pipelines in Azure DevOps, automating deployments, and building a more maintainable build system. I was primarily responsible for ensuring our applications met security and failover compliance standards, working to establish reliability practices across the team.',
+            },
         ],
+        technologies: ['Angular', 'Azure DevOps', 'CI/CD'],
         contributions: [
-            'Developed ultra-low latency trading engine in C++',
-            'Implemented real-time market data processing pipeline',
-            'Built risk management system with automated position limits',
-            'Created comprehensive audit and compliance reporting',
-            'Optimized system achieving sub-millisecond trade execution',
+            'Built responsive frontend for vehicle showroom application',
+            'Transitioned to Application Owner role overseeing platform health',
+            'Led team DevOps initiative and established CI/CD practices',
+            'Set up automated deployment pipelines in Azure DevOps',
+            'Ensured security and failover compliance standards',
+            'Built maintainable build and deployment infrastructure',
         ],
     },
 ];
@@ -103,7 +131,6 @@ const professionalProjects: ProfessionalProject[] = [
 const personalProjects: PersonalProject[] = [
     {
         type: 'personal',
-        image: '/personal-blog.png',
         projectName: 'Personal Blog & Portfolio',
         briefDescription:
             'A modern, responsive blog and portfolio site built with Next.js, featuring markdown support and dynamic content management.',
@@ -120,72 +147,26 @@ const personalProjects: PersonalProject[] = [
     },
     {
         type: 'personal',
-        image: '/task-manager.png',
-        projectName: 'Task Management App',
+        projectName: 'Hot Sauce Project',
         briefDescription:
-            'A full-stack task management application with real-time collaboration, drag-and-drop functionality, and team workspaces.',
-        detailedDescription:
-            'Built a comprehensive task management application inspired by modern productivity tools. Features include real-time collaboration, drag-and-drop task organization, team workspaces, file attachments, and notification system. Uses WebSocket for real-time updates.',
-        technologies: [
-            'React',
-            'TypeScript',
-            'Node.js',
-            'Socket.io',
-            'MongoDB',
-            'Express',
+            'Growing jalapeño and cayenne peppers in the Phoenix desert to produce homemade hot sauce, experimenting with cultivation techniques and desert agriculture.',
+        detailedDescription: [
+            {
+                type: 'paragraph',
+                content:
+                    'I grow jalapeño and cayenne peppers with the goal of producing my own hot sauce. What started as a few plants in pots has grown into a more deliberate setup. I recently moved everything into galvanized raised beds, dialing in soil composition, irrigation, and shade management for the desert heat.',
+            },
+            {
+                type: 'paragraph',
+                content:
+                    "Along the way I've worked through the usual challenges: transplant shock, pest management, and figuring out what actually keeps plants healthy through a Phoenix summer. It's an ongoing experiment, and the hot sauce is the goal that keeps it interesting.",
+            },
+            {
+                type: 'paragraph',
+                content:
+                    "I'm still working on nailing down a recipe I actually like. It's been a lot of trial and error, tweaking fermentation times, adjusting spice ratios, and figuring out what balance of heat and flavor works best. Each batch teaches me something new.",
+            },
         ],
-        status: 'completed',
-    },
-    {
-        type: 'personal',
-        image: '/weather-app.png',
-        projectName: 'Weather Forecast App',
-        briefDescription:
-            'A beautiful weather application with location-based forecasts, interactive maps, and severe weather alerts.',
-        detailedDescription:
-            'Developed a modern weather application that provides detailed forecasts, interactive weather maps, and push notifications for severe weather alerts. Features location-based forecasts, historical weather data, and beautiful data visualizations.',
-        technologies: [
-            'React Native',
-            'TypeScript',
-            'OpenWeather API',
-            'Mapbox',
-            'Redux Toolkit',
-        ],
-        status: 'completed',
-    },
-    {
-        type: 'personal',
-        image: '/crypto-tracker.png',
-        projectName: 'Cryptocurrency Tracker',
-        briefDescription:
-            'Real-time cryptocurrency portfolio tracker with price alerts, news integration, and advanced analytics.',
-        detailedDescription:
-            'Currently building a comprehensive cryptocurrency portfolio tracker that provides real-time price updates, portfolio analytics, price alerts, and integrated news feed. Features include portfolio diversification analysis and automated trading strategies.',
-        technologies: [
-            'Vue.js',
-            'TypeScript',
-            'Firebase',
-            'CoinGecko API',
-            'Chart.js',
-        ],
-        status: 'in-progress',
-    },
-    {
-        type: 'personal',
-        image: '/recipe-app.png',
-        projectName: 'Recipe Sharing Platform',
-        briefDescription:
-            'A social platform for sharing and discovering recipes with meal planning, shopping lists, and nutrition tracking.',
-        detailedDescription:
-            'Planning to create a social recipe sharing platform where users can discover, save, and share recipes. Will include features like meal planning, automatic shopping list generation, nutrition tracking, and recipe rating system.',
-        technologies: [
-            'Next.js',
-            'TypeScript',
-            'Prisma',
-            'PostgreSQL',
-            'NextAuth.js',
-        ],
-        status: 'planned',
     },
 ];
 

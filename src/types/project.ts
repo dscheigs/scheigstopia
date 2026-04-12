@@ -1,9 +1,21 @@
+type Image = {
+    src: string;
+    alt: string;
+    width?: number;
+    height?: number;
+};
+
+// Content block types for structured descriptions
+export type ContentBlock =
+    | { type: 'paragraph'; content: string }
+    | { type: 'list'; items: string[] };
+
 // Base project interface with common fields
 export interface BaseProject {
-    image: string;
+    headerImage?: Omit<Image, 'width' | 'height'>; // Optional header image
     projectName: string;
     briefDescription: string;
-    detailedDescription: string;
+    detailedDescription: string | ContentBlock[];
     technologies?: string[];
 }
 
@@ -17,6 +29,7 @@ export interface ProfessionalProject extends BaseProject {
 export interface PersonalProject extends BaseProject {
     type: 'personal';
     status?: 'completed' | 'in-progress' | 'planned';
+    images?: Image[];
 }
 
 // Union type for all projects

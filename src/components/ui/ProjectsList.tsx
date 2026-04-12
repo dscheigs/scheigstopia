@@ -40,11 +40,6 @@ export default function ProjectsList() {
         const isGoingBackward =
             selectedSection === 'Personal' && section === 'Professional';
 
-        console.log(
-            'Setting direction:',
-            isGoingBackward ? 'backward' : 'forward'
-        );
-
         if (isGoingBackward) {
             document.documentElement.setAttribute(
                 'data-transition-direction',
@@ -58,11 +53,6 @@ export default function ProjectsList() {
 
         // Force a reflow to ensure attribute is set
         void document.documentElement.offsetHeight;
-
-        console.log(
-            'Attribute set:',
-            document.documentElement.getAttribute('data-transition-direction')
-        );
 
         // With a transition:
         const transition = document.startViewTransition(() => {
