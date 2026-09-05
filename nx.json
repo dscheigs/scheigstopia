@@ -27,7 +27,10 @@
         "changelog": {
             "workspaceChangelog": false,
             "projectChangelogs": {
-                "createRelease": false
+                "createRelease": false,
+                "renderOptions": {
+                    "authors": false
+                }
             }
         }
     },
