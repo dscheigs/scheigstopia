@@ -146,14 +146,9 @@ The project follows a **minimalistic color approach** with strategic use of colo
 </div>
 ```
 
-<!-- nx configuration start-->
-<!-- Leave the start & end comments to automatically receive updates. -->
+## Working with Nx
 
-## General Guidelines for working with Nx
-
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- Prefix nx commands with the workspace's package manager (e.g., `pnpm nx build`) - avoids using a globally installed CLI
-- NEVER guess CLI flags - check `nx <command> --help` when unsure
-- When adding a new Nx plugin, use `nx add <plugin>` so its init generator runs
-
-<!-- nx configuration end-->
+- Run tasks through `nx` (`nx run`, `nx run-many`, `nx affected`), not the underlying tool directly, so caching applies.
+- Prefix with the package manager: `pnpm nx build`.
+- Check `nx <command> --help` rather than guessing flags.
+- Add plugins with `nx add <plugin>` so the init generator runs.
