@@ -1,33 +1,29 @@
-# Scheigstopia
+# scheigs
 
-A Next.js application built with TypeScript and Tailwind CSS. My humble internet cottage
+An Nx monorepo (pnpm workspaces).
 
-## Getting Started
+## Contents
 
-Install dependencies:
+| Path                | What                                                          |
+| ------------------- | ------------------------------------------------------------- |
+| `apps/scheigstopia` | Personal site — Next.js 15, App Router, TypeScript, Tailwind. |
+| `packages/`         | Shared, publishable packages (none yet).                      |
+
+## Getting started
 
 ```bash
 pnpm install
+pnpm dev            # runs apps/scheigstopia on http://localhost:3000
 ```
 
-Run the development server:
+## Common commands
 
 ```bash
-pnpm dev
+pnpm build                          # build the site
+pnpm lint                           # eslint, all projects
+pnpm type-check                     # tsc --noEmit, all projects
+pnpm graph                          # Nx project graph
+nx affected -t build lint typecheck # only what changed
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Commands
-
-- `pnpm dev` - Start development server
-- `pnpm build` - Build for production
-- `pnpm start` - Start production server
-- `pnpm lint` - Run linting
-
-## Tech Stack
-
-- Next.js 15 with App Router
-- TypeScript
-- Tailwind CSS
-- ESLint & Prettier
+Requires Node 22 and pnpm (the `packageManager` field pins the version).

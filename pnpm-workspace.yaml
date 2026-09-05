@@ -1,5 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
 # pnpm blocks dependency install scripts by default (supply-chain guard).
 # Only these vetted native-binary builds are allowed to run postinstall.
 allowBuilds:
+  '@swc/core': true
   '@tailwindcss/oxide': true
+  nx: true
   unrs-resolver: true

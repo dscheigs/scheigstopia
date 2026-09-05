@@ -1,17 +1,16 @@
 {
-    "name": "scheigstopia",
-    "version": "0.1.0",
+    "name": "@scheigs/source",
+    "version": "0.0.0",
     "private": true,
     "scripts": {
-        "dev": "next dev --turbopack",
-        "build": "next build",
-        "start": "next start",
-        "lint": "next lint",
-        "lint:fix": "next lint --fix",
-        "type-check": "tsc --noEmit",
+        "dev": "nx dev scheigstopia",
+        "build": "nx build scheigstopia",
+        "start": "nx start scheigstopia",
+        "lint": "nx run-many -t lint",
+        "type-check": "nx run-many -t typecheck",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
-        "clean": "rm -rf .next out node_modules/.cache",
+        "graph": "nx graph",
         "prepare": "husky"
     },
     "dependencies": {
@@ -21,6 +20,10 @@
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3",
+        "@nx/eslint": "23.2.0",
+        "@nx/next": "23.2.0",
+        "@swc-node/register": "^1.12.1",
+        "@swc/core": "^1.16.2",
         "@tailwindcss/postcss": "^4",
         "@types/node": "^20",
         "@types/react": "^19",
@@ -29,13 +32,20 @@
         "eslint-config-next": "15.5.25",
         "husky": "^9.1.7",
         "lint-staged": "^16.1.2",
+        "nx": "23.2.0",
         "prettier": "3.5.3",
         "tailwindcss": "^4",
         "typescript": "^5"
     },
     "lint-staged": {
-        "**/*": "prettier --write --ignore-unknown",
-        "*.{ts,tsx,js,cjs,mjs}": "next lint --fix --file"
+        "**/*": "prettier --write --ignore-unknown"
     },
-    "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457"
+    "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457",
+    "nx": {
+        "includedScripts": []
+    },
+    "engines": {
+        "node": ">=22",
+        "pnpm": ">=12"
+    }
 }
