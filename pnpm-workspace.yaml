@@ -1,0 +1,5 @@
+# pnpm blocks dependency install scripts by default (supply-chain guard).
+# Only these vetted native-binary builds are allowed to run postinstall.
+allowBuilds:
+  '@tailwindcss/oxide': true
+  unrs-resolver: true

@@ -7,23 +7,23 @@ A Next.js application built with TypeScript and Tailwind CSS. My humble internet
 Install dependencies:
 
 ```bash
-yarn install
+pnpm install
 ```
 
 Run the development server:
 
 ```bash
-yarn dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Commands
 
-- `yarn dev` - Start development server
-- `yarn build` - Build for production
-- `yarn start` - Start production server
-- `yarn lint` - Run linting
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run linting
 
 ## Tech Stack
 

@@ -8,15 +8,15 @@ This is a Next.js 15 application with TypeScript, using the App Router architect
 
 ## Development Commands
 
-- `yarn dev` - Start development server with Turbopack for faster builds
-- `yarn build` - Build the application for production
-- `yarn start` - Start the production server
-- `yarn lint` - Run Next.js linter to check code quality
-- `yarn lint:fix` - Auto-fix linting issues
-- `yarn type-check` - Check TypeScript without building
-- `yarn format` - Format all files with Prettier
-- `yarn format:check` - Check if files are formatted
-- `yarn clean` - Clean build artifacts and cache
+- `pnpm dev` - Start development server with Turbopack for faster builds
+- `pnpm build` - Build the application for production
+- `pnpm start` - Start the production server
+- `pnpm lint` - Run Next.js linter to check code quality
+- `pnpm lint:fix` - Auto-fix linting issues
+- `pnpm type-check` - Check TypeScript without building
+- `pnpm format` - Format all files with Prettier
+- `pnpm format:check` - Check if files are formatted
+- `pnpm clean` - Clean build artifacts and cache
 
 ## Code Quality & Git Workflow
 
