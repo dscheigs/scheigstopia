@@ -21,9 +21,11 @@
     "devDependencies": {
         "@eslint/eslintrc": "^3",
         "@nx/eslint": "23.2.0",
+        "@nx/js": "23.2.0",
         "@nx/next": "23.2.0",
         "@swc-node/register": "^1.12.1",
         "@swc/core": "^1.16.2",
+        "@swc/helpers": "~0.5.18",
         "@tailwindcss/postcss": "^4",
         "@types/node": "^20",
         "@types/react": "^19",
@@ -34,6 +36,7 @@
         "lint-staged": "^16.1.2",
         "nx": "23.2.0",
         "prettier": "3.5.3",
+        "style-dictionary": "^5.5.2",
         "tailwindcss": "^4",
         "typescript": "^5"
     },

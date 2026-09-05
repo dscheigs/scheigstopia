@@ -1,0 +1,179 @@
+{
+    "$schema": "https://tr.designtokens.org/format/",
+    "color": {
+        "$type": "color",
+
+        "light": {
+            "bg": {
+                "canvas": {
+                    "$value": "{color.base.canvas-light}",
+                    "$description": "The page itself"
+                },
+                "surface": {
+                    "$value": "{color.neutral.50}",
+                    "$description": "Cards, panels, modals — minimal content surfaces"
+                },
+                "surface-hover": { "$value": "{color.neutral.100}" },
+                "raised": {
+                    "$value": "{color.base.white}",
+                    "$description": "Surface that should sit above its neighbours (menus, popovers)"
+                },
+                "sunken": {
+                    "$value": "{color.neutral.100}",
+                    "$description": "Inset wells, code blocks, track backgrounds"
+                },
+                "tinted": {
+                    "$value": "{color.sage.100}",
+                    "$description": "Brand-tinted surface — hero bands, feature callouts, nav"
+                },
+                "tinted-hover": { "$value": "{color.sage.200}" },
+                "inverse": {
+                    "$value": "{color.neutral.900}",
+                    "$description": "High-contrast block against the canvas"
+                }
+            },
+            "text": {
+                "primary": { "$value": "{color.base.ink-light}" },
+                "secondary": {
+                    "$value": "{color.neutral.600}",
+                    "$description": "Supporting copy — passes AA for body text"
+                },
+                "muted": {
+                    "$value": "{color.neutral.500}",
+                    "$description": "Metadata, captions — AA Large only, do not use for essential body text"
+                },
+                "on-accent": {
+                    "$value": "{color.base.white}",
+                    "$description": "Text on action.primary / action.accent fills"
+                },
+                "on-inverse": { "$value": "{color.neutral.50}" },
+                "link": { "$value": "{color.green.700}" }
+            },
+            "border": {
+                "subtle": {
+                    "$value": "{color.neutral.200}",
+                    "$description": "Hairline dividers"
+                },
+                "default": {
+                    "$value": "{color.neutral.300}",
+                    "$description": "Standard container edges"
+                },
+                "strong": {
+                    "$value": "{color.neutral.400}",
+                    "$description": "Inputs, emphasised edges"
+                },
+                "tinted": {
+                    "$value": "{color.sage.300}",
+                    "$description": "Edge on brand-tinted surfaces"
+                },
+                "focus": {
+                    "$value": "{color.green.500}",
+                    "$description": "Keyboard focus ring"
+                }
+            },
+            "action": {
+                "primary": {
+                    "$value": "{color.green.800}",
+                    "$description": "Primary button / primary interactive fill"
+                },
+                "primary-hover": { "$value": "{color.green.700}" },
+                "primary-active": { "$value": "{color.green.900}" },
+                "primary-text": { "$value": "{color.base.white}" },
+                "accent": {
+                    "$value": "{color.green.400}",
+                    "$description": "Decorative brand highlight — underlines, markers, chart keys. Not a text colour on light grounds."
+                }
+            },
+            "feedback": {
+                "success": {
+                    "surface": { "$value": "{color.success.50}" },
+                    "border": { "$value": "{color.success.300}" },
+                    "fg": { "$value": "{color.success.700}" },
+                    "solid": { "$value": "{color.success.600}" }
+                },
+                "warning": {
+                    "surface": { "$value": "{color.warning.50}" },
+                    "border": { "$value": "{color.warning.300}" },
+                    "fg": { "$value": "{color.warning.700}" },
+                    "solid": { "$value": "{color.warning.600}" }
+                },
+                "error": {
+                    "surface": { "$value": "{color.error.50}" },
+                    "border": { "$value": "{color.error.300}" },
+                    "fg": { "$value": "{color.error.700}" },
+                    "solid": { "$value": "{color.error.600}" }
+                },
+                "info": {
+                    "surface": { "$value": "{color.info.50}" },
+                    "border": { "$value": "{color.info.300}" },
+                    "fg": { "$value": "{color.info.700}" },
+                    "solid": { "$value": "{color.info.600}" }
+                }
+            }
+        },
+
+        "dark": {
+            "bg": {
+                "canvas": { "$value": "{color.base.canvas-dark}" },
+                "surface": { "$value": "{color.neutral.900}" },
+                "surface-hover": { "$value": "{color.neutral.800}" },
+                "raised": { "$value": "{color.neutral.800}" },
+                "sunken": { "$value": "{color.neutral.950}" },
+                "tinted": { "$value": "{color.sage.900}" },
+                "tinted-hover": { "$value": "{color.sage.800}" },
+                "inverse": { "$value": "{color.neutral.100}" }
+            },
+            "text": {
+                "primary": { "$value": "{color.base.ink-dark}" },
+                "secondary": { "$value": "{color.neutral.400}" },
+                "muted": { "$value": "{color.sage.400}" },
+                "on-accent": {
+                    "$value": "{color.green.950}",
+                    "$description": "Dark ink on the light-green fills used in dark mode"
+                },
+                "on-inverse": { "$value": "{color.neutral.900}" },
+                "link": { "$value": "{color.green.300}" }
+            },
+            "border": {
+                "subtle": { "$value": "{color.neutral.800}" },
+                "default": { "$value": "{color.neutral.700}" },
+                "strong": { "$value": "{color.neutral.600}" },
+                "tinted": { "$value": "{color.sage.700}" },
+                "focus": { "$value": "{color.green.400}" }
+            },
+            "action": {
+                "primary": { "$value": "{color.green.400}" },
+                "primary-hover": { "$value": "{color.green.300}" },
+                "primary-active": { "$value": "{color.green.500}" },
+                "primary-text": { "$value": "{color.green.950}" },
+                "accent": { "$value": "{color.green.400}" }
+            },
+            "feedback": {
+                "success": {
+                    "surface": { "$value": "{color.success.950}" },
+                    "border": { "$value": "{color.success.700}" },
+                    "fg": { "$value": "{color.success.300}" },
+                    "solid": { "$value": "{color.success.500}" }
+                },
+                "warning": {
+                    "surface": { "$value": "{color.warning.950}" },
+                    "border": { "$value": "{color.warning.700}" },
+                    "fg": { "$value": "{color.warning.300}" },
+                    "solid": { "$value": "{color.warning.500}" }
+                },
+                "error": {
+                    "surface": { "$value": "{color.error.950}" },
+                    "border": { "$value": "{color.error.700}" },
+                    "fg": { "$value": "{color.error.300}" },
+                    "solid": { "$value": "{color.error.500}" }
+                },
+                "info": {
+                    "surface": { "$value": "{color.info.950}" },
+                    "border": { "$value": "{color.info.700}" },
+                    "fg": { "$value": "{color.info.300}" },
+                    "solid": { "$value": "{color.info.500}" }
+                }
+            }
+        }
+    }
+}

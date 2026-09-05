@@ -9,6 +9,24 @@
         },
         "lint": {
             "cache": true
+        },
+        "nx-release-publish": {
+            "dependsOn": ["build"]
+        }
+    },
+    "release": {
+        "projects": ["packages/*"],
+        "projectsRelationship": "independent",
+        "releaseTagPattern": "{projectName}@{version}",
+        "version": {
+            "conventionalCommits": true,
+            "fallbackCurrentVersionResolver": "disk"
+        },
+        "changelog": {
+            "workspaceChangelog": false,
+            "projectChangelogs": {
+                "createRelease": false
+            }
         }
     },
     "plugins": [
@@ -27,6 +45,20 @@
             "plugin": "@nx/eslint/plugin",
             "options": {
                 "targetName": "lint"
+            }
+        },
+        {
+            "plugin": "@nx/js/typescript",
+            "options": {
+                "typecheck": {
+                    "targetName": "typecheck"
+                },
+                "build": {
+                    "targetName": "build",
+                    "configName": "tsconfig.lib.json",
+                    "buildDepsName": "build-deps",
+                    "watchDepsName": "watch-deps"
+                }
             }
         }
     ]

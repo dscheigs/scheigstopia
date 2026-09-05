@@ -1,0 +1,23 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "sylva",
+    "projectType": "library",
+    "sourceRoot": "packages/sylva/tokens",
+    "tags": ["scope:sylva", "type:tokens"],
+    "targets": {
+        "build": {
+            "executor": "nx:run-commands",
+            "cache": true,
+            "inputs": [
+                "{projectRoot}/tokens/**/*",
+                "{projectRoot}/brand/**/*",
+                "{projectRoot}/build.mjs"
+            ],
+            "outputs": ["{projectRoot}/dist"],
+            "options": {
+                "command": "node build.mjs",
+                "cwd": "packages/sylva"
+            }
+        }
+    }
+}
