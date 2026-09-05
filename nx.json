@@ -17,7 +17,9 @@
     "release": {
         "projects": ["packages/*"],
         "projectsRelationship": "independent",
-        "releaseTagPattern": "{projectName}@{version}",
+        "releaseTag": {
+            "pattern": "{projectName}@{version}"
+        },
         "version": {
             "conventionalCommits": true,
             "fallbackCurrentVersionResolver": "disk"
