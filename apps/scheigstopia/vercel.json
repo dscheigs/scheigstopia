@@ -3,5 +3,10 @@
     "framework": "nextjs",
     "installCommand": "pnpm install --frozen-lockfile",
     "buildCommand": "pnpm nx build scheigstopia",
-    "outputDirectory": "apps/scheigstopia/.next"
+    "outputDirectory": ".next",
+    "git": {
+        "deploymentEnabled": {
+            "main": false
+        }
+    }
 }
