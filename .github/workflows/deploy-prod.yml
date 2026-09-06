@@ -15,9 +15,6 @@ concurrency:
 permissions:
     contents: read
 
-env:
-    VERCEL_CLI: vercel@59.11.7
-
 jobs:
     deploy:
         runs-on: ubuntu-latest
@@ -41,8 +38,8 @@ jobs:
 
             - run: pnpm install --frozen-lockfile
 
-            - run: pnpm dlx "$VERCEL_CLI" pull --yes --environment=production --token="$VERCEL_TOKEN"
+            - run: pnpm exec vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-            - run: pnpm dlx "$VERCEL_CLI" build --prod --token="$VERCEL_TOKEN"
+            - run: pnpm exec vercel build --prod --token="$VERCEL_TOKEN"
 
-            - run: pnpm dlx "$VERCEL_CLI" deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+            - run: pnpm exec vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
