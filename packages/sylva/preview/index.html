@@ -1,0 +1,869 @@
+<title>Sylva Color System</title>
+<meta name="description" content="Reference for the Sylva color tokens — a forest-green and sage palette as W3C design tokens." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,500;0,600;1,500&family=JetBrains+Mono:wght@400;500&display=swap" />
+
+<style>
+  :root {
+    /* --- Sylva tokens, resolved for light --- */
+    --canvas: #e9eadc;
+    --surface: #fafafa;
+    --sunken: #f0f1e6;
+    --tinted: #e3e9dd;
+    --tinted-border: #aec3ae;
+    --ink: #1a1a1a;
+    --secondary: #525252;
+    --muted: #737373;
+    --border: #d4d4d4;
+    --border-subtle: #e5e5e5;
+    --accent: #2e7d32;
+    --accent-bright: #66bb6a;
+    --on-accent: #ffffff;
+    --shadow: 0 1px 2px rgba(20, 34, 20, 0.06), 0 8px 24px -12px rgba(20, 34, 20, 0.18);
+
+    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Lora', ui-serif, Georgia, 'Times New Roman', serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --measure: 40rem;
+    --wide: 68rem;
+  }
+
+  :root:not([data-theme='light']) {
+    @media (prefers-color-scheme: dark) {
+      --canvas: #030803;
+      --surface: #171717;
+      --sunken: #0a0a0a;
+      --tinted: #1a2a1b;
+      --tinted-border: #3f5a41;
+      --ink: #e8f5e8;
+      --secondary: #a3a3a3;
+      --muted: #8ba58c;
+      --border: #404040;
+      --border-subtle: #262626;
+      --accent: #66bb6a;
+      --accent-bright: #86cb8b;
+      --on-accent: #062f0b;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -14px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --canvas: #030803;
+    --surface: #171717;
+    --sunken: #0a0a0a;
+    --tinted: #1a2a1b;
+    --tinted-border: #3f5a41;
+    --ink: #e8f5e8;
+    --secondary: #a3a3a3;
+    --muted: #8ba58c;
+    --border: #404040;
+    --border-subtle: #262626;
+    --accent: #66bb6a;
+    --accent-bright: #86cb8b;
+    --on-accent: #062f0b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -14px rgba(0, 0, 0, 0.6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: var(--wide);
+    margin: 0 auto;
+    padding: 0 clamp(1.25rem, 4vw, 3rem);
+  }
+
+  /* ---------- masthead ---------- */
+  header.masthead {
+    padding: clamp(3rem, 8vw, 6rem) 0 clamp(2rem, 5vw, 3.5rem);
+    border-bottom: 1px solid var(--border);
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1.25rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.75rem, 7vw, 4.75rem);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h1 .leaf { color: var(--accent); font-style: italic; }
+  .lede {
+    max-width: var(--measure);
+    font-size: clamp(1.05rem, 2.2vw, 1.2rem);
+    color: var(--secondary);
+    margin: 1.5rem 0 0;
+  }
+  .origin {
+    max-width: var(--measure);
+    margin: 1.25rem 0 0;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .origin code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--secondary);
+  }
+
+  /* ---------- theme toggle ---------- */
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--canvas) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .toolbar .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+  }
+  .toolbar .mark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+  }
+  .toolbar .mark { display: inline-flex; align-items: center; gap: 0.5rem; }
+
+  /* pixel gnome — the site mascot, rendered crisp at any size */
+  .gnome { display: block; height: auto; image-rendering: pixelated; }
+  .gnome-xs { width: 1.05rem; }
+  .gnome-lg { width: clamp(4.5rem, 12vw, 7rem); }
+  .gnome-xl { width: clamp(7rem, 22vw, 11rem); }
+  .segmented {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px;
+    background: var(--surface);
+  }
+  .segmented button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--secondary);
+    font: inherit;
+    font-size: 0.82rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .segmented button[aria-pressed='true'] {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .segmented button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- sections ---------- */
+  section { padding: clamp(3rem, 7vw, 5rem) 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: 0; }
+  .section-head { max-width: var(--measure); margin-bottom: 2.5rem; }
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.6rem, 3.5vw, 2.15rem);
+    letter-spacing: -0.015em;
+    margin: 0.6rem 0 0;
+    text-wrap: balance;
+  }
+  h2 + p { color: var(--secondary); margin: 0.75rem 0 0; }
+  h3 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 2.5rem 0 1rem;
+  }
+  h3:first-of-type { margin-top: 0; }
+
+  /* ---------- primitive ramps ---------- */
+  .ramp {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+  }
+  .ramp.short { grid-template-columns: repeat(6, 1fr); max-width: 40rem; }
+  .swatch {
+    appearance: none;
+    border: 0;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    padding: 0.9rem 0.7rem 0.8rem;
+    min-height: 6.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.15rem;
+    position: relative;
+    transition: transform 0.12s ease;
+  }
+  .swatch:hover { transform: translateY(-3px); }
+  .swatch:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; z-index: 2; }
+  .swatch .step { font-size: 0.72rem; font-weight: 600; font-family: var(--font-mono); }
+  .swatch .hex { font-size: 0.68rem; font-family: var(--font-mono); opacity: 0.72; text-transform: uppercase; }
+  .swatch .anchor {
+    position: absolute;
+    top: 0.55rem;
+    left: 0.7rem;
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(2px);
+  }
+  .base-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 0.9rem;
+  }
+  .base-chip {
+    appearance: none;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
+    transition: transform 0.12s ease;
+  }
+  .base-chip:hover { transform: translateY(-3px); }
+  .base-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .base-chip .fill { height: 3.75rem; }
+  .base-chip .meta { padding: 0.6rem 0.7rem 0.7rem; }
+  .base-chip .name { font-size: 0.8rem; font-weight: 600; }
+  .base-chip .hex { font-size: 0.72rem; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; }
+
+  /* ---------- semantic table ---------- */
+  .tokens { display: flex; flex-direction: column; gap: 0.4rem; }
+  .token-row {
+    display: grid;
+    grid-template-columns: 3rem minmax(11rem, 1.4fr) minmax(8rem, 1fr) minmax(12rem, 1.6fr);
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .token-row:hover { background: var(--sunken); }
+  .token-row .chip {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 7px;
+    border: 1px solid rgba(128, 128, 128, 0.28);
+  }
+  .token-row .path { font-family: var(--font-mono); font-size: 0.82rem; }
+  .token-row .resolves {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--secondary);
+  }
+  .token-row .resolves .hex { color: var(--muted); }
+  .token-row .note { font-size: 0.85rem; color: var(--secondary); }
+  .token-row .arrow { color: var(--muted); }
+  @media (max-width: 46rem) {
+    .token-row {
+      grid-template-columns: 2.5rem 1fr;
+      grid-template-areas: 'chip path' 'chip resolves' '. note';
+      row-gap: 0.2rem;
+    }
+    .token-row .chip { grid-area: chip; }
+    .token-row .path { grid-area: path; }
+    .token-row .resolves { grid-area: resolves; }
+    .token-row .note { grid-area: note; }
+  }
+
+  /* ---------- contrast ---------- */
+  .contrast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 0.9rem;
+  }
+  .pair {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .pair .sample {
+    padding: 1.1rem 1rem;
+    font-size: 1rem;
+  }
+  .pair .sample .big { font-size: 1.35rem; font-weight: 600; font-family: var(--font-display); }
+  .pair .foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0.8rem;
+    background: var(--surface);
+    border-top: 1px solid var(--border-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--secondary);
+  }
+  .badge {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 0.15rem 0.45rem;
+    border-radius: 5px;
+  }
+  .badge.aaa { background: #10b98122; color: #047857; }
+  .badge.aa  { background: #3b82f622; color: #1d4ed8; }
+  .badge.aal { background: #f59e0b22; color: #b45309; }
+  .badge.fail{ background: #ef444422; color: #b91c1c; }
+  :root[data-theme='dark'] .badge.aaa,
+  :root:not([data-theme='light']) .badge.aaa { color: #6ee7b7; }
+  :root[data-theme='dark'] .badge.aa,
+  :root:not([data-theme='light']) .badge.aa { color: #93c5fd; }
+  :root[data-theme='dark'] .badge.aal,
+  :root:not([data-theme='light']) .badge.aal { color: #fcd34d; }
+  :root[data-theme='dark'] .badge.fail,
+  :root:not([data-theme='light']) .badge.fail { color: #fca5a5; }
+
+  /* ---------- usage ---------- */
+  .prose { max-width: var(--measure); }
+  .prose p { color: var(--secondary); }
+  .prose strong { color: var(--ink); font-weight: 600; }
+  .prose a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  pre {
+    background: var(--sunken);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .file-list { display: grid; gap: 0.6rem; margin: 1.5rem 0 0; }
+  .file-list div {
+    display: flex;
+    gap: 0.9rem;
+    align-items: baseline;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  .file-list code { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); white-space: nowrap; }
+  .file-list span { font-size: 0.85rem; color: var(--secondary); }
+
+  footer {
+    padding: 3rem 0 4rem;
+    color: var(--muted);
+    font-size: 0.83rem;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(150%);
+    background: var(--ink);
+    color: var(--canvas);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    z-index: 40;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+  /* ---------- brand section ---------- */
+  .brand-lockup {
+    display: flex;
+    align-items: flex-end;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    flex-wrap: wrap;
+    padding: 1.75rem;
+    border: 1px solid var(--tinted-border);
+    border-radius: 14px;
+    background: var(--tinted);
+  }
+  .brand-lockup .word {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2rem, 6vw, 3.25rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .gnome-palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+    gap: 0.6rem;
+    margin-top: 1.75rem;
+  }
+  .gnome-palette button {
+    appearance: none;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .gnome-palette button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .gnome-palette .fill { height: 2.5rem; }
+  .gnome-palette .meta { padding: 0.4rem 0.55rem 0.5rem; }
+  .gnome-palette .role { font-size: 0.72rem; font-weight: 600; }
+  .gnome-palette .hex { font-size: 0.68rem; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; }
+  .masthead .wrap { display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+  .masthead .col { flex: 1 1 30rem; }
+  .masthead .gnome-xl { flex: 0 0 auto; margin-top: 0.25rem; }
+</style>
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <symbol id="gnome" viewBox="0 0 14 23"><rect x="6" y="1" width="2" height="1" fill="#463b32"/><rect x="6" y="2" width="1" height="1" fill="#932911"/><rect x="7" y="2" width="1" height="1" fill="#463b32"/><rect x="5" y="3" width="1" height="1" fill="#463b32"/><rect x="6" y="3" width="2" height="1" fill="#b13c1c"/><rect x="8" y="3" width="1" height="1" fill="#463b32"/><rect x="5" y="4" width="1" height="1" fill="#463b32"/><rect x="6" y="4" width="2" height="1" fill="#b13c1c"/><rect x="8" y="4" width="1" height="1" fill="#463b32"/><rect x="4" y="5" width="1" height="1" fill="#463b32"/><rect x="5" y="5" width="1" height="1" fill="#932911"/><rect x="6" y="5" width="3" height="1" fill="#b13c1c"/><rect x="9" y="5" width="1" height="1" fill="#463b32"/><rect x="4" y="6" width="1" height="1" fill="#463b32"/><rect x="5" y="6" width="4" height="1" fill="#b13c1c"/><rect x="9" y="6" width="1" height="1" fill="#463b32"/><rect x="4" y="7" width="1" height="1" fill="#463b32"/><rect x="5" y="7" width="4" height="1" fill="#b13c1c"/><rect x="9" y="7" width="1" height="1" fill="#463b32"/><rect x="3" y="8" width="1" height="1" fill="#463b32"/><rect x="4" y="8" width="1" height="1" fill="#932911"/><rect x="5" y="8" width="4" height="1" fill="#b13c1c"/><rect x="9" y="8" width="1" height="1" fill="#932911"/><rect x="10" y="8" width="1" height="1" fill="#463b32"/><rect x="3" y="9" width="1" height="1" fill="#463b32"/><rect x="4" y="9" width="6" height="1" fill="#b13c1c"/><rect x="10" y="9" width="1" height="1" fill="#463b32"/><rect x="3" y="10" width="1" height="1" fill="#463b32"/><rect x="4" y="10" width="6" height="1" fill="#b13c1c"/><rect x="10" y="10" width="1" height="1" fill="#463b32"/><rect x="2" y="11" width="1" height="1" fill="#463b32"/><rect x="3" y="11" width="1" height="1" fill="#cfbb95"/><rect x="4" y="11" width="6" height="1" fill="#eba966"/><rect x="10" y="11" width="1" height="1" fill="#cfbb95"/><rect x="11" y="11" width="1" height="1" fill="#463b32"/><rect x="2" y="12" width="1" height="1" fill="#463b32"/><rect x="3" y="12" width="1" height="1" fill="#e6d4b0"/><rect x="4" y="12" width="1" height="1" fill="#f6e9d3"/><rect x="5" y="12" width="1" height="1" fill="#f2e3c9"/><rect x="6" y="12" width="2" height="1" fill="#e6944f"/><rect x="8" y="12" width="1" height="1" fill="#f2e3c9"/><rect x="9" y="12" width="1" height="1" fill="#f6e9d3"/><rect x="10" y="12" width="1" height="1" fill="#e6d4b0"/><rect x="11" y="12" width="1" height="1" fill="#463b32"/><rect x="1" y="13" width="1" height="1" fill="#463b32"/><rect x="2" y="13" width="1" height="1" fill="#e6d4b0"/><rect x="3" y="13" width="2" height="1" fill="#f6e9d3"/><rect x="5" y="13" width="1" height="1" fill="#f2e3c9"/><rect x="6" y="13" width="5" height="1" fill="#f6e9d3"/><rect x="11" y="13" width="1" height="1" fill="#e6d4b0"/><rect x="12" y="13" width="1" height="1" fill="#463b32"/><rect x="1" y="14" width="1" height="1" fill="#463b32"/><rect x="2" y="14" width="1" height="1" fill="#e6d4b0"/><rect x="3" y="14" width="8" height="1" fill="#f6e9d3"/><rect x="11" y="14" width="1" height="1" fill="#e6d4b0"/><rect x="12" y="14" width="1" height="1" fill="#463b32"/><rect x="0" y="15" width="1" height="1" fill="#463b32"/><rect x="1" y="15" width="1" height="1" fill="#586b6f"/><rect x="2" y="15" width="1" height="1" fill="#e6d4b0"/><rect x="3" y="15" width="8" height="1" fill="#f6e9d3"/><rect x="11" y="15" width="1" height="1" fill="#eedfc5"/><rect x="12" y="15" width="1" height="1" fill="#586b6f"/><rect x="13" y="15" width="1" height="1" fill="#463b32"/><rect x="0" y="16" width="1" height="1" fill="#463b32"/><rect x="1" y="16" width="2" height="1" fill="#586b6f"/><rect x="3" y="16" width="1" height="1" fill="#e6d4b0"/><rect x="4" y="16" width="6" height="1" fill="#f6e9d3"/><rect x="10" y="16" width="1" height="1" fill="#eedfc5"/><rect x="11" y="16" width="2" height="1" fill="#586b6f"/><rect x="13" y="16" width="1" height="1" fill="#463b32"/><rect x="0" y="17" width="1" height="1" fill="#463b32"/><rect x="1" y="17" width="1" height="1" fill="#647376"/><rect x="2" y="17" width="1" height="1" fill="#586b6f"/><rect x="3" y="17" width="2" height="1" fill="#647376"/><rect x="5" y="17" width="1" height="1" fill="#e6d4b0"/><rect x="6" y="17" width="2" height="1" fill="#f6e9d3"/><rect x="8" y="17" width="1" height="1" fill="#e6d4b0"/><rect x="9" y="17" width="2" height="1" fill="#647376"/><rect x="11" y="17" width="1" height="1" fill="#586b6f"/><rect x="12" y="17" width="1" height="1" fill="#647376"/><rect x="13" y="17" width="1" height="1" fill="#463b32"/><rect x="0" y="18" width="1" height="1" fill="#463b32"/><rect x="1" y="18" width="1" height="1" fill="#eba966"/><rect x="2" y="18" width="1" height="1" fill="#586b6f"/><rect x="3" y="18" width="8" height="1" fill="#647376"/><rect x="11" y="18" width="1" height="1" fill="#586b6f"/><rect x="12" y="18" width="1" height="1" fill="#eba966"/><rect x="13" y="18" width="1" height="1" fill="#463b32"/><rect x="1" y="19" width="1" height="1" fill="#463b32"/><rect x="2" y="19" width="1" height="1" fill="#586b6f"/><rect x="3" y="19" width="8" height="1" fill="#647376"/><rect x="11" y="19" width="1" height="1" fill="#586b6f"/><rect x="12" y="19" width="1" height="1" fill="#463b32"/><rect x="2" y="20" width="1" height="1" fill="#463b32"/><rect x="3" y="20" width="8" height="1" fill="#4b5b23"/><rect x="11" y="20" width="1" height="1" fill="#463b32"/><rect x="3" y="21" width="2" height="1" fill="#54473d"/><rect x="5" y="21" width="1" height="1" fill="#463b32"/><rect x="8" y="21" width="1" height="1" fill="#463b32"/><rect x="9" y="21" width="2" height="1" fill="#54473d"/><rect x="2" y="22" width="4" height="1" fill="#463b32"/><rect x="8" y="22" width="4" height="1" fill="#463b32"/></symbol>
+</svg>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="mark"><svg class="gnome gnome-xs"><use href="#gnome"/></svg>Sylva</span>
+    <div class="segmented" role="group" aria-label="Theme">
+      <button data-theme-choice="system" aria-pressed="true">System</button>
+      <button data-theme-choice="light" aria-pressed="false">Light</button>
+      <button data-theme-choice="dark" aria-pressed="false">Dark</button>
+    </div>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="col">
+      <p class="eyebrow">Color System · v0.1.0</p>
+      <h1>Sylva &mdash; a <span class="leaf">forest &amp; sage</span> palette</h1>
+      <p class="lede">
+        A small, reusable set of color tokens: a forest-green brand ramp, a muted sage for
+        surfaces and edges, hue-free neutrals for content, and four feedback hues. Two tiers —
+        raw primitives and semantic aliases — delivered as W3C design tokens.
+      </p>
+      <p class="origin">
+        Lifted from an existing site palette, mascot and all. The three primary greens
+        (<code>#0d4d14</code>, <code>#1b5e20</code>, <code>#2e7d32</code>), the accent
+        <code>#66bb6a</code>, and the sage surface/border/muted values are preserved as
+        anchor steps; the rest of each ramp is generated around them.
+      </p>
+    </div>
+    <svg class="gnome gnome-xl" role="img" aria-label="The gnome mascot"><use href="#gnome"/></svg>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="primitives">
+    <div class="section-head">
+      <p class="eyebrow">Tier 1</p>
+      <h2>Primitives</h2>
+      <p>The raw palette. No assigned meaning — reference these from semantic tokens, never
+        from application code. Click any swatch to copy its hex.</p>
+    </div>
+
+    <h3>Green · brand</h3>
+    <div class="ramp" data-scale="green"></div>
+
+    <h3>Sage · muted green-grey</h3>
+    <div class="ramp" data-scale="sage"></div>
+
+    <h3>Neutral · content greys</h3>
+    <div class="ramp" data-scale="neutral"></div>
+
+    <h3>Feedback hues</h3>
+    <div class="ramp short" data-scale="success"></div>
+    <div class="ramp short" data-scale="warning"></div>
+    <div class="ramp short" data-scale="error"></div>
+    <div class="ramp short" data-scale="info"></div>
+
+    <h3>Base</h3>
+    <div class="base-grid" id="base-grid"></div>
+  </section>
+
+  <section id="semantic">
+    <div class="section-head">
+      <p class="eyebrow">Tier 2</p>
+      <h2>Semantic tokens</h2>
+      <p>What applications actually consume. Each one resolves to a primitive, and the
+        resolution changes with the theme — switch the toggle above to see both sets.</p>
+    </div>
+    <div id="semantic-groups"></div>
+  </section>
+
+  <section id="contrast">
+    <div class="section-head">
+      <p class="eyebrow">Verification</p>
+      <h2>Contrast</h2>
+      <p>WCAG 2.1 contrast ratios for the pairings that matter, computed live for the
+        current theme. <strong>AAA</strong> ≥ 7 · <strong>AA</strong> ≥ 4.5 ·
+        <strong>AA Large</strong> ≥ 3 (18px bold / 24px+).</p>
+    </div>
+    <div class="contrast-grid" id="contrast-grid"></div>
+  </section>
+
+  <section id="usage">
+    <div class="section-head">
+      <p class="eyebrow">Adopting it</p>
+      <h2>Using the tokens</h2>
+    </div>
+    <div class="prose">
+      <p>The source of truth is two <a href="https://tr.designtokens.org/format/">DTCG</a>
+        files. <strong>Primitives</strong> hold hex values; <strong>semantic</strong> tokens
+        hold references like <code>{color.green.800}</code> and are split into
+        <code>light</code> and <code>dark</code> groups that mirror each other.</p>
+
+      <div class="file-list">
+        <div><code>tokens/primitives.tokens.json</code><span>Green, sage, neutral, feedback ramps + base colors</span></div>
+        <div><code>tokens/semantic.tokens.json</code><span>bg · text · border · action · feedback, per theme</span></div>
+        <div><code>brand/gnome.svg</code><span>The mascot — standalone pixel SVG</span></div>
+        <div><code>preview/index.html</code><span>This page</span></div>
+      </div>
+
+      <p style="margin-top:2rem">Generate CSS custom properties with Style Dictionary v4
+        (opt-in — not committed here):</p>
+      <pre>npm i -D style-dictionary
+
+// sd.config.mjs
+export default {
+  source: ['tokens/**/*.tokens.json'],
+  platforms: {
+    css: {
+      transformGroup: 'css',
+      buildPath: 'dist/',
+      files: [{ destination: 'sylva.css', format: 'css/variables' }]
+    }
+  }
+};</pre>
+      <p>Then in a project: <code>@import '@scheigs/sylva/dist/sylva.css';</code> and map
+        the semantic vars into your Tailwind <code>@theme</code> block.</p>
+    </div>
+  </section>
+
+  <section id="brand">
+    <div class="section-head">
+      <p class="eyebrow">The mascot</p>
+      <h2>Gnome mark</h2>
+      <p>The gnome travels with the palette as <code>brand/gnome.svg</code> — a
+        14&times;23 pixel grid of flat <code>&lt;rect&gt;</code>s, no gradients, scales crisp
+        to any size. Its 14 colors are its own (hat reds, beard blue-greys, a moss-green
+        collar); they sit <em>outside</em> the token system but are kept here so the whole
+        identity lives in one place.</p>
+    </div>
+
+    <div class="brand-lockup">
+      <svg class="gnome gnome-lg" role="img" aria-label="The gnome mascot"><use href="#gnome"/></svg>
+      <span class="word">Sylva</span>
+    </div>
+
+    <h3>Gnome palette</h3>
+    <div class="gnome-palette" id="gnome-palette"></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  Sylva v0.1.0 · forest &amp; sage color tokens · MIT license.
+</footer>
+
+<div class="toast" id="toast">copied</div>
+
+<script>
+  const PRIMITIVES = {
+    green:   { 50:'#eef8ef',100:'#d6efd8',200:'#b0dfb4',300:'#86cb8b',400:'#66bb6a',500:'#4c9e51',600:'#3c8a41',700:'#2e7d32',800:'#1b5e20',900:'#0d4d14',950:'#062f0b' },
+    sage:    { 50:'#f2f5ef',100:'#e3e9dd',200:'#c9d6c8',300:'#aec3ae',400:'#8ba58c',500:'#6b8a6c',600:'#547156',700:'#3f5a41',800:'#2b3f2c',900:'#1a2a1b',950:'#0c150c' },
+    neutral: { 50:'#fafafa',100:'#f5f5f5',200:'#e5e5e5',300:'#d4d4d4',400:'#a3a3a3',500:'#737373',600:'#525252',700:'#404040',800:'#262626',900:'#171717',950:'#0a0a0a' },
+    success: { 50:'#ecfdf5',300:'#6ee7b7',500:'#10b981',600:'#059669',700:'#047857',950:'#022c22' },
+    warning: { 50:'#fffbeb',300:'#fcd34d',500:'#f59e0b',600:'#d97706',700:'#b45309',950:'#451a03' },
+    error:   { 50:'#fef2f2',300:'#fca5a5',500:'#ef4444',600:'#dc2626',700:'#b91c1c',950:'#450a0a' },
+    info:    { 50:'#eff6ff',300:'#93c5fd',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',950:'#172554' },
+    base:    { white:'#ffffff', black:'#000000', 'canvas-light':'#e9eadc', 'canvas-dark':'#030803', 'ink-light':'#1a1a1a', 'ink-dark':'#e8f5e8' }
+  };
+
+  const ANCHORS = {
+    'green.400':'accent', 'green.700':'primary·hv', 'green.800':'primary', 'green.900':'primary·dk',
+    'sage.200':'≈ surf·hv', 'sage.500':'≈ muted', 'sage.700':'≈ dk border'
+  };
+
+  const BASE_ORDER = [
+    ['base.canvas-light','Canvas (light)'], ['base.canvas-dark','Canvas (dark)'],
+    ['base.ink-light','Ink (light)'], ['base.ink-dark','Ink (dark)'],
+    ['base.white','White'], ['base.black','Black']
+  ];
+
+  // path -> primitive key, per theme
+  const REF = {
+    light: {
+      'bg.canvas':'base.canvas-light', 'bg.surface':'neutral.50', 'bg.surface-hover':'neutral.100',
+      'bg.raised':'base.white', 'bg.sunken':'neutral.100', 'bg.tinted':'sage.100',
+      'bg.tinted-hover':'sage.200', 'bg.inverse':'neutral.900',
+      'text.primary':'base.ink-light', 'text.secondary':'neutral.600', 'text.muted':'neutral.500',
+      'text.on-accent':'base.white', 'text.on-inverse':'neutral.50', 'text.link':'green.700',
+      'border.subtle':'neutral.200', 'border.default':'neutral.300', 'border.strong':'neutral.400',
+      'border.tinted':'sage.300', 'border.focus':'green.500',
+      'action.primary':'green.800', 'action.primary-hover':'green.700', 'action.primary-active':'green.900',
+      'action.primary-text':'base.white', 'action.accent':'green.400',
+      'feedback.success.surface':'success.50','feedback.success.border':'success.300','feedback.success.fg':'success.700','feedback.success.solid':'success.600',
+      'feedback.warning.surface':'warning.50','feedback.warning.border':'warning.300','feedback.warning.fg':'warning.700','feedback.warning.solid':'warning.600',
+      'feedback.error.surface':'error.50','feedback.error.border':'error.300','feedback.error.fg':'error.700','feedback.error.solid':'error.600',
+      'feedback.info.surface':'info.50','feedback.info.border':'info.300','feedback.info.fg':'info.700','feedback.info.solid':'info.600'
+    },
+    dark: {
+      'bg.canvas':'base.canvas-dark', 'bg.surface':'neutral.900', 'bg.surface-hover':'neutral.800',
+      'bg.raised':'neutral.800', 'bg.sunken':'neutral.950', 'bg.tinted':'sage.900',
+      'bg.tinted-hover':'sage.800', 'bg.inverse':'neutral.100',
+      'text.primary':'base.ink-dark', 'text.secondary':'neutral.400', 'text.muted':'sage.400',
+      'text.on-accent':'green.950', 'text.on-inverse':'neutral.900', 'text.link':'green.300',
+      'border.subtle':'neutral.800', 'border.default':'neutral.700', 'border.strong':'neutral.600',
+      'border.tinted':'sage.700', 'border.focus':'green.400',
+      'action.primary':'green.400', 'action.primary-hover':'green.300', 'action.primary-active':'green.500',
+      'action.primary-text':'green.950', 'action.accent':'green.400',
+      'feedback.success.surface':'success.950','feedback.success.border':'success.700','feedback.success.fg':'success.300','feedback.success.solid':'success.500',
+      'feedback.warning.surface':'warning.950','feedback.warning.border':'warning.700','feedback.warning.fg':'warning.300','feedback.warning.solid':'warning.500',
+      'feedback.error.surface':'error.950','feedback.error.border':'error.700','feedback.error.fg':'error.300','feedback.error.solid':'error.500',
+      'feedback.info.surface':'info.950','feedback.info.border':'info.700','feedback.info.fg':'info.300','feedback.info.solid':'info.500'
+    }
+  };
+
+  const GROUPS = [
+    { name:'Background', rows:[
+      ['bg.canvas','The page itself'],
+      ['bg.surface','Cards, panels, modals'],
+      ['bg.surface-hover','Hover state for surfaces'],
+      ['bg.raised','Menus, popovers — above the page'],
+      ['bg.sunken','Inset wells, code blocks'],
+      ['bg.tinted','Brand-tinted bands, nav, callouts'],
+      ['bg.tinted-hover','Hover on tinted surfaces'],
+      ['bg.inverse','High-contrast block']
+    ]},
+    { name:'Text', rows:[
+      ['text.primary','Reading text'],
+      ['text.secondary','Supporting copy — passes AA'],
+      ['text.muted','Metadata, captions — AA Large only'],
+      ['text.on-accent','Text on primary / accent fills'],
+      ['text.on-inverse','Text on bg.inverse'],
+      ['text.link','Inline links']
+    ]},
+    { name:'Border', rows:[
+      ['border.subtle','Hairline dividers'],
+      ['border.default','Standard container edges'],
+      ['border.strong','Inputs, emphasised edges'],
+      ['border.tinted','Edges on tinted surfaces'],
+      ['border.focus','Keyboard focus ring']
+    ]},
+    { name:'Action', rows:[
+      ['action.primary','Primary button fill'],
+      ['action.primary-hover','Primary button, hover'],
+      ['action.primary-active','Primary button, pressed'],
+      ['action.primary-text','Label on primary button'],
+      ['action.accent','Decorative brand highlight']
+    ]},
+    { name:'Feedback', rows:[
+      ['feedback.success.surface','Success banner background'],
+      ['feedback.success.fg','Success text / icon'],
+      ['feedback.success.solid','Success solid fill'],
+      ['feedback.warning.surface','Warning banner background'],
+      ['feedback.warning.fg','Warning text / icon'],
+      ['feedback.warning.solid','Warning solid fill'],
+      ['feedback.error.surface','Error banner background'],
+      ['feedback.error.fg','Error text / icon'],
+      ['feedback.error.solid','Error solid fill'],
+      ['feedback.info.surface','Info banner background'],
+      ['feedback.info.fg','Info text / icon'],
+      ['feedback.info.solid','Info solid fill']
+    ]}
+  ];
+
+  const PAIRS = [
+    ['text.primary','bg.canvas','Body text on the page'],
+    ['text.primary','bg.surface','Body text on a card'],
+    ['text.secondary','bg.surface','Supporting copy on a card'],
+    ['text.muted','bg.surface','Caption on a card'],
+    ['text.link','bg.surface','Link on a card'],
+    ['action.primary-text','action.primary','Primary button label'],
+    ['text.on-accent','action.accent','Label on an accent fill'],
+    ['text.primary','bg.tinted','Text on a tinted band'],
+    ['text.on-inverse','bg.inverse','Text on the inverse block'],
+    ['feedback.error.fg','feedback.error.surface','Error text in its banner']
+  ];
+
+  const val = (key) => {
+    const [scale, step] = key.split('.');
+    return PRIMITIVES[scale] ? PRIMITIVES[scale][step] : undefined;
+  };
+  const resolve = (path, theme) => val(REF[theme][path]);
+
+  function effectiveTheme() {
+    const attr = document.documentElement.getAttribute('data-theme');
+    if (attr === 'light' || attr === 'dark') return attr;
+    return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  /* ---- contrast ---- */
+  function lum(hex) {
+    const c = [0, 1, 2].map((i) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255)
+      .map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function ratio(a, b) {
+    const l1 = lum(a), l2 = lum(b);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  }
+  function grade(r) {
+    if (r >= 7) return ['aaa', 'AAA'];
+    if (r >= 4.5) return ['aa', 'AA'];
+    if (r >= 3) return ['aal', 'AA Large'];
+    return ['fail', 'Fail'];
+  }
+
+  /* ---- clipboard ---- */
+  let toastTimer;
+  function copy(text) {
+    navigator.clipboard?.writeText(text).then(() => {
+      const t = document.getElementById('toast');
+      t.textContent = text + ' copied';
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1400);
+    }).catch(() => {});
+  }
+
+  /* ---- render: primitive ramps ---- */
+  function textOn(bgHex) {
+    return lum(bgHex) > 0.42 ? '#1a1a1a' : '#ffffff';
+  }
+  document.querySelectorAll('.ramp[data-scale]').forEach((el) => {
+    const scale = el.dataset.scale;
+    el.innerHTML = Object.entries(PRIMITIVES[scale]).map(([step, hex]) => {
+      const anchor = ANCHORS[scale + '.' + step];
+      return `<button class="swatch" style="background:${hex};color:${textOn(hex)}" data-hex="${hex}" title="${scale}.${step} — click to copy ${hex}">
+        ${anchor ? `<span class="anchor" style="color:${textOn(hex)}">${anchor}</span>` : ''}
+        <span class="step">${step}</span>
+        <span class="hex">${hex}</span>
+      </button>`;
+    }).join('');
+  });
+
+  document.getElementById('base-grid').innerHTML = BASE_ORDER.map(([key, label]) => {
+    const hex = val(key);
+    return `<button class="base-chip" data-hex="${hex}" title="${key} — click to copy">
+      <div class="fill" style="background:${hex}"></div>
+      <div class="meta"><div class="name">${label}</div><div class="hex">${hex}</div></div>
+    </button>`;
+  }).join('');
+
+  const GNOME_PALETTE = [
+    ['#463b32', 'Outline'], ['#54473d', 'Boot'], ['#932911', 'Hat, dark'],
+    ['#b13c1c', 'Hat'], ['#e6944f', 'Nose'], ['#eba966', 'Skin'],
+    ['#cfbb95', 'Skin, shadow'], ['#4b5b23', 'Collar'], ['#586b6f', 'Beard, dark'],
+    ['#647376', 'Beard, mid'], ['#e6d4b0', 'Beard, shadow'], ['#f2e3c9', 'Beard'],
+    ['#f6e9d3', 'Beard, light'], ['#eedfc5', 'Beard, highlight']
+  ];
+  document.getElementById('gnome-palette').innerHTML = GNOME_PALETTE.map(([hex, role]) =>
+    `<button data-hex="${hex}" title="${role} — click to copy ${hex}">
+      <div class="fill" style="background:${hex}"></div>
+      <div class="meta"><div class="role">${role}</div><div class="hex">${hex}</div></div>
+    </button>`
+  ).join('');
+
+  /* ---- render: semantic + contrast (theme-dependent) ---- */
+  function renderThemed() {
+    const theme = effectiveTheme();
+
+    document.getElementById('semantic-groups').innerHTML = GROUPS.map((g) => `
+      <h3>${g.name}</h3>
+      <div class="tokens">
+        ${g.rows.map(([path, note]) => {
+          const prim = REF[theme][path];
+          const hex = val(prim);
+          return `<div class="token-row" data-hex="${hex}" title="click to copy ${hex}">
+            <span class="chip" style="background:${hex}"></span>
+            <span class="path">color.${theme}.${path}</span>
+            <span class="resolves">${prim} <span class="hex">${hex}</span></span>
+            <span class="note">${note}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    `).join('');
+
+    document.getElementById('contrast-grid').innerHTML = PAIRS.map(([fg, bg, label]) => {
+      const fgHex = resolve(fg, theme), bgHex = resolve(bg, theme);
+      const r = ratio(fgHex, bgHex);
+      const [cls, txt] = grade(r);
+      return `<div class="pair">
+        <div class="sample" style="background:${bgHex};color:${fgHex}">
+          <div class="big">${label}</div>
+          <div>The quick brown fox jumps over it</div>
+        </div>
+        <div class="foot">
+          <span>${fg.replace('feedback.','')} / ${bg.replace('feedback.','')}</span>
+          <span><span class="badge ${cls}">${txt}</span> ${r.toFixed(2)}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ---- theme toggle ---- */
+  const buttons = document.querySelectorAll('[data-theme-choice]');
+  function setChoice(choice) {
+    if (choice === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', choice);
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === choice)));
+    try { localStorage.setItem('sylva-theme', choice); } catch (e) {}
+    renderThemed();
+  }
+  buttons.forEach((b) => b.addEventListener('click', () => setChoice(b.dataset.themeChoice)));
+
+  let stored = 'system';
+  try { stored = localStorage.getItem('sylva-theme') || 'system'; } catch (e) {}
+  setChoice(stored);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (!document.documentElement.hasAttribute('data-theme')) renderThemed();
+  });
+
+  /* ---- copy delegation ---- */
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-hex]');
+    if (el) copy(el.dataset.hex);
+  });
+</script>

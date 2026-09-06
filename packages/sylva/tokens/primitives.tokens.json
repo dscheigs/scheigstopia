@@ -1,0 +1,125 @@
+{
+    "$schema": "https://tr.designtokens.org/format/",
+    "color": {
+        "$type": "color",
+        "base": {
+            "white": { "$value": "#ffffff" },
+            "black": { "$value": "#000000" },
+            "canvas-light": {
+                "$value": "#e9eadc",
+                "$description": "Warm sage-paper page ground. The signature background of the source identity (light)."
+            },
+            "canvas-dark": {
+                "$value": "#030803",
+                "$description": "Near-black page ground with a trace of green (dark)."
+            },
+            "ink-light": {
+                "$value": "#1a1a1a",
+                "$description": "Primary reading text on light grounds."
+            },
+            "ink-dark": {
+                "$value": "#e8f5e8",
+                "$description": "Off-white with a green cast — primary reading text on dark grounds."
+            }
+        },
+
+        "green": {
+            "$description": "Brand forest green. Anchored on the three primary greens and the accent from the source site.",
+            "50": { "$value": "#eef8ef" },
+            "100": { "$value": "#d6efd8" },
+            "200": { "$value": "#b0dfb4" },
+            "300": { "$value": "#86cb8b" },
+            "400": {
+                "$value": "#66bb6a",
+                "$description": "Anchor — was --accent"
+            },
+            "500": { "$value": "#4c9e51" },
+            "600": { "$value": "#3c8a41" },
+            "700": {
+                "$value": "#2e7d32",
+                "$description": "Anchor — was --primary-hover"
+            },
+            "800": {
+                "$value": "#1b5e20",
+                "$description": "Anchor — was --primary"
+            },
+            "900": {
+                "$value": "#0d4d14",
+                "$description": "Anchor — was --primary-dark"
+            },
+            "950": { "$value": "#062f0b" }
+        },
+
+        "sage": {
+            "$description": "Muted green-grey for tinted surfaces, borders and secondary text. Anchored on the source site's surface/border/muted greens.",
+            "50": { "$value": "#f2f5ef" },
+            "100": { "$value": "#e3e9dd" },
+            "200": {
+                "$value": "#c9d6c8",
+                "$description": "Anchor — near the old light --surface-hover"
+            },
+            "300": { "$value": "#aec3ae" },
+            "400": { "$value": "#8ba58c" },
+            "500": {
+                "$value": "#6b8a6c",
+                "$description": "Anchor — near the old light --muted"
+            },
+            "600": { "$value": "#547156" },
+            "700": {
+                "$value": "#3f5a41",
+                "$description": "Anchor — near the old dark --border"
+            },
+            "800": { "$value": "#2b3f2c" },
+            "900": { "$value": "#1a2a1b" },
+            "950": { "$value": "#0c150c" }
+        },
+
+        "neutral": {
+            "$description": "Hue-free greys for minimal content surfaces, borders and UI chrome.",
+            "50": { "$value": "#fafafa" },
+            "100": { "$value": "#f5f5f5" },
+            "200": { "$value": "#e5e5e5" },
+            "300": { "$value": "#d4d4d4" },
+            "400": { "$value": "#a3a3a3" },
+            "500": { "$value": "#737373" },
+            "600": { "$value": "#525252" },
+            "700": { "$value": "#404040" },
+            "800": { "$value": "#262626" },
+            "900": { "$value": "#171717" },
+            "950": { "$value": "#0a0a0a" }
+        },
+
+        "success": {
+            "50": { "$value": "#ecfdf5" },
+            "300": { "$value": "#6ee7b7" },
+            "500": { "$value": "#10b981" },
+            "600": { "$value": "#059669" },
+            "700": { "$value": "#047857" },
+            "950": { "$value": "#022c22" }
+        },
+        "warning": {
+            "50": { "$value": "#fffbeb" },
+            "300": { "$value": "#fcd34d" },
+            "500": { "$value": "#f59e0b" },
+            "600": { "$value": "#d97706" },
+            "700": { "$value": "#b45309" },
+            "950": { "$value": "#451a03" }
+        },
+        "error": {
+            "50": { "$value": "#fef2f2" },
+            "300": { "$value": "#fca5a5" },
+            "500": { "$value": "#ef4444" },
+            "600": { "$value": "#dc2626" },
+            "700": { "$value": "#b91c1c" },
+            "950": { "$value": "#450a0a" }
+        },
+        "info": {
+            "50": { "$value": "#eff6ff" },
+            "300": { "$value": "#93c5fd" },
+            "500": { "$value": "#3b82f6" },
+            "600": { "$value": "#2563eb" },
+            "700": { "$value": "#1d4ed8" },
+            "950": { "$value": "#172554" }
+        }
+    }
+}

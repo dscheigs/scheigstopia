@@ -1,0 +1,14 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "scheigstopia",
+    "projectType": "application",
+    "sourceRoot": "apps/scheigstopia/src",
+    "tags": ["scope:scheigstopia", "type:app"],
+    "targets": {
+        "typecheck": {
+            "command": "tsc --noEmit -p apps/scheigstopia/tsconfig.json",
+            "cache": true,
+            "inputs": ["default", "^default"]
+        }
+    }
+}

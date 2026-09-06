@@ -4,34 +4,60 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js 15 application with TypeScript, using the App Router architecture. The project uses Tailwind CSS for styling and includes comprehensive tooling for code quality and consistency.
+This is an **Nx monorepo** (pnpm workspaces). Today it contains one project — the
+Scheigstopia personal site (`apps/scheigstopia`), a Next.js 15 App Router app with
+TypeScript and Tailwind CSS. More apps and shared packages (`packages/*`) will be
+added over time.
+
+## Workspace layout
+
+```
+apps/
+  scheigstopia/          Next.js 15 site (App Router). Its own tsconfig, eslint, next config.
+packages/                Shared, publishable packages (none yet).
+tsconfig.base.json       Compiler options every project's tsconfig extends.
+eslint.config.mjs        Flat ESLint base; project configs import and extend it.
+nx.json                  Nx plugins (@nx/next, @nx/eslint) + target defaults.
+pnpm-workspace.yaml      Workspace globs + vetted build-script allowlist.
+```
+
+Dependencies live in the **root `package.json`**. Apps do not carry their own deps;
+publishable packages will.
 
 ## Development Commands
 
-- `yarn dev` - Start development server with Turbopack for faster builds
-- `yarn build` - Build the application for production
-- `yarn start` - Start the production server
-- `yarn lint` - Run Next.js linter to check code quality
-- `yarn lint:fix` - Auto-fix linting issues
-- `yarn type-check` - Check TypeScript without building
-- `yarn format` - Format all files with Prettier
-- `yarn format:check` - Check if files are formatted
-- `yarn clean` - Clean build artifacts and cache
+Run from the repo root. Root scripts wrap Nx; you can also call Nx directly.
+
+- `pnpm dev` → `nx dev scheigstopia` - dev server (Turbopack) on :3000
+- `pnpm build` → `nx build scheigstopia` - production build
+- `pnpm start` → `nx start scheigstopia` - serve the production build
+- `pnpm lint` → `nx run-many -t lint` - ESLint across all projects
+- `pnpm type-check` → `nx run-many -t typecheck` - `tsc --noEmit` across all projects
+- `pnpm format` / `pnpm format:check` - Prettier
+- `pnpm graph` - open the Nx project graph
+- `nx affected -t build lint typecheck` - only what the current changes touch
+- `nx <target> <project>` - a single target for one project
+
+Nx caches `build`, `lint`, `typecheck` locally — a repeat run with no relevant
+changes is a near-instant cache hit.
 
 ## Code Quality & Git Workflow
 
-The project enforces code quality through:
+- **Package manager**: pnpm only. `packageManager` pins the version; `.npmrc` adds a
+  24h `minimum-release-age` supply-chain guard and disables pnpm self-management.
+  New dependency build scripts are blocked until added to `allowBuilds` in
+  `pnpm-workspace.yaml`.
+- **Pre-commit hook**: `lint-staged` runs Prettier on staged files.
+- **Commit messages**: conventional commit format enforced by `.husky/commit-msg` —
+  `<type>: <description>`, type ∈ feat, fix, docs, style, refactor, test, chore,
+  perf, ci, build, revert.
 
-- **Pre-commit hooks**: Automatically runs `lint-staged` which formats code with Prettier and lints TypeScript/JavaScript files with Next.js linter (includes Next.js-specific rules)
-- **Commit message convention**: All commits must follow conventional commit format: `<type>: <description>` where type is one of: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert
-- **Automatic formatting**: Prettier formats all files on commit, Next.js linter fixes auto-fixable issues and enforces Next.js best practices
+## Architecture (apps/scheigstopia)
 
-## Architecture
-
-- **App Router**: Uses Next.js 13+ App Router with layout components in `src/app/`
-- **Styling**: Tailwind CSS with CSS custom properties for theming (Inter & JetBrains Mono fonts)
-- **TypeScript**: Configured with strict mode and path aliases (`@/*` maps to `./src/*`)
-- **Import aliases**: Use `@/` prefix for imports from the src directory
+- **App Router**: layouts and pages in `apps/scheigstopia/src/app/`
+- **Styling**: Tailwind CSS with CSS custom properties for theming (Inter & JetBrains Mono)
+- **TypeScript**: strict mode; path alias `@/*` → `apps/scheigstopia/src/*`
+- **Import aliases**: use `@/` for imports within the app's src
 
 ## Typography System
 
@@ -55,9 +81,9 @@ The project uses custom typography classes with responsive clamp() sizing. **ALW
 
 ### CSS Organization
 
-- `src/styles/globals.css` - Main imports and body styles
-- `src/styles/colors.css` - Color system and variables
-- `src/styles/typography.css` - Font system and typography classes
+- `apps/scheigstopia/src/styles/globals.css` - Main imports and body styles
+- `apps/scheigstopia/src/styles/colors.css` - Color system and variables
+- `apps/scheigstopia/src/styles/typography.css` - Font system and typography classes
 
 ## Color System & Design Philosophy
 
@@ -119,3 +145,10 @@ The project follows a **minimalistic color approach** with strategic use of colo
   <p className="text-muted">Description text</p>
 </div>
 ```
+
+## Working with Nx
+
+- Run tasks through `nx` (`nx run`, `nx run-many`, `nx affected`), not the underlying tool directly, so caching applies.
+- Prefix with the package manager: `pnpm nx build`.
+- Check `nx <command> --help` rather than guessing flags.
+- Add plugins with `nx add <plugin>` so the init generator runs.

@@ -1,0 +1,45 @@
+{
+    "name": "@scheigs/sylva",
+    "version": "0.1.0",
+    "description": "Sylva — a forest-green and sage color system as W3C design tokens.",
+    "license": "MIT",
+    "author": "dscheigs",
+    "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
+    "files": [
+        "dist",
+        "tokens",
+        "brand"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/sylva.d.ts",
+            "default": "./dist/sylva.js"
+        },
+        "./css": "./dist/sylva.css",
+        "./tokens/primitives": "./tokens/primitives.tokens.json",
+        "./tokens/semantic": "./tokens/semantic.tokens.json",
+        "./gnome.svg": "./brand/gnome.svg",
+        "./package.json": "./package.json"
+    },
+    "scripts": {
+        "build": "node build.mjs"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "keywords": [
+        "design-tokens",
+        "dtcg",
+        "color",
+        "palette",
+        "design-system"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/dscheigs/scheigstopia.git",
+        "directory": "packages/sylva"
+    }
+}

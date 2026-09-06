@@ -4,3 +4,7 @@ coverage
 
 # Ignore all HTML files:
 **/*.html
+
+# pnpm-managed files (pnpm owns their formatting)
+pnpm-lock.yaml
+pnpm-workspace.yaml
