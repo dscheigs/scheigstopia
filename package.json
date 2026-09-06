@@ -38,7 +38,8 @@
         "prettier": "3.5.3",
         "style-dictionary": "^5.5.2",
         "tailwindcss": "^4",
-        "typescript": "^5"
+        "typescript": "^5",
+        "vercel": "59.11.7"
     },
     "lint-staged": {
         "**/*": "prettier --write --ignore-unknown"

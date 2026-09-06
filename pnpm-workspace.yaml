@@ -7,5 +7,6 @@ packages:
 allowBuilds:
   '@swc/core': true
   '@tailwindcss/oxide': true
+  esbuild: true
   nx: true
   unrs-resolver: true
