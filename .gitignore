@@ -37,9 +37,7 @@ yarn-debug.log*
 next-env.d.ts
 
 # editors
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+.vscode/
 
 # nx
 .nx/cache
