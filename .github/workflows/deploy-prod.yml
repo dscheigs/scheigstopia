@@ -38,8 +38,8 @@ jobs:
 
             - run: pnpm install --frozen-lockfile
 
-            - run: pnpm exec vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-
-            - run: pnpm exec vercel build --prod --token="$VERCEL_TOKEN"
-
-            - run: pnpm exec vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+            # Server-side build: uploads source and builds on Vercel using the
+            # project's dashboard settings (Root Directory, vercel.json). A
+            # project-scoped token can deploy but can't read the project-settings
+            # API that `vercel pull` / `build --prebuilt` need.
+            - run: pnpm exec vercel deploy --prod --yes --archive=tgz --token="$VERCEL_TOKEN"
