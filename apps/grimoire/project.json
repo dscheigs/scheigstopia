@@ -1,0 +1,27 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "grimoire",
+    "projectType": "application",
+    "sourceRoot": "apps/grimoire/src",
+    "tags": ["scope:grimoire", "type:app"],
+    "targets": {
+        "typecheck": {
+            "command": "tsc --noEmit -p apps/grimoire/tsconfig.json",
+            "cache": true,
+            "inputs": ["default", "^default"]
+        },
+        "test": {
+            "command": "vitest run --root apps/grimoire",
+            "cache": true,
+            "inputs": ["default", "^default"]
+        },
+        "card-names": {
+            "command": "node apps/grimoire/scripts/build-card-names.mjs",
+            "cache": false
+        },
+        "migrate": {
+            "command": "node --env-file-if-exists=apps/grimoire/.env.local apps/grimoire/scripts/migrate.mjs",
+            "cache": false
+        }
+    }
+}
