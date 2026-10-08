@@ -4,16 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an **Nx monorepo** (pnpm workspaces). Today it contains one project — the
-Scheigstopia personal site (`apps/scheigstopia`), a Next.js 15 App Router app with
-TypeScript and Tailwind CSS. More apps and shared packages (`packages/*`) will be
-added over time.
+This is an **Nx monorepo** (pnpm workspaces). It contains the Scheigstopia personal
+site (`apps/scheigstopia`) and Grimoire (`apps/grimoire`), a private Magic: The
+Gathering collection tracker. Both are Next.js 15 App Router apps with TypeScript
+and Tailwind CSS. More apps and shared packages (`packages/*`) will be added over time.
 
 ## Workspace layout
 
 ```
 apps/
   scheigstopia/          Next.js 15 site (App Router). Its own tsconfig, eslint, next config.
+  grimoire/              Next.js 15 collection tracker (Auth.js, Neon Postgres). See its README.
 packages/                Shared, publishable packages (none yet).
 tsconfig.base.json       Compiler options every project's tsconfig extends.
 eslint.config.mjs        Flat ESLint base; project configs import and extend it.
@@ -29,6 +30,8 @@ publishable packages will.
 Run from the repo root. Root scripts wrap Nx; you can also call Nx directly.
 
 - `pnpm dev` → `nx dev scheigstopia` - dev server (Turbopack) on :3000
+- `pnpm dev:grimoire` → `nx dev grimoire` - Grimoire dev server (needs `apps/grimoire/.env.local`)
+- `nx test grimoire` - Grimoire's Vitest suite (database tests run on in-process Postgres)
 - `pnpm build` → `nx build scheigstopia` - production build
 - `pnpm start` → `nx start scheigstopia` - serve the production build
 - `pnpm lint` → `nx run-many -t lint` - ESLint across all projects
@@ -58,6 +61,12 @@ changes is a near-instant cache hit.
 - **Styling**: Tailwind CSS with CSS custom properties for theming (Inter & JetBrains Mono)
 - **TypeScript**: strict mode; path alias `@/*` → `apps/scheigstopia/src/*`
 - **Import aliases**: use `@/` for imports within the app's src
+
+## Architecture (apps/grimoire)
+
+- **Auth**: Auth.js (`next-auth` v5 beta) with GitHub, restricted to `ALLOWED_GITHUB_ID`. Route handlers check the session themselves; there is no middleware.
+- **Data**: Neon Postgres via `@neondatabase/serverless`. Query code takes a `Sql` function so tests can run it against PGlite. Schema changes are new files in `apps/grimoire/db/migrations/`.
+- **Styling**: same Tailwind setup and typography/color rules as the site (its CSS files are copies).
 
 ## Typography System
 

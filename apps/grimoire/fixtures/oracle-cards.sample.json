@@ -1,0 +1,114 @@
+[
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-00000000000d",
+        "name": "Sample Vanguard",
+        "layout": "vanguard"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-00000000000e",
+        "name": "Sample Plane",
+        "layout": "planar"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-00000000000f",
+        "name": "Sample Scheme",
+        "layout": "scheme"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-000000000001",
+        "name": "Lightning Bolt",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-000000000002",
+        "name": "Counterspell",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-000000000003",
+        "name": "Sol Ring",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-000000000004",
+        "name": "Llanowar Elves",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-000000000005",
+        "name": "Birds of Paradise",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-000000000006",
+        "name": "Swords to Plowshares",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-000000000007",
+        "name": "Dark Ritual",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-000000000008",
+        "name": "Serra Angel",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-000000000009",
+        "name": "Wrath of God",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-00000000000a",
+        "name": "Delver of Secrets // Insectile Aberration",
+        "layout": "transform"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-00000000000b",
+        "name": "Goblin",
+        "layout": "token"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-00000000000c",
+        "name": "Lightning Bolt Art Card",
+        "layout": "art_series"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-000000000001",
+        "name": "Lightning Bolt",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "name": "Card Without An Oracle Id",
+        "layout": "normal"
+    },
+    {
+        "object": "card",
+        "layout": "reversible_card",
+        "name": "Reversible Example // Reversible Example",
+        "card_faces": [
+            {
+                "oracle_id": "00000000-0000-4000-8000-00000000000d",
+                "name": "Reversible Example"
+            }
+        ]
+    }
+]
