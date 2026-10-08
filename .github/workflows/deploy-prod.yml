@@ -1,12 +1,23 @@
 name: Deploy to production
 
+# Manual deploy of one app, or all of them. Each app has its own GitHub
+# environment (production-<app>) holding that app's Vercel secrets:
+# VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_ORG_ID. Each environment should
+# allow deployments from `main` only and require a reviewer.
+#
+# To add an app: add it to `options` and to the `all` list below, create a
+# `production-<app>` environment, and add the app's Vercel project.
 on:
     workflow_dispatch:
         inputs:
-            ref:
-                description: Branch, tag, or SHA to deploy
-                required: false
-                default: main
+            app:
+                description: App to deploy
+                type: choice
+                default: scheigstopia
+                options:
+                    - all
+                    - scheigstopia
+                    - grimoire
 
 concurrency:
     group: deploy-prod
@@ -17,16 +28,19 @@ permissions:
 
 jobs:
     deploy:
+        name: Deploy ${{ matrix.app }}
         runs-on: ubuntu-latest
-        environment: production
-        env:
-            VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-            VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-            VERCEL_TOKEN: ${{ secrets.VERCEL_SCHEIGSTOPIA_TOKEN }}
+        environment: production-${{ matrix.app }}
+        strategy:
+            fail-fast: false
+            matrix:
+                app: ${{ fromJSON(inputs.app == 'all' && '["scheigstopia","grimoire"]' || format('["{0}"]', inputs.app)) }}
         steps:
+            # Always deploys the ref this workflow was started from. The
+            # environment only allows `main`, so there is no way to deploy
+            # another branch with these secrets.
             - uses: actions/checkout@v4
               with:
-                  ref: ${{ inputs.ref }}
                   persist-credentials: false
 
             - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
@@ -42,4 +56,12 @@ jobs:
             # project's dashboard settings (Root Directory, vercel.json). A
             # project-scoped token can deploy but can't read the project-settings
             # API that `vercel pull` / `build --prebuilt` need.
-            - run: pnpm exec vercel deploy --prod --yes --archive=tgz --token="$VERCEL_TOKEN"
+            #
+            # The credentials are set on this step only, so checkout and
+            # `pnpm install` (which runs dependency install scripts) never see them.
+            - name: Deploy to Vercel
+              env:
+                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+              run: pnpm exec vercel deploy --prod --yes --archive=tgz --token="$VERCEL_TOKEN"
