@@ -15,7 +15,8 @@ and Tailwind CSS. More apps and shared packages (`packages/*`) will be added ove
 apps/
   scheigstopia/          Next.js 15 site (App Router). Its own tsconfig, eslint, next config.
   grimoire/              Next.js 15 collection tracker (Auth.js, Neon Postgres). See its README.
-packages/                Shared, publishable packages (none yet).
+packages/
+  sylva/                 Sylva color system (W3C design tokens -> CSS/JS). `nx build sylva` generates dist/ (git-ignored).
 tsconfig.base.json       Compiler options every project's tsconfig extends.
 eslint.config.mjs        Flat ESLint base; project configs import and extend it.
 nx.json                  Nx plugins (@nx/next, @nx/eslint) + target defaults.
@@ -23,7 +24,9 @@ pnpm-workspace.yaml      Workspace globs + vetted build-script allowlist.
 ```
 
 Dependencies live in the **root `package.json`**. Apps do not carry their own deps;
-publishable packages will.
+publishable packages will. A workspace package an app uses is a root dependency
+(`"workspace:*"`) plus an `implicitDependencies` entry in the app's `project.json`,
+so Nx builds the package first (CSS imports are invisible to Nx's import scan).
 
 ## Development Commands
 
@@ -58,7 +61,7 @@ changes is a near-instant cache hit.
 ## Architecture (apps/scheigstopia)
 
 - **App Router**: layouts and pages in `apps/scheigstopia/src/app/`
-- **Styling**: Tailwind CSS with CSS custom properties for theming (Inter & JetBrains Mono)
+- **Styling**: Tailwind CSS with CSS custom properties for theming (Inter & JetBrains Mono). Colors come from Sylva (see Color System); `nx dev` and `nx build` build Sylva first.
 - **TypeScript**: strict mode; path alias `@/*` → `apps/scheigstopia/src/*`
 - **Import aliases**: use `@/` for imports within the app's src
 
@@ -69,6 +72,23 @@ changes is a near-instant cache hit.
 - **Card list**: `apps/grimoire/public/data/card-names.json` is committed (built from Scryfall by `nx run grimoire:card-names`, refreshed by hand). The build fails if it is missing or not a real build.
 - **Deploys**: manual, via the _Deploy to production_ workflow (pick an app or `all`). Each app has a `production-<app>` GitHub environment holding its Vercel secrets.
 - **Styling**: same Tailwind setup and typography/color rules as the site (its CSS files are copies).
+
+## No stray values (hard rule)
+
+Never hard-code a design value in app code:
+
+- No hex, rgb or hsl colors, and no Tailwind arbitrary colors like `bg-[#1b5e20]`.
+- No raw font sizes (px, rem, clamp) and no arbitrary sizes like `text-[13px]`.
+
+Colors come from Sylva tokens through the Tailwind classes mapped to them (see Color
+System). Type comes from the typography classes below. If the value you need doesn't
+exist, add the token or class first and say so in the PR; don't hard-code around it.
+
+Exceptions, until the color audit retires them: the six site-only colors in
+`apps/scheigstopia/src/styles/colors.css` (listed under Color System), and Grimoire's
+copied CSS until it moves to Sylva (#32). Sylva's token files are where values are
+defined. This file states the rule; a CI check to enforce it is planned (#49), and
+until then it is enforced in review.
 
 ## Typography System
 
@@ -97,6 +117,17 @@ The project uses custom typography classes with responsive clamp() sizing. **ALW
 - `apps/scheigstopia/src/styles/typography.css` - Font system and typography classes
 
 ## Color System & Design Philosophy
+
+### Where the values come from
+
+`colors.css` imports Sylva (`@scheigs/sylva/css`) and points the site's variable
+names at Sylva tokens wherever the colors match exactly: background, foreground,
+the primary/accent greens, the neutral scale, the minimal surface colors and
+success/warning/error. These are still literal values, because Sylva has no
+matching token yet: `--surface`, `--surface-hover`, `--border`, `--muted`,
+`--accent-muted`, `--accent-muted-hover`. To change a shared color, edit Sylva's
+tokens rather than `colors.css`. Keep the variable names; the Tailwind classes below
+depend on them.
 
 The project follows a **minimalistic color approach** with strategic use of color:
 

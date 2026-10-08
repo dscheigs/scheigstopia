@@ -4,6 +4,7 @@
     "projectType": "application",
     "sourceRoot": "apps/scheigstopia/src",
     "tags": ["scope:scheigstopia", "type:app"],
+    "implicitDependencies": ["sylva"],
     "targets": {
         "typecheck": {
             "command": "tsc --noEmit -p apps/scheigstopia/tsconfig.json",
