@@ -38,7 +38,7 @@ Run from the repo root. Root scripts wrap Nx; you can also call Nx directly.
 - `pnpm type-check` → `nx run-many -t typecheck` - `tsc --noEmit` across all projects
 - `pnpm format` / `pnpm format:check` - Prettier
 - `pnpm graph` - open the Nx project graph
-- `nx affected -t build lint typecheck` - only what the current changes touch
+- `nx affected -t build lint typecheck test` - only what the current changes touch
 - `nx <target> <project>` - a single target for one project
 
 Nx caches `build`, `lint`, `typecheck` locally — a repeat run with no relevant
