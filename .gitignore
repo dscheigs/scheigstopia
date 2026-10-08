@@ -28,9 +28,13 @@ yarn-debug.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
+
+# generated card list (built from Scryfall bulk data)
+apps/grimoire/public/data/card-names.json
 
 # typescript
 *.tsbuildinfo
