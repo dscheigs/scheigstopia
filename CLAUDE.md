@@ -71,7 +71,7 @@ changes is a near-instant cache hit.
 - **Data**: Neon Postgres via `@neondatabase/serverless`. Query code takes a `Sql` function so tests can run it against PGlite. Schema changes are new files in `apps/grimoire/db/migrations/`.
 - **Card list**: `apps/grimoire/public/data/card-names.json` is committed (built from Scryfall by `nx run grimoire:card-names`, refreshed by hand). The build fails if it is missing or not a real build.
 - **Deploys**: manual, via the _Deploy to production_ workflow (pick an app or `all`). Each app has a `production-<app>` GitHub environment holding its Vercel secrets.
-- **Styling**: same Tailwind setup and typography/color rules as the site (its CSS files are copies).
+- **Styling**: same Tailwind setup and typography/color rules as the site. Its `colors.css` imports Sylva like the site's (`nx dev` and `nx build` build Sylva first); `typography.css` is a copy.
 
 ## Design (colors and typography)
 
