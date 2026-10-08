@@ -17,7 +17,7 @@
     "dependencies": {
         "@neondatabase/serverless": "^1.2.0",
         "fuse.js": "^7.5.0",
-        "next": "15.5.25",
+        "next": "15.5.27",
         "next-auth": "5.0.0-beta.32",
         "react": "^19.0.0",
         "react-dom": "^19.0.0"
@@ -39,7 +39,7 @@
         "eslint-config-next": "15.5.25",
         "husky": "^9.1.7",
         "lint-staged": "^16.1.2",
-        "nx": "23.2.0",
+        "nx": "23.2.1",
         "prettier": "3.5.3",
         "style-dictionary": "^5.5.2",
         "tailwindcss": "^4",
