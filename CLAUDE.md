@@ -73,6 +73,23 @@ changes is a near-instant cache hit.
 - **Deploys**: manual, via the _Deploy to production_ workflow (pick an app or `all`). Each app has a `production-<app>` GitHub environment holding its Vercel secrets.
 - **Styling**: same Tailwind setup and typography/color rules as the site (its CSS files are copies).
 
+## No stray values (hard rule)
+
+Never hard-code a design value in app code:
+
+- No hex, rgb or hsl colors, and no Tailwind arbitrary colors like `bg-[#1b5e20]`.
+- No raw font sizes (px, rem, clamp) and no arbitrary sizes like `text-[13px]`.
+
+Colors come from Sylva tokens through the Tailwind classes mapped to them (see Color
+System). Type comes from the typography classes below. If the value you need doesn't
+exist, add the token or class first and say so in the PR; don't hard-code around it.
+
+Exceptions, until the color audit retires them: the six site-only colors in
+`apps/scheigstopia/src/styles/colors.css` (listed under Color System), and Grimoire's
+copied CSS until it moves to Sylva (#32). Sylva's token files are where values are
+defined. This file states the rule; a CI check to enforce it is planned (#49), and
+until then it is enforced in review.
+
 ## Typography System
 
 The project uses custom typography classes with responsive clamp() sizing. **ALWAYS use these classes instead of Tailwind's default text sizing:**
