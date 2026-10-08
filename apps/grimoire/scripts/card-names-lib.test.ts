@@ -1,7 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { slimOracleCards } from './card-names-lib.mjs';
+import {
+    MIN_REAL_CARD_COUNT,
+    assertDeployableCardList,
+    pickOracleCardsEntry,
+    slimOracleCards,
+} from './card-names-lib.mjs';
 
 async function loadFixture(): Promise<unknown[]> {
     const file = path.join(
@@ -60,5 +65,94 @@ describe('slimOracleCards', () => {
 
     it('ignores junk entries', () => {
         expect(slimOracleCards([null, 5, 'x', {}], 'v').count).toBe(0);
+    });
+});
+
+describe('assertDeployableCardList', () => {
+    function listOf(count: number, version = '2026-10-07T00:00:00Z') {
+        const cards = Array.from({ length: count }, (_, i) => [
+            `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+            `Card ${i}`,
+        ]);
+        return { version, count, cards };
+    }
+
+    it('accepts a full-size list', () => {
+        expect(() =>
+            assertDeployableCardList(listOf(MIN_REAL_CARD_COUNT))
+        ).not.toThrow();
+    });
+
+    it('rejects a list built from the sample fixture', async () => {
+        const sample = slimOracleCards(await loadFixture(), 'fixture');
+        expect(() => assertDeployableCardList(sample)).toThrow(/fixture/);
+    });
+
+    it('rejects a list that is too small', () => {
+        expect(() =>
+            assertDeployableCardList(listOf(MIN_REAL_CARD_COUNT - 1))
+        ).toThrow(/only/);
+    });
+
+    it('rejects a list whose count does not match its cards', () => {
+        const list = listOf(MIN_REAL_CARD_COUNT);
+        list.count = list.count + 1;
+        expect(() => assertDeployableCardList(list)).toThrow(/count/);
+    });
+
+    it('rejects things that are not a card list', () => {
+        expect(() => assertDeployableCardList(null)).toThrow(/not a card list/);
+        expect(() => assertDeployableCardList({ cards: 'x' })).toThrow(
+            /not a card list/
+        );
+    });
+});
+
+describe('pickOracleCardsEntry', () => {
+    const oracle = {
+        type: 'oracle_cards',
+        name: 'Oracle Cards',
+        download_uri: 'https://data.scryfall.io/oracle-cards/x.json',
+    };
+    const other = {
+        type: 'default_cards',
+        name: 'Default Cards',
+        download_uri: 'https://data.scryfall.io/default-cards/y.json',
+    };
+
+    it('finds the entry by type', () => {
+        expect(pickOracleCardsEntry({ data: [other, oracle] })).toBe(oracle);
+    });
+
+    it('falls back to the display name when the type differs', () => {
+        const renamed = { ...oracle, type: 'oracle-cards' };
+        expect(pickOracleCardsEntry({ data: [other, renamed] })).toBe(renamed);
+    });
+
+    it('shows what it received when nothing matches', () => {
+        expect(() =>
+            pickOracleCardsEntry({ object: 'list', data: [other] })
+        ).toThrow(/default_cards \/ Default Cards/);
+        expect(() => pickOracleCardsEntry({ object: 'error' })).toThrow(
+            /Response keys: \[object\]/
+        );
+    });
+
+    it('accepts an entry that only has a jsonl_download_uri', () => {
+        const jsonl = {
+            ...oracle,
+            download_uri: undefined,
+            jsonl_download_uri:
+                'https://data.scryfall.io/oracle-cards/x.jsonl.gz',
+        };
+        expect(pickOracleCardsEntry({ data: [jsonl] })).toBe(jsonl);
+    });
+
+    it('rejects a matching entry that has no download_uri', () => {
+        expect(() =>
+            pickOracleCardsEntry({
+                data: [{ ...oracle, download_uri: undefined }],
+            })
+        ).toThrow(/no download_uri/);
     });
 });
