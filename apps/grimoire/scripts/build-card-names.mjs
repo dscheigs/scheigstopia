@@ -9,7 +9,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { slimOracleCards } from './card-names-lib.mjs';
+import { pickOracleCardsEntry, slimOracleCards } from './card-names-lib.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const outFile = path.join(scriptDir, '..', 'public', 'data', 'card-names.json');
@@ -38,10 +38,7 @@ async function load() {
     }
 
     const bulk = await getJson('https://api.scryfall.com/bulk-data');
-    const entry = bulk.data?.find((item) => item.type === 'oracle_cards');
-    if (!entry?.download_uri) {
-        throw new Error('oracle_cards entry not found in Scryfall bulk-data');
-    }
+    const entry = pickOracleCardsEntry(bulk);
     console.log(`Downloading ${entry.download_uri} ...`);
     const cards = await getJson(entry.download_uri);
     return { cards, version: entry.updated_at };

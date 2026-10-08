@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
     MIN_REAL_CARD_COUNT,
     assertDeployableCardList,
+    pickOracleCardsEntry,
     slimOracleCards,
 } from './card-names-lib.mjs';
 
@@ -104,5 +105,44 @@ describe('assertDeployableCardList', () => {
         expect(() => assertDeployableCardList({ cards: 'x' })).toThrow(
             /not a card list/
         );
+    });
+});
+
+describe('pickOracleCardsEntry', () => {
+    const oracle = {
+        type: 'oracle_cards',
+        name: 'Oracle Cards',
+        download_uri: 'https://data.scryfall.io/oracle-cards/x.json',
+    };
+    const other = {
+        type: 'default_cards',
+        name: 'Default Cards',
+        download_uri: 'https://data.scryfall.io/default-cards/y.json',
+    };
+
+    it('finds the entry by type', () => {
+        expect(pickOracleCardsEntry({ data: [other, oracle] })).toBe(oracle);
+    });
+
+    it('falls back to the display name when the type differs', () => {
+        const renamed = { ...oracle, type: 'oracle-cards' };
+        expect(pickOracleCardsEntry({ data: [other, renamed] })).toBe(renamed);
+    });
+
+    it('shows what it received when nothing matches', () => {
+        expect(() =>
+            pickOracleCardsEntry({ object: 'list', data: [other] })
+        ).toThrow(/default_cards \/ Default Cards/);
+        expect(() => pickOracleCardsEntry({ object: 'error' })).toThrow(
+            /Response keys: \[object\]/
+        );
+    });
+
+    it('rejects a matching entry that has no download_uri', () => {
+        expect(() =>
+            pickOracleCardsEntry({
+                data: [{ ...oracle, download_uri: undefined }],
+            })
+        ).toThrow(/no download_uri/);
     });
 });

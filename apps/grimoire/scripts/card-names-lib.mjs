@@ -69,3 +69,27 @@ export function assertDeployableCardList(list) {
         );
     }
 }
+
+/**
+ * Finds the Oracle Cards file in Scryfall's /bulk-data response. Matches on the
+ * documented type, then falls back to the display name. Throws an error that
+ * shows what Scryfall actually returned, so a changed response is easy to read.
+ * @param {unknown} bulk  Parsed /bulk-data response.
+ * @returns {{ download_uri: string, updated_at?: string }}
+ */
+export function pickOracleCardsEntry(bulk) {
+    const items = Array.isArray(bulk?.data) ? bulk.data : [];
+    const entry =
+        items.find((item) => item?.type === 'oracle_cards') ??
+        items.find((item) => item?.name === 'Oracle Cards');
+    if (typeof entry?.download_uri === 'string') return entry;
+
+    const seen = items.map((item) => `${item?.type} / ${item?.name}`);
+    const keys = bulk && typeof bulk === 'object' ? Object.keys(bulk) : [];
+    throw new Error(
+        'Oracle Cards entry not found in Scryfall bulk-data. ' +
+            `Response keys: [${keys.join(', ')}]. ` +
+            `Entries (type / name): [${seen.join('; ')}]. ` +
+            (entry ? 'The matching entry has no download_uri.' : '')
+    );
+}
