@@ -10,8 +10,8 @@
                 "$description": "Warm sage-paper page ground. The signature background of the source identity (light)."
             },
             "canvas-dark": {
-                "$value": "#030803",
-                "$description": "Near-black page ground with a trace of green (dark)."
+                "$value": "#0a120a",
+                "$description": "Very dark page ground with a trace of green (dark)."
             },
             "ink-light": {
                 "$value": "#1a1a1a",
