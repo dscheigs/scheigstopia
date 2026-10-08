@@ -44,7 +44,7 @@ Settings, all on the server and never sent to the browser:
 | `ANTHROPIC_API_KEY` | Turns scanning on. Unset, the route answers 503 and calls nothing.                                         |
 | `IDENTIFY_MODEL`    | Model that reads the name. Defaults to the smallest (`claude-haiku-5-5`); change it without a code change. |
 
-**Every scan is a paid API call.** Before setting the key in production, add the cost controls from issue #43: a separate key in an Anthropic workspace with a monthly spend limit, an app-side daily and monthly cap, and a rate limit. Until then, try scanning locally only.
+**Every scan is a paid API call.** Before setting the key in production, use a key made just for Grimoire in an Anthropic workspace with a monthly spend limit (issue #43). That limit is what protects the bill while you scan one card at a time. The app-side daily and monthly cap and the rate limit from #43 are not built yet; they are needed before auto-capture (milestone 3), which can send requests in a loop.
 
 To try it locally, put a key in `apps/grimoire/.env.local` and run `pnpm dev:grimoire`. A phone can reach your computer's dev server over HTTPS only (for example through a tunnel), because browsers block camera access on plain HTTP.
 
@@ -89,7 +89,7 @@ When a new set is released:
 
 ## Not yet done
 
-- Cost controls for scanning (issue #43). Do these before enabling scanning in production.
+- App-side scan cap and rate limits (issue #43), needed before auto-capture. Set a spend limit on the API key's workspace before enabling scanning in production.
 - Automatic capture, the background queue and review list, and the OCR-first accuracy and cost test (milestones 3 to 5).
 - Installing as a home-screen app and requesting persistent storage.
 - A cached copy of the card list in IndexedDB; for now it is fetched as a static file and cached by the browser.
