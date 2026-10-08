@@ -138,6 +138,16 @@ describe('pickOracleCardsEntry', () => {
         );
     });
 
+    it('accepts an entry that only has a jsonl_download_uri', () => {
+        const jsonl = {
+            ...oracle,
+            download_uri: undefined,
+            jsonl_download_uri:
+                'https://data.scryfall.io/oracle-cards/x.jsonl.gz',
+        };
+        expect(pickOracleCardsEntry({ data: [jsonl] })).toBe(jsonl);
+    });
+
     it('rejects a matching entry that has no download_uri', () => {
         expect(() =>
             pickOracleCardsEntry({

@@ -8,6 +8,7 @@
 // (~150 MB) once; that file is rebuilt by Scryfall about every 12 hours.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { gunzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { pickOracleCardsEntry, slimOracleCards } from './card-names-lib.mjs';
 
@@ -28,6 +29,21 @@ async function getJson(url) {
     return response.json();
 }
 
+// Scryfall publishes the bulk file as gzipped JSON Lines (one card per line).
+async function getJsonl(url) {
+    const response = await fetch(url, { headers });
+    if (!response.ok) {
+        throw new Error(`${url} responded ${response.status}`);
+    }
+    const text = gunzipSync(Buffer.from(await response.arrayBuffer())).toString(
+        'utf8'
+    );
+    return text
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .map((line) => JSON.parse(line));
+}
+
 async function load() {
     const fixtureFlag = process.argv.indexOf('--fixture');
     if (fixtureFlag !== -1) {
@@ -39,8 +55,9 @@ async function load() {
 
     const bulk = await getJson('https://api.scryfall.com/bulk-data');
     const entry = pickOracleCardsEntry(bulk);
-    console.log(`Downloading ${entry.download_uri} ...`);
-    const cards = await getJson(entry.download_uri);
+    const url = entry.download_uri ?? entry.jsonl_download_uri;
+    console.log(`Downloading ${url} ...`);
+    const cards = entry.download_uri ? await getJson(url) : await getJsonl(url);
     return { cards, version: entry.updated_at };
 }
 
