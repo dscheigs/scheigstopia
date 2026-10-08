@@ -15,7 +15,8 @@ and Tailwind CSS. More apps and shared packages (`packages/*`) will be added ove
 apps/
   scheigstopia/          Next.js 15 site (App Router). Its own tsconfig, eslint, next config.
   grimoire/              Next.js 15 collection tracker (Auth.js, Neon Postgres). See its README.
-packages/                Shared, publishable packages (none yet).
+packages/
+  sylva/                 Sylva color system (W3C design tokens -> CSS/JS). `nx build sylva` generates dist/ (git-ignored).
 tsconfig.base.json       Compiler options every project's tsconfig extends.
 eslint.config.mjs        Flat ESLint base; project configs import and extend it.
 nx.json                  Nx plugins (@nx/next, @nx/eslint) + target defaults.
@@ -23,7 +24,9 @@ pnpm-workspace.yaml      Workspace globs + vetted build-script allowlist.
 ```
 
 Dependencies live in the **root `package.json`**. Apps do not carry their own deps;
-publishable packages will.
+publishable packages will. A workspace package an app uses is a root dependency
+(`"workspace:*"`) plus an `implicitDependencies` entry in the app's `project.json`,
+so Nx builds the package first (CSS imports are invisible to Nx's import scan).
 
 ## Development Commands
 
@@ -58,7 +61,7 @@ changes is a near-instant cache hit.
 ## Architecture (apps/scheigstopia)
 
 - **App Router**: layouts and pages in `apps/scheigstopia/src/app/`
-- **Styling**: Tailwind CSS with CSS custom properties for theming (Inter & JetBrains Mono)
+- **Styling**: Tailwind CSS with CSS custom properties for theming (Inter & JetBrains Mono). Colors come from Sylva (see Color System); `nx dev` and `nx build` build Sylva first.
 - **TypeScript**: strict mode; path alias `@/*` → `apps/scheigstopia/src/*`
 - **Import aliases**: use `@/` for imports within the app's src
 
@@ -97,6 +100,17 @@ The project uses custom typography classes with responsive clamp() sizing. **ALW
 - `apps/scheigstopia/src/styles/typography.css` - Font system and typography classes
 
 ## Color System & Design Philosophy
+
+### Where the values come from
+
+`colors.css` imports Sylva (`@scheigs/sylva/css`) and points the site's variable
+names at Sylva tokens wherever the colors match exactly: background, foreground,
+the primary/accent greens, the neutral scale, the minimal surface colors and
+success/warning/error. These are still literal values, because Sylva has no
+matching token yet: `--surface`, `--surface-hover`, `--border`, `--muted`,
+`--accent-muted`, `--accent-muted-hover`. To change a shared color, edit Sylva's
+tokens rather than `colors.css`. Keep the variable names; the Tailwind classes below
+depend on them.
 
 The project follows a **minimalistic color approach** with strategic use of color:
 
