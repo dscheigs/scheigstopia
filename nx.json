@@ -4,6 +4,9 @@
         "build": {
             "cache": true
         },
+        "dev": {
+            "dependsOn": ["^build"]
+        },
         "test": {
             "cache": true
         },
