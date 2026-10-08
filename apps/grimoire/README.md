@@ -2,12 +2,13 @@
 
 A private Magic: The Gathering collection tracker. Phone-friendly, signed in with GitHub, with the collection saved in a Neon Postgres database so it survives a phone reset and works across devices.
 
-This is milestone 1 of the plan: sign-in, database, the card list, and a collection you can search, add to, edit, and export. Camera scanning comes next.
+This is milestones 1 and 2 of the plan: sign-in, database, the card list, a collection you can search, add to, edit, and export, and snapping a card with the camera to identify and add it. Automatic capture, the background queue, and the accuracy and cost test come next.
 
 ## What's here
 
 - **Sign-in**: GitHub through Auth.js, restricted to one GitHub account (`ALLOWED_GITHUB_ID`). Every API route checks the session itself.
 - **Collection**: add a card by typing its name (fuzzy search), change quantities, remove cards, filter the list, export as `4 Lightning Bolt` text for Moxfield or Archidekt.
+- **Scanning**: tap _Scan a card_, point the rear camera at one card, tap _Snap_. The phone shrinks the photo, `POST /api/identify` has Claude read the name, and the app matches it to the card list and asks _Is this ...?_ before adding anything. See [Card scanning](#card-scanning).
 - **Card list**: `public/data/card-names.json`, committed to the repo and built from Scryfall's Oracle Cards bulk data by `scripts/build-card-names.mjs`. Tokens, emblems, and other non-collectible layouts are left out. Deploys do not call Scryfall.
 - **Data**: users and collection tables in `db/migrations`. Cards are keyed by Scryfall `oracle_id`; everything is keyed to an internal user id, not the GitHub id, so other sign-in methods can be added later.
 
@@ -26,6 +27,26 @@ This is milestone 1 of the plan: sign-in, database, the card list, and a collect
 5. **Create the tables.** `pnpm nx run grimoire:migrate` (reads `apps/grimoire/.env.local` if present).
 6. **Card list.** It is already committed, so there is nothing to do. See [Refreshing the card list](#refreshing-the-card-list) when a new set comes out.
 7. **Run it.** `pnpm dev:grimoire`, then open http://localhost:3000.
+
+## Card scanning
+
+How it works:
+
+1. The browser opens the camera with `getUserMedia` (HTTPS or `localhost` only), draws one frame to a canvas, and downsizes it to 1280 px on the long side as a JPEG (`src/lib/capture.ts`).
+2. `POST /api/identify` takes the image as the request body. It checks the session, the content type, the size (1.5 MB), and that the bytes really are a JPEG, PNG or WebP, all before anything is sent to the API.
+3. The server asks Claude vision for the card name and returns `{ name }`, or `{ name: null }` if the photo was not readable. The photo is never stored.
+4. The browser fuzzy-matches that name against the card list and shows the best match with _Add to collection_ and _Not it_. Nothing is added without a tap.
+
+Settings, all on the server and never sent to the browser:
+
+| Variable            | What it does                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `ANTHROPIC_API_KEY` | Turns scanning on. Unset, the route answers 503 and calls nothing.                                         |
+| `IDENTIFY_MODEL`    | Model that reads the name. Defaults to the smallest (`claude-haiku-5-5`); change it without a code change. |
+
+**Every scan is a paid API call.** Before setting the key in production, add the cost controls from issue #43: a separate key in an Anthropic workspace with a monthly spend limit, an app-side daily and monthly cap, and a rate limit. Until then, try scanning locally only.
+
+To try it locally, put a key in `apps/grimoire/.env.local` and run `pnpm dev:grimoire`. A phone can reach your computer's dev server over HTTPS only (for example through a tunnel), because browsers block camera access on plain HTTP.
 
 ## Deploying to Vercel
 
@@ -64,10 +85,11 @@ When a new set is released:
 
 ## Tests
 
-`nx test grimoire` runs Vitest. The database tests apply the real migrations to an in-process Postgres (PGlite) and exercise the real queries, including that one user can never read or change another user's cards. The sign-in gate, input validation, export format, fuzzy search, and card-list filtering have their own tests.
+`nx test grimoire` runs Vitest. The database tests apply the real migrations to an in-process Postgres (PGlite) and exercise the real queries, including that one user can never read or change another user's cards. The sign-in gate, input validation, export format, fuzzy search, and card-list filtering have their own tests, and so does scanning: the route's limits and failure handling, the reply parsing, and the request sent to the API (against a stand-in for `fetch`, so no key or network is needed).
 
 ## Not yet done
 
-- Camera scanning, OCR, and the Claude vision fallback (milestones 2 to 5).
+- Cost controls for scanning (issue #43). Do these before enabling scanning in production.
+- Automatic capture, the background queue and review list, and the OCR-first accuracy and cost test (milestones 3 to 5).
 - Installing as a home-screen app and requesting persistent storage.
 - A cached copy of the card list in IndexedDB; for now it is fetched as a static file and cached by the browser.
