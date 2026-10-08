@@ -1,6 +1,24 @@
 [
     {
         "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-00000000000d",
+        "name": "Sample Vanguard",
+        "layout": "vanguard"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-00000000000e",
+        "name": "Sample Plane",
+        "layout": "planar"
+    },
+    {
+        "object": "card",
+        "oracle_id": "00000000-0000-4000-8000-00000000000f",
+        "name": "Sample Scheme",
+        "layout": "scheme"
+    },
+    {
+        "object": "card",
         "oracle_id": "00000000-0000-4000-8000-000000000001",
         "name": "Lightning Bolt",
         "layout": "normal"

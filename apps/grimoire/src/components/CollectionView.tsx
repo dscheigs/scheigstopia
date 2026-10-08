@@ -17,6 +17,18 @@ const buttonClasses =
 const inputClasses =
     'w-full rounded-lg border border-border-minimal bg-surface-minimal px-4 py-3 text-body placeholder:text-text-minimal';
 
+const SEARCH_DEBOUNCE_MS = 150;
+
+/** `value`, but only after it has stopped changing for `delayMs`. */
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+    const [debounced, setDebounced] = useState(value);
+    useEffect(() => {
+        const timer = setTimeout(() => setDebounced(value), delayMs);
+        return () => clearTimeout(timer);
+    }, [value, delayMs]);
+    return debounced;
+}
+
 function sortItems(items: CollectionItem[]): CollectionItem[] {
     return [...items].sort((a, b) =>
         a.name.toLowerCase().localeCompare(b.name.toLowerCase())
@@ -103,9 +115,10 @@ export default function CollectionView() {
                 : buildIndex(cardList),
         [cardList]
     );
+    const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS);
     const results = useMemo(
-        () => (index ? searchCards(index, query) : []),
-        [index, query]
+        () => (index ? searchCards(index, debouncedQuery) : []),
+        [index, debouncedQuery]
     );
 
     const visibleItems = useMemo(() => {
@@ -241,11 +254,13 @@ export default function CollectionView() {
                         ))}
                     </ul>
                 )}
-                {index && query.trim().length >= 2 && results.length === 0 && (
-                    <p className="text-caption text-text-minimal">
-                        No matching cards.
-                    </p>
-                )}
+                {index &&
+                    debouncedQuery.trim().length >= 2 &&
+                    results.length === 0 && (
+                        <p className="text-caption text-text-minimal">
+                            No matching cards.
+                        </p>
+                    )}
             </section>
 
             <section aria-labelledby="collection-heading" className="space-y-3">

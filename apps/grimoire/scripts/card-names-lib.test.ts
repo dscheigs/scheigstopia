@@ -27,12 +27,15 @@ describe('slimOracleCards', () => {
         expect(names).toContain('Delver of Secrets // Insectile Aberration');
     });
 
-    it('drops tokens and art series cards', async () => {
+    it('drops tokens, art series and other non-collectible layouts', async () => {
         const names = slimOracleCards(await loadFixture(), 'test').cards.map(
             ([, name]) => name
         );
         expect(names).not.toContain('Goblin');
         expect(names).not.toContain('Lightning Bolt Art Card');
+        expect(names).not.toContain('Sample Vanguard');
+        expect(names).not.toContain('Sample Plane');
+        expect(names).not.toContain('Sample Scheme');
     });
 
     it('dedupes by oracle id and skips cards without one', async () => {

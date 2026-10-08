@@ -7,6 +7,9 @@ const EXCLUDED_LAYOUTS = new Set([
     'token',
     'double_faced_token',
     'emblem',
+    'vanguard',
+    'planar',
+    'scheme',
 ]);
 
 /**
