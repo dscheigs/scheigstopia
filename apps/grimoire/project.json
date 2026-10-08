@@ -22,6 +22,10 @@
         "migrate": {
             "command": "node --env-file-if-exists=apps/grimoire/.env.local apps/grimoire/scripts/migrate.mjs",
             "cache": false
+        },
+        "check-card-names": {
+            "command": "node apps/grimoire/scripts/check-card-names.mjs",
+            "cache": false
         }
     }
 }

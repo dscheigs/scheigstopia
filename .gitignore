@@ -33,9 +33,6 @@ yarn-debug.log*
 # vercel
 .vercel
 
-# generated card list (built from Scryfall bulk data)
-apps/grimoire/public/data/card-names.json
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts

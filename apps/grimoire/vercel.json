@@ -2,7 +2,7 @@
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "framework": "nextjs",
     "installCommand": "pnpm install --frozen-lockfile",
-    "buildCommand": "pnpm nx run grimoire:card-names && pnpm nx build grimoire",
+    "buildCommand": "pnpm nx run grimoire:check-card-names && pnpm nx build grimoire",
     "outputDirectory": ".next",
     "git": {
         "deploymentEnabled": {
