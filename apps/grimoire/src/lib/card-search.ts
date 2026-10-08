@@ -33,6 +33,29 @@ export function buildIndex(file: CardNameFile): CardIndex {
     });
 }
 
+const normalize = (text: string) =>
+    text.trim().replace(/\s+/g, ' ').toLowerCase();
+
+/**
+ * Likely cards for a name read off a photo, best first. An exact name (or exact
+ * front face) beats a fuzzy hit, so "Lightning Bolt" is not outranked by
+ * "Lightning Bolt Art Card". Nothing matches when the name is too far off.
+ */
+export function matchReadName(
+    index: CardIndex,
+    readName: string,
+    limit = 3
+): CardEntry[] {
+    const wanted = normalize(readName);
+    const candidates = searchCards(index, readName, limit + 5);
+    const exact = candidates.filter(
+        (card) =>
+            normalize(card.name) === wanted || normalize(card.front) === wanted
+    );
+    const rest = candidates.filter((card) => !exact.includes(card));
+    return [...exact, ...rest].slice(0, limit);
+}
+
 /** Best matches for what the user typed. Short or empty queries match nothing. */
 export function searchCards(
     index: CardIndex,

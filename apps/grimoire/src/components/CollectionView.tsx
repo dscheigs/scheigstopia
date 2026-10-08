@@ -1,6 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ScanCard from '@/components/ScanCard';
+import { buttonClasses, inputClasses } from '@/components/styles';
+import { readError } from '@/lib/api-client';
 import {
     buildIndex,
     searchCards,
@@ -10,12 +13,6 @@ import {
 import type { CollectionItem } from '@/lib/collection';
 
 type CardListState = 'loading' | 'missing' | CardNameFile;
-
-const buttonClasses =
-    'inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-neutral-800 px-3 text-body font-medium text-neutral-100 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300';
-
-const inputClasses =
-    'w-full rounded-lg border border-border-minimal bg-surface-minimal px-4 py-3 text-body placeholder:text-text-minimal';
 
 const SEARCH_DEBOUNCE_MS = 150;
 
@@ -43,15 +40,6 @@ function withItem(
         ...items.filter((existing) => existing.oracleId !== item.oracleId),
         item,
     ]);
-}
-
-async function readError(response: Response): Promise<string> {
-    try {
-        const body = (await response.json()) as { error?: string };
-        return body.error ?? `Request failed (${response.status}).`;
-    } catch {
-        return `Request failed (${response.status}).`;
-    }
 }
 
 export default function CollectionView() {
@@ -134,29 +122,49 @@ export default function CollectionView() {
         [items]
     );
 
-    const addCard = useCallback(async (card: CardEntry) => {
-        setBusyId(card.oracleId);
-        setError(null);
-        try {
-            const response = await fetch('/api/collection', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    oracleId: card.oracleId,
-                    name: card.name,
-                }),
-            });
-            if (!response.ok) throw new Error(await readError(response));
-            const body = (await response.json()) as { item: CollectionItem };
-            setItems((current) => withItem(current ?? [], body.item));
-            setQuery('');
-            searchRef.current?.focus();
-        } catch (e) {
-            setError(e instanceof Error ? e.message : 'Could not add card.');
-        } finally {
-            setBusyId(null);
-        }
-    }, []);
+    /** Add one copy. Returns whether it worked; failures show in the alert below. */
+    const addCard = useCallback(
+        async (
+            card: CardEntry,
+            options: { focusSearch?: boolean } = {}
+        ): Promise<boolean> => {
+            const { focusSearch = true } = options;
+            setBusyId(card.oracleId);
+            setError(null);
+            try {
+                const response = await fetch('/api/collection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        oracleId: card.oracleId,
+                        name: card.name,
+                    }),
+                });
+                if (!response.ok) throw new Error(await readError(response));
+                const body = (await response.json()) as {
+                    item: CollectionItem;
+                };
+                setItems((current) => withItem(current ?? [], body.item));
+                setQuery('');
+                if (focusSearch) searchRef.current?.focus();
+                return true;
+            } catch (e) {
+                setError(
+                    e instanceof Error ? e.message : 'Could not add card.'
+                );
+                return false;
+            } finally {
+                setBusyId(null);
+            }
+        },
+        []
+    );
+
+    // Scanning must not pop the keyboard up between cards.
+    const addScannedCard = useCallback(
+        (card: CardEntry) => addCard(card, { focusSearch: false }),
+        [addCard]
+    );
 
     const setQuantity = useCallback(
         async (item: CollectionItem, quantity: number) => {
@@ -209,6 +217,7 @@ export default function CollectionView() {
                 <h2 id="add-heading" className="text-subheading">
                     Add a card
                 </h2>
+                <ScanCard index={index} onAdd={addScannedCard} />
                 <label htmlFor="card-search" className="sr-only">
                     Card name
                 </label>
