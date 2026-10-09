@@ -1,153 +1,33 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
-import {
-    matchReadName,
-    type CardEntry,
-    type CardIndex,
-} from '@/lib/card-search';
-import { CAPTURE_MAX_EDGE, CAPTURE_QUALITY, fitWithin } from '@/lib/capture';
-import { useAddCard, useIdentify } from '@/lib/queries';
-
-type Phase = 'idle' | 'starting' | 'live' | 'reading' | 'result';
-
-interface Outcome {
-    /** What the model read off the card, or null if it could not read one. */
-    read: string | null;
-    /** Cards in the list that match it, best first. */
-    matches: CardEntry[];
-}
+import type { CardIndex } from '@/lib/card-search';
+import { AUTO_CAPTURE } from '@/lib/auto-capture';
+import { useCardScanner } from '@/lib/useCardScanner';
 
 interface Props {
     index: CardIndex | null;
 }
 
-function cameraProblem(error: unknown): string {
-    const name = error instanceof DOMException ? error.name : '';
-    if (name === 'NotAllowedError' || name === 'SecurityError') {
-        return 'Camera access was blocked. Allow it for this site in your browser settings, then try again.';
-    }
-    if (name === 'NotFoundError' || name === 'OverconstrainedError') {
-        return 'No camera was found on this device.';
-    }
-    return 'Could not start the camera.';
-}
-
 /** Point the camera at one card, snap it, and add it once you confirm the match. */
 export default function ScanCard({ index }: Props) {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const streamRef = useRef<MediaStream | null>(null);
-    const [phase, setPhase] = useState<Phase>('idle');
-    const [outcome, setOutcome] = useState<Outcome | null>(null);
-    const [message, setMessage] = useState<string | null>(null);
-    const identify = useIdentify();
-    const addCard = useAddCard();
-
-    const stopCamera = useCallback(() => {
-        streamRef.current?.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-        if (videoRef.current) videoRef.current.srcObject = null;
-    }, []);
-
-    // Release the camera when leaving the page.
-    useEffect(() => stopCamera, [stopCamera]);
-
-    const startCamera = useCallback(async () => {
-        setMessage(null);
-        setOutcome(null);
-        if (!navigator.mediaDevices?.getUserMedia) {
-            setMessage('The camera needs a secure (HTTPS) connection.');
-            return;
-        }
-        setPhase('starting');
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: { ideal: 'environment' },
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 },
-                },
-                audio: false,
-            });
-            streamRef.current = stream;
-            const video = videoRef.current;
-            if (video) {
-                video.srcObject = stream;
-                await video.play();
-            }
-            setPhase('live');
-        } catch (error) {
-            stopCamera();
-            setMessage(cameraProblem(error));
-            setPhase('idle');
-        }
-    }, [stopCamera]);
-
-    const closeCamera = useCallback(() => {
-        stopCamera();
-        setOutcome(null);
-        setMessage(null);
-        setPhase('idle');
-    }, [stopCamera]);
-
-    const snap = useCallback(async () => {
-        const video = videoRef.current;
-        if (!video || video.videoWidth === 0) return;
-
-        const { width, height } = fitWithin(
-            video.videoWidth,
-            video.videoHeight,
-            CAPTURE_MAX_EDGE
-        );
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d')?.drawImage(video, 0, 0, width, height);
-        const blob = await new Promise<Blob | null>((resolve) =>
-            canvas.toBlob(resolve, 'image/jpeg', CAPTURE_QUALITY)
-        );
-        if (!blob) {
-            setMessage('Could not capture that frame. Try again.');
-            return;
-        }
-
-        setMessage(null);
-        setPhase('reading');
-        identify.mutate(blob, {
-            onSuccess: ({ name }) => {
-                setOutcome({
-                    read: name,
-                    matches: name && index ? matchReadName(index, name) : [],
-                });
-                setPhase('result');
-            },
-            onError: (error) => {
-                setMessage(error.message);
-                setPhase('live');
-            },
-        });
-    }, [index, identify]);
-
-    // On failure the result stays up so you can retry.
-    const confirmAdd = useCallback(
-        (card: CardEntry) => {
-            setMessage(null);
-            addCard.mutate(card, {
-                onSuccess: () => {
-                    setOutcome(null);
-                    setPhase('live');
-                },
-                onError: (error) => setMessage(error.message),
-            });
-        },
-        [addCard]
-    );
-
-    const dismiss = useCallback(() => {
-        setOutcome(null);
-        setPhase('live');
-    }, []);
+    const {
+        videoRef,
+        phase,
+        outcome,
+        message,
+        auto,
+        debug,
+        reading,
+        adding,
+        startCamera,
+        closeCamera,
+        snap,
+        toggleAuto,
+        toggleDebug,
+        confirmAdd,
+        dismiss,
+    } = useCardScanner(index);
 
     const cameraOn =
         phase === 'live' || phase === 'reading' || phase === 'result';
@@ -170,27 +50,52 @@ export default function ScanCard({ index }: Props) {
             ) : null}
 
             {/* Always mounted so the stream can attach; hidden until the camera is on. */}
-            <video
-                ref={videoRef}
-                playsInline
-                muted
-                aria-label="Camera view"
-                className={
-                    cameraOn
-                        ? 'aspect-[4/3] w-full rounded-lg bg-neutral-950 object-cover'
-                        : 'hidden'
-                }
-            />
+            <div className={cameraOn ? 'relative' : 'hidden'}>
+                <video
+                    ref={videoRef}
+                    playsInline
+                    muted
+                    aria-label="Camera view"
+                    className="aspect-[4/3] w-full rounded-lg bg-neutral-950 object-cover"
+                />
+                {auto && debug && reading && (
+                    <dl
+                        className="absolute bottom-2 left-2 space-y-0.5 rounded-lg bg-neutral-950/80 p-2 font-mono text-caption text-neutral-100"
+                        aria-label="Auto-capture readings"
+                    >
+                        <div>state: {reading.state}</div>
+                        <div>
+                            card in frame:{' '}
+                            {(reading.vsBackground * 100).toFixed(0)}% (needs{' '}
+                            {(AUTO_CAPTURE.presentFraction * 100).toFixed(0)}%)
+                        </div>
+                        <div>
+                            motion: {(reading.vsPrevious * 100).toFixed(1)}%
+                            (still at or under{' '}
+                            {(AUTO_CAPTURE.stillFraction * 100).toFixed(0)}%)
+                        </div>
+                        <div>
+                            still: {reading.stillForMs}/{AUTO_CAPTURE.stableMs}{' '}
+                            ms
+                        </div>
+                        <div>
+                            empty: {reading.emptyForMs}/{AUTO_CAPTURE.emptyMs}{' '}
+                            ms
+                        </div>
+                    </dl>
+                )}
+            </div>
 
             {cameraOn && (
                 <p className="text-caption text-text-minimal">
-                    Hold one card flat, fill the frame, and keep the title
-                    sharp.
+                    {auto
+                        ? 'Auto-capture is on. Start with nothing in frame, then hold each card still, flat and filling the frame. Take it away before the next one.'
+                        : 'Hold one card flat, fill the frame, and keep the title sharp.'}
                 </p>
             )}
 
             {(phase === 'live' || phase === 'reading') && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <button
                         type="button"
                         onClick={() => void snap()}
@@ -199,6 +104,25 @@ export default function ScanCard({ index }: Props) {
                     >
                         {phase === 'reading' ? 'Reading...' : 'Snap'}
                     </button>
+                    <button
+                        type="button"
+                        onClick={toggleAuto}
+                        disabled={phase === 'reading'}
+                        aria-pressed={auto}
+                        className={secondaryButtonClasses}
+                    >
+                        {auto ? 'Auto-capture: on' : 'Auto-capture: off'}
+                    </button>
+                    {auto && (
+                        <button
+                            type="button"
+                            onClick={toggleDebug}
+                            aria-pressed={debug}
+                            className={secondaryButtonClasses}
+                        >
+                            Debug
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={closeCamera}
@@ -228,7 +152,7 @@ export default function ScanCard({ index }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => confirmAdd(best)}
-                                    disabled={addCard.isPending}
+                                    disabled={adding}
                                     className={buttonClasses}
                                 >
                                     Add to collection
@@ -236,7 +160,7 @@ export default function ScanCard({ index }: Props) {
                                 <button
                                     type="button"
                                     onClick={dismiss}
-                                    disabled={addCard.isPending}
+                                    disabled={adding}
                                     className={secondaryButtonClasses}
                                 >
                                     Not it
@@ -255,7 +179,7 @@ export default function ScanCard({ index }: Props) {
                                                     onClick={() =>
                                                         confirmAdd(card)
                                                     }
-                                                    disabled={addCard.isPending}
+                                                    disabled={adding}
                                                     className={
                                                         secondaryButtonClasses
                                                     }
