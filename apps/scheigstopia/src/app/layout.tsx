@@ -9,9 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = createPageMetadata({
-    title: 'Daniel Scheigert',
-    description:
-        'A place to share my projects, thoughts, and experiences as a software engineer.',
+    title: 'Scheigstopia',
+    description: 'The apps and tools I build.',
 });
 
 export default function RootLayout({

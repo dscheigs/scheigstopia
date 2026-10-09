@@ -3,14 +3,28 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import HomeLink from '@/components/ui/HomeLink';
+import { apps } from '@/data/apps';
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const navigation = [
-        { name: 'About', href: '/about' },
-        { name: 'Projects', href: '/projects' },
+        ...apps.map(({ name, href }) => ({ name, href })),
+        { name: 'About Me', href: '/about' },
     ];
+
+    // One anchor per nav item for the sliding underline.
+    const anchorCss = navigation
+        .map(
+            (_, i) => `
+                .nav-link:nth-child(${i + 1}) {
+                    --anchor: --item-${i + 1};
+                }
+                .nav-links:has(.nav-link:nth-child(${i + 1}) a:is(:hover, :focus-visible)) {
+                    --target: --item-${i + 1};
+                }`
+        )
+        .join('');
 
     return (
         <>
@@ -42,18 +56,7 @@ export default function Header() {
                     padding: 1rem;
                     text-decoration: none;
                 }
-                .nav-link:nth-child(1) { 
-                    --anchor: --item-1; 
-                }
-                .nav-links:has(.nav-link:nth-child(1) a:is(:hover, :focus-visible)) {
-                    --target: --item-1;
-                }
-                .nav-link:nth-child(2) { 
-                    --anchor: --item-2; 
-                }
-                .nav-links:has(.nav-link:nth-child(2) a:is(:hover, :focus-visible)) {
-                    --target: --item-2; 
-                }
+                ${anchorCss}
                 .nav-link a:focus-visible {
                     outline: none;
                 }
