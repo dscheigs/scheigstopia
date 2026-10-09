@@ -3,16 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ScanCard from '@/components/ScanCard';
 import { buttonClasses, inputClasses } from '@/components/styles';
-import { readError } from '@/lib/api-client';
-import {
-    buildIndex,
-    searchCards,
-    type CardEntry,
-    type CardNameFile,
-} from '@/lib/card-search';
+import { buildIndex, searchCards, type CardEntry } from '@/lib/card-search';
 import type { CollectionItem } from '@/lib/collection';
-
-type CardListState = 'loading' | 'missing' | CardNameFile;
+import {
+    useAddCard,
+    useCardNames,
+    useCollection,
+    useSetQuantity,
+} from '@/lib/queries';
 
 const SEARCH_DEBOUNCE_MS = 150;
 
@@ -26,75 +24,35 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
     return debounced;
 }
 
-function sortItems(items: CollectionItem[]): CollectionItem[] {
-    return [...items].sort((a, b) =>
-        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-    );
-}
-
-function withItem(
-    items: CollectionItem[],
-    item: CollectionItem
-): CollectionItem[] {
-    return sortItems([
-        ...items.filter((existing) => existing.oracleId !== item.oracleId),
-        item,
-    ]);
-}
-
 export default function CollectionView() {
-    const [items, setItems] = useState<CollectionItem[] | null>(null);
-    const [cardList, setCardList] = useState<CardListState>('loading');
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('');
-    const [busyId, setBusyId] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
     const searchRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        let cancelled = false;
+    const collection = useCollection();
+    const cardNames = useCardNames();
+    const addCardMutation = useAddCard();
+    const setQuantityMutation = useSetQuantity();
 
-        async function loadCollection() {
-            const response = await fetch('/api/collection');
-            if (response.status === 401) {
-                window.location.href = '/signin';
-                return;
-            }
-            if (!response.ok) {
-                throw new Error(await readError(response));
-            }
-            const body = (await response.json()) as { items: CollectionItem[] };
-            if (!cancelled) setItems(body.items);
-        }
+    // null while loading; a failed load shows the error and an empty list.
+    const items = collection.data ?? (collection.isError ? [] : null);
+    const cardList = cardNames.isError
+        ? 'missing'
+        : cardNames.isPending
+          ? 'loading'
+          : cardNames.data;
 
-        async function loadCardList() {
-            const response = await fetch('/data/card-names.json');
-            if (!response.ok) {
-                if (!cancelled) setCardList('missing');
-                return;
-            }
-            const file = (await response.json()) as CardNameFile;
-            if (!cancelled) setCardList(file);
-        }
+    const error =
+        addCardMutation.error?.message ??
+        setQuantityMutation.error?.message ??
+        collection.error?.message ??
+        null;
 
-        loadCollection().catch((e: unknown) => {
-            if (!cancelled) {
-                setError(
-                    e instanceof Error
-                        ? e.message
-                        : 'Could not load collection.'
-                );
-                setItems([]);
-            }
-        });
-        loadCardList().catch(() => {
-            if (!cancelled) setCardList('missing');
-        });
-
-        return () => {
-            cancelled = true;
-        };
-    }, []);
+    const busyId =
+        (addCardMutation.isPending && addCardMutation.variables.oracleId) ||
+        (setQuantityMutation.isPending &&
+            setQuantityMutation.variables.item.oracleId) ||
+        null;
 
     const index = useMemo(
         () =>
@@ -122,94 +80,27 @@ export default function CollectionView() {
         [items]
     );
 
-    /** Add one copy. Returns whether it worked; failures show in the alert below. */
-    const addCard = useCallback(
-        async (
-            card: CardEntry,
-            options: { focusSearch?: boolean } = {}
-        ): Promise<boolean> => {
-            const { focusSearch = true } = options;
-            setBusyId(card.oracleId);
-            setError(null);
-            try {
-                const response = await fetch('/api/collection', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        oracleId: card.oracleId,
-                        name: card.name,
-                    }),
-                });
-                if (!response.ok) throw new Error(await readError(response));
-                const body = (await response.json()) as {
-                    item: CollectionItem;
-                };
-                setItems((current) => withItem(current ?? [], body.item));
+    // A new action clears the last one's error.
+    const addCard = (card: CardEntry) => {
+        setQuantityMutation.reset();
+        addCardMutation.mutate(card, {
+            onSuccess: () => {
                 setQuery('');
-                if (focusSearch) searchRef.current?.focus();
-                return true;
-            } catch (e) {
-                setError(
-                    e instanceof Error ? e.message : 'Could not add card.'
-                );
-                return false;
-            } finally {
-                setBusyId(null);
-            }
-        },
-        []
-    );
+                searchRef.current?.focus();
+            },
+        });
+    };
 
-    // Scanning must not pop the keyboard up between cards.
-    const addScannedCard = useCallback(
-        (card: CardEntry) => addCard(card, { focusSearch: false }),
-        [addCard]
-    );
+    const setQuantity = (item: CollectionItem, quantity: number) => {
+        addCardMutation.reset();
+        setQuantityMutation.mutate({ item, quantity });
+    };
 
-    const setQuantity = useCallback(
-        async (item: CollectionItem, quantity: number) => {
-            setBusyId(item.oracleId);
-            setError(null);
-            try {
-                const response = await fetch(
-                    `/api/collection/${item.oracleId}`,
-                    {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ quantity }),
-                    }
-                );
-                if (!response.ok) throw new Error(await readError(response));
-                const body = (await response.json()) as {
-                    item?: CollectionItem;
-                    removed?: boolean;
-                };
-                setItems((current) =>
-                    body.item
-                        ? withItem(current ?? [], body.item)
-                        : (current ?? []).filter(
-                              (existing) => existing.oracleId !== item.oracleId
-                          )
-                );
-            } catch (e) {
-                setError(
-                    e instanceof Error ? e.message : 'Could not update card.'
-                );
-            } finally {
-                setBusyId(null);
-            }
-        },
-        []
-    );
-
-    const removeCard = useCallback(
-        (item: CollectionItem) => {
-            if (window.confirm(`Remove ${item.name} from your collection?`)) {
-                void setQuantity(item, 0);
-            }
-        },
-        [setQuantity]
-    );
+    const removeCard = (item: CollectionItem) => {
+        if (window.confirm(`Remove ${item.name} from your collection?`)) {
+            setQuantity(item, 0);
+        }
+    };
 
     return (
         <div className="mx-auto max-w-2xl space-y-10 px-4 py-6">
@@ -217,7 +108,7 @@ export default function CollectionView() {
                 <h2 id="add-heading" className="text-subheading">
                     Add a card
                 </h2>
-                <ScanCard index={index} onAdd={addScannedCard} />
+                <ScanCard index={index} />
                 <label htmlFor="card-search" className="sr-only">
                     Card name
                 </label>
@@ -250,7 +141,7 @@ export default function CollectionView() {
                             <li key={card.oracleId}>
                                 <button
                                     type="button"
-                                    onClick={() => void addCard(card)}
+                                    onClick={() => addCard(card)}
                                     disabled={busyId === card.oracleId}
                                     className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-2 text-left text-body transition-colors hover:bg-surface-minimal-hover disabled:opacity-50"
                                 >
@@ -342,7 +233,7 @@ export default function CollectionView() {
                                                 busy || item.quantity <= 1
                                             }
                                             onClick={() =>
-                                                void setQuantity(
+                                                setQuantity(
                                                     item,
                                                     item.quantity - 1
                                                 )
@@ -362,7 +253,7 @@ export default function CollectionView() {
                                             aria-label={`Add one ${item.name}`}
                                             disabled={busy}
                                             onClick={() =>
-                                                void setQuantity(
+                                                setQuantity(
                                                     item,
                                                     item.quantity + 1
                                                 )

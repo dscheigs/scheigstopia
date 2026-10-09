@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
-import { readError } from '@/lib/api-client';
 import {
     matchReadName,
     type CardEntry,
     type CardIndex,
 } from '@/lib/card-search';
 import { CAPTURE_MAX_EDGE, CAPTURE_QUALITY, fitWithin } from '@/lib/capture';
+import { useAddCard, useIdentify } from '@/lib/queries';
 
 type Phase = 'idle' | 'starting' | 'live' | 'reading' | 'result';
 
@@ -21,8 +21,6 @@ interface Outcome {
 
 interface Props {
     index: CardIndex | null;
-    /** Resolves to whether the card was added. */
-    onAdd: (card: CardEntry) => Promise<boolean>;
 }
 
 function cameraProblem(error: unknown): string {
@@ -37,13 +35,14 @@ function cameraProblem(error: unknown): string {
 }
 
 /** Point the camera at one card, snap it, and add it once you confirm the match. */
-export default function ScanCard({ index, onAdd }: Props) {
+export default function ScanCard({ index }: Props) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const [phase, setPhase] = useState<Phase>('idle');
     const [outcome, setOutcome] = useState<Outcome | null>(null);
     const [message, setMessage] = useState<string | null>(null);
-    const [adding, setAdding] = useState(false);
+    const identify = useIdentify();
+    const addCard = useAddCard();
 
     const stopCamera = useCallback(() => {
         streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -115,48 +114,34 @@ export default function ScanCard({ index, onAdd }: Props) {
 
         setMessage(null);
         setPhase('reading');
-        try {
-            const response = await fetch('/api/identify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'image/jpeg' },
-                body: blob,
-            });
-            if (response.status === 401) {
-                window.location.href = '/signin';
-                return;
-            }
-            if (!response.ok) throw new Error(await readError(response));
-            const { name } = (await response.json()) as { name: string | null };
-            setOutcome({
-                read: name,
-                matches: name && index ? matchReadName(index, name) : [],
-            });
-            setPhase('result');
-        } catch (error) {
-            setMessage(
-                error instanceof Error
-                    ? error.message
-                    : 'Could not read the card.'
-            );
-            setPhase('live');
-        }
-    }, [index]);
+        identify.mutate(blob, {
+            onSuccess: ({ name }) => {
+                setOutcome({
+                    read: name,
+                    matches: name && index ? matchReadName(index, name) : [],
+                });
+                setPhase('result');
+            },
+            onError: (error) => {
+                setMessage(error.message);
+                setPhase('live');
+            },
+        });
+    }, [index, identify]);
 
+    // On failure the result stays up so you can retry.
     const confirmAdd = useCallback(
-        async (card: CardEntry) => {
-            setAdding(true);
-            try {
-                // On failure the result stays up so you can retry; the reason
-                // is shown by whoever owns the collection.
-                if (await onAdd(card)) {
+        (card: CardEntry) => {
+            setMessage(null);
+            addCard.mutate(card, {
+                onSuccess: () => {
                     setOutcome(null);
                     setPhase('live');
-                }
-            } finally {
-                setAdding(false);
-            }
+                },
+                onError: (error) => setMessage(error.message),
+            });
         },
-        [onAdd]
+        [addCard]
     );
 
     const dismiss = useCallback(() => {
@@ -242,8 +227,8 @@ export default function ScanCard({ index, onAdd }: Props) {
                             <div className="flex flex-wrap gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => void confirmAdd(best)}
-                                    disabled={adding}
+                                    onClick={() => confirmAdd(best)}
+                                    disabled={addCard.isPending}
                                     className={buttonClasses}
                                 >
                                     Add to collection
@@ -251,7 +236,7 @@ export default function ScanCard({ index, onAdd }: Props) {
                                 <button
                                     type="button"
                                     onClick={dismiss}
-                                    disabled={adding}
+                                    disabled={addCard.isPending}
                                     className={secondaryButtonClasses}
                                 >
                                     Not it
@@ -268,9 +253,9 @@ export default function ScanCard({ index, onAdd }: Props) {
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        void confirmAdd(card)
+                                                        confirmAdd(card)
                                                     }
-                                                    disabled={adding}
+                                                    disabled={addCard.isPending}
                                                     className={
                                                         secondaryButtonClasses
                                                     }
