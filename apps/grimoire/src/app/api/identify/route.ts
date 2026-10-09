@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getSql } from '@/lib/db';
 import { badRequest, unauthorized } from '@/lib/http';
 import {
     IdentifyError,
@@ -8,6 +9,12 @@ import {
     readCardName,
     sniffImageType,
 } from '@/lib/identify';
+import {
+    limitMessage,
+    readLimits,
+    releaseIdentify,
+    reserveIdentify,
+} from '@/lib/identify-limits';
 import { getUserId } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -47,6 +54,13 @@ export async function POST(request: Request) {
         return badRequest("That doesn't look like a valid image.");
     }
 
+    // Count this scan before paying for it; refused requests make no API call.
+    const sql = getSql();
+    const reservation = await reserveIdentify(sql, userId, readLimits());
+    if (!reservation.allowed) {
+        return fail(limitMessage[reservation.window], 429);
+    }
+
     try {
         const name = await readCardName(
             { bytes, mediaType },
@@ -54,6 +68,11 @@ export async function POST(request: Request) {
         );
         return NextResponse.json({ name });
     } catch (error) {
+        // Give the scan back only when the provider answered with an error
+        // status. A timeout or dropped connection may still have been billed.
+        if (error instanceof IdentifyError && error.status !== undefined) {
+            await releaseIdentify(sql, userId, reservation.id).catch(() => {});
+        }
         // Log what failed, never the image or the key.
         console.error(
             'identify failed',

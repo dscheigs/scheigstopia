@@ -17,7 +17,7 @@ export const DEFAULT_IDENTIFY_MODEL = 'claude-haiku-5-5';
 const API_URL = 'https://api.anthropic.com/v1/messages';
 const API_VERSION = '2023-06-01';
 const REQUEST_TIMEOUT_MS = 20_000;
-const MAX_OUTPUT_TOKENS = 64;
+const MAX_OUTPUT_TOKENS = 1024;
 const MAX_NAME_LENGTH = 200;
 const UNREADABLE = 'UNREADABLE';
 
