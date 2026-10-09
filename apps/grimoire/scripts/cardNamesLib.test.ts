@@ -6,7 +6,7 @@ import {
     assertDeployableCardList,
     pickOracleCardsEntry,
     slimOracleCards,
-} from './card-names-lib.mjs';
+} from './cardNamesLib.mjs';
 
 async function loadFixture(): Promise<unknown[]> {
     const file = path.join(

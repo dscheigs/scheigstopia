@@ -4,7 +4,7 @@ import {
     changedFraction,
     createDetector,
     toGray,
-} from '@/lib/auto-capture';
+} from '@/lib/autoCapture';
 
 const {
     sampleWidth: W,

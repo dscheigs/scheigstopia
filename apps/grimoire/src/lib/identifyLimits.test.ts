@@ -5,7 +5,7 @@ import {
     readLimits,
     releaseIdentify,
     reserveIdentify,
-} from '@/lib/identify-limits';
+} from '@/lib/identifyLimits';
 import { upsertUser } from '@/lib/users';
 import { createTestDb } from '@/test/db';
 

@@ -14,7 +14,7 @@ import {
     readLimits,
     releaseIdentify,
     reserveIdentify,
-} from '@/lib/identify-limits';
+} from '@/lib/identifyLimits';
 import { getUserId } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';

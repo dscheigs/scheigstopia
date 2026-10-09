@@ -8,13 +8,13 @@ import {
     toGray,
     type Detector,
     type Reading,
-} from '@/lib/auto-capture';
+} from '@/lib/autoCapture';
 import { CAPTURE_MAX_EDGE, CAPTURE_QUALITY, fitWithin } from '@/lib/capture';
 import {
     matchReadName,
     type CardEntry,
     type CardIndex,
-} from '@/lib/card-search';
+} from '@/lib/cardSearch';
 import { useAddCard, useIdentify } from '@/lib/queries';
 
 export type Phase = 'idle' | 'starting' | 'live' | 'reading' | 'result';

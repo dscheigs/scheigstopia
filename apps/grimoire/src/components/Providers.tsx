@@ -7,7 +7,7 @@ import {
     QueryClientProvider,
 } from '@tanstack/react-query';
 import { useState } from 'react';
-import { ApiError, isUnauthorized } from '@/lib/api-client';
+import { ApiError, isUnauthorized } from '@/lib/apiClient';
 
 /** A lapsed session on any request sends you back to sign in. */
 function redirectIfSignedOut(error: unknown) {

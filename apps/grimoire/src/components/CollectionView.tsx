@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ScanCard from '@/components/ScanCard';
 import { buttonClasses, inputClasses } from '@/components/styles';
-import { buildIndex, searchCards, type CardEntry } from '@/lib/card-search';
+import { buildIndex, searchCards, type CardEntry } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
 import {
     useAddCard,

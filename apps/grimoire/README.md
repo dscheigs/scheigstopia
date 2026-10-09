@@ -9,7 +9,7 @@ This is milestones 1 to 3 of the plan: sign-in, database, the card list, a colle
 - **Sign-in**: GitHub through Auth.js, restricted to one GitHub account (`ALLOWED_GITHUB_ID`). Every API route checks the session itself.
 - **Collection**: add a card by typing its name (fuzzy search), change quantities, remove cards, filter the list, export as `4 Lightning Bolt` text for Moxfield or Archidekt.
 - **Scanning**: tap _Scan a card_, point the rear camera at one card, tap _Snap_. The phone shrinks the photo, `POST /api/identify` has Claude read the name, and the app matches it to the card list and asks _Is this ...?_ before adding anything. See [Card scanning](#card-scanning).
-- **Card list**: `public/data/card-names.json`, committed to the repo and built from Scryfall's Oracle Cards bulk data by `scripts/build-card-names.mjs`. Tokens, emblems, and other non-collectible layouts are left out. Deploys do not call Scryfall.
+- **Card list**: `public/data/card-names.json`, committed to the repo and built from Scryfall's Oracle Cards bulk data by `scripts/buildCardNames.mjs`. Tokens, emblems, and other non-collectible layouts are left out. Deploys do not call Scryfall.
 - **Data**: users and collection tables in `db/migrations`. Cards are keyed by Scryfall `oracle_id`; everything is keyed to an internal user id, not the GitHub id, so other sign-in methods can be added later.
 
 ## First-time setup

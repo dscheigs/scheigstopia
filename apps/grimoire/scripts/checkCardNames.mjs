@@ -5,7 +5,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assertDeployableCardList } from './card-names-lib.mjs';
+import { assertDeployableCardList } from './cardNamesLib.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const file = path.join(scriptDir, '..', 'public', 'data', 'card-names.json');
