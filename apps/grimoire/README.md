@@ -2,7 +2,7 @@
 
 A private Magic: The Gathering collection tracker. Phone-friendly, signed in with GitHub, with the collection saved in a Neon Postgres database so it survives a phone reset and works across devices.
 
-This is milestones 1 and 2 of the plan: sign-in, database, the card list, a collection you can search, add to, edit, and export, and snapping a card with the camera to identify and add it. Automatic capture, the background queue, and the accuracy and cost test come next.
+This is milestones 1 to 3 of the plan: sign-in, database, the card list, a collection you can search, add to, edit, and export, snapping a card with the camera to identify and add it, and auto-capture that snaps for you when a card is held still. The background queue and the accuracy and cost test come next.
 
 ## What's here
 
@@ -39,12 +39,13 @@ How it works:
 
 Settings, all on the server and never sent to the browser:
 
-| Variable            | What it does                                                                                               |
-| ------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `ANTHROPIC_API_KEY` | Turns scanning on. Unset, the route answers 503 and calls nothing.                                         |
-| `IDENTIFY_MODEL`    | Model that reads the name. Defaults to the smallest (`claude-haiku-5-5`); change it without a code change. |
+| Variable                                        | What it does                                                                                                                                       |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ANTHROPIC_API_KEY`                             | Turns scanning on. Unset, the route answers 503 and calls nothing.                                                                                 |
+| `IDENTIFY_MODEL`                                | Model that reads the name. Defaults to the smallest (`claude-haiku-5-5`); change it without a code change.                                         |
+| `IDENTIFY_LIMIT_PER_MINUTE` / `_DAY` / `_MONTH` | Scan caps per user (days and months are UTC). Past a cap the route answers 429 and calls nothing. Defaults are deliberately low: 10, 100 and 1000. |
 
-**Every scan is a paid API call.** Before setting the key in production, use a key made just for Grimoire in an Anthropic workspace with a monthly spend limit (issue #43). That limit is what protects the bill while you scan one card at a time. The app-side daily and monthly cap and the rate limit from #43 are not built yet; they are needed before auto-capture (milestone 3), which can send requests in a loop.
+**Every scan is a paid API call.** Before setting the key in production, use a key made just for Grimoire in an Anthropic workspace with a monthly spend limit (issue #43). That limit is the backstop. The app-side caps above sit in front of it, and auto-capture switches itself off on any failed or refused scan so it can never retry in a loop.
 
 To try it locally, put a key in `apps/grimoire/.env.local` and run `pnpm dev:grimoire`. A phone can reach your computer's dev server over HTTPS only (for example through a tunnel), because browsers block camera access on plain HTTP.
 
@@ -87,9 +88,21 @@ When a new set is released:
 
 `nx test grimoire` runs Vitest. The database tests apply the real migrations to an in-process Postgres (PGlite) and exercise the real queries, including that one user can never read or change another user's cards. The sign-in gate, input validation, export format, fuzzy search, and card-list filtering have their own tests, and so does scanning: the route's limits and failure handling, the reply parsing, and the request sent to the API (against a stand-in for `fetch`, so no key or network is needed).
 
+## Auto-capture
+
+Tap _Auto-capture_ while the camera is live and the app watches the video instead of waiting for _Snap_. About ten times a second it shrinks the frame to 64 x 48 grayscale and compares it with the empty background (`src/lib/auto-capture.ts`):
+
+1. Start with nothing in frame so it can learn the background.
+2. When a card fills enough of the frame and holds still for about 0.6 s, it captures once and runs the normal scan flow, including the confirm step.
+3. It will not capture again until the card is taken away for about 0.8 s, or a clearly different card replaces it. Captures are at least 2 s apart.
+
+Every threshold is in the `AUTO_CAPTURE` object at the top of that file. Turn on _Debug_ for a readout over the video (how much of the frame changed, how much is moving, how long it has been still) to tune them under your lighting. The numbers there are starting guesses, tested only against synthetic frames, so expect to adjust them with a real camera.
+
+Confirming each card is still manual; the background queue that removes it is milestone 4.
+
 ## Not yet done
 
-- App-side scan cap and rate limits (issue #43), needed before auto-capture. Set a spend limit on the API key's workspace before enabling scanning in production.
-- Automatic capture, the background queue and review list, and the OCR-first accuracy and cost test (milestones 3 to 5).
+- The rest of issue #43: showing the remaining scan budget in the UI, and a rate limit on sign-in. Set a spend limit on the API key's workspace before enabling scanning in production.
+- The background queue and review list, and the OCR-first accuracy and cost test (milestones 4 and 5).
 - Installing as a home-screen app and requesting persistent storage.
 - A cached copy of the card list in IndexedDB; for now it is fetched as a static file and cached by the browser.

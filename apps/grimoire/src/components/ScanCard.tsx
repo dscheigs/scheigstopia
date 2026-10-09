@@ -7,6 +7,13 @@ import {
     type CardEntry,
     type CardIndex,
 } from '@/lib/card-search';
+import {
+    AUTO_CAPTURE,
+    createDetector,
+    toGray,
+    type Detector,
+    type Reading,
+} from '@/lib/auto-capture';
 import { CAPTURE_MAX_EDGE, CAPTURE_QUALITY, fitWithin } from '@/lib/capture';
 import { useAddCard, useIdentify } from '@/lib/queries';
 
@@ -41,6 +48,14 @@ export default function ScanCard({ index }: Props) {
     const [phase, setPhase] = useState<Phase>('idle');
     const [outcome, setOutcome] = useState<Outcome | null>(null);
     const [message, setMessage] = useState<string | null>(null);
+    const [auto, setAuto] = useState(false);
+    const [debug, setDebug] = useState(false);
+    const [reading, setReading] = useState<Reading | null>(null);
+    const detectorRef = useRef<Detector | null>(null);
+    const sampleRef = useRef<{
+        canvas: HTMLCanvasElement;
+        context: CanvasRenderingContext2D;
+    } | null>(null);
     const identify = useIdentify();
     const addCard = useAddCard();
 
@@ -86,6 +101,8 @@ export default function ScanCard({ index }: Props) {
 
     const closeCamera = useCallback(() => {
         stopCamera();
+        setAuto(false);
+        setReading(null);
         setOutcome(null);
         setMessage(null);
         setPhase('idle');
@@ -114,6 +131,8 @@ export default function ScanCard({ index }: Props) {
 
         setMessage(null);
         setPhase('reading');
+        // Whatever is in front of the camera now is being handled; don't recapture it.
+        detectorRef.current?.hold();
         identify.mutate(blob, {
             onSuccess: ({ name }) => {
                 setOutcome({
@@ -123,11 +142,64 @@ export default function ScanCard({ index }: Props) {
                 setPhase('result');
             },
             onError: (error) => {
-                setMessage(error.message);
+                // A failing or capped scan must never turn into a retry loop.
+                setAuto(false);
+                setMessage(
+                    auto
+                        ? `${error.message} Auto-capture is off.`
+                        : error.message
+                );
                 setPhase('live');
             },
         });
-    }, [index, identify]);
+    }, [index, identify, auto]);
+
+    // Latest snap for the sampling timer, which outlives any one render.
+    const snapRef = useRef(snap);
+    useEffect(() => {
+        snapRef.current = snap;
+    }, [snap]);
+
+    const toggleAuto = useCallback(() => {
+        // A fresh detector learns the empty background from the scene as it is now.
+        detectorRef.current = createDetector();
+        setReading(null);
+        setAuto((on) => !on);
+    }, []);
+
+    // While live and in auto mode, watch the video and snap when a card settles.
+    useEffect(() => {
+        if (!auto || phase !== 'live') return;
+        detectorRef.current ??= createDetector();
+        const timer = setInterval(() => {
+            const video = videoRef.current;
+            const detector = detectorRef.current;
+            if (!video || !detector || video.videoWidth === 0) return;
+
+            if (!sampleRef.current) {
+                const canvas = document.createElement('canvas');
+                canvas.width = AUTO_CAPTURE.sampleWidth;
+                canvas.height = AUTO_CAPTURE.sampleHeight;
+                const context = canvas.getContext('2d', {
+                    willReadFrequently: true,
+                });
+                if (!context) return;
+                sampleRef.current = { canvas, context };
+            }
+            const { canvas, context } = sampleRef.current;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const { data } = context.getImageData(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+            const result = detector.step(toGray(data), performance.now());
+            if (debug) setReading(result);
+            if (result.capture) void snapRef.current();
+        }, AUTO_CAPTURE.sampleIntervalMs);
+        return () => clearInterval(timer);
+    }, [auto, phase, debug]);
 
     // On failure the result stays up so you can retry.
     const confirmAdd = useCallback(
@@ -170,27 +242,52 @@ export default function ScanCard({ index }: Props) {
             ) : null}
 
             {/* Always mounted so the stream can attach; hidden until the camera is on. */}
-            <video
-                ref={videoRef}
-                playsInline
-                muted
-                aria-label="Camera view"
-                className={
-                    cameraOn
-                        ? 'aspect-[4/3] w-full rounded-lg bg-neutral-950 object-cover'
-                        : 'hidden'
-                }
-            />
+            <div className={cameraOn ? 'relative' : 'hidden'}>
+                <video
+                    ref={videoRef}
+                    playsInline
+                    muted
+                    aria-label="Camera view"
+                    className="aspect-[4/3] w-full rounded-lg bg-neutral-950 object-cover"
+                />
+                {auto && debug && reading && (
+                    <dl
+                        className="absolute bottom-2 left-2 space-y-0.5 rounded-lg bg-neutral-950/80 p-2 font-mono text-caption text-neutral-100"
+                        aria-label="Auto-capture readings"
+                    >
+                        <div>state: {reading.state}</div>
+                        <div>
+                            card in frame:{' '}
+                            {(reading.vsBackground * 100).toFixed(0)}% (needs{' '}
+                            {(AUTO_CAPTURE.presentFraction * 100).toFixed(0)}%)
+                        </div>
+                        <div>
+                            motion: {(reading.vsPrevious * 100).toFixed(1)}%
+                            (still at or under{' '}
+                            {(AUTO_CAPTURE.stillFraction * 100).toFixed(0)}%)
+                        </div>
+                        <div>
+                            still: {reading.stillForMs}/{AUTO_CAPTURE.stableMs}{' '}
+                            ms
+                        </div>
+                        <div>
+                            empty: {reading.emptyForMs}/{AUTO_CAPTURE.emptyMs}{' '}
+                            ms
+                        </div>
+                    </dl>
+                )}
+            </div>
 
             {cameraOn && (
                 <p className="text-caption text-text-minimal">
-                    Hold one card flat, fill the frame, and keep the title
-                    sharp.
+                    {auto
+                        ? 'Auto-capture is on. Start with nothing in frame, then hold each card still, flat and filling the frame. Take it away before the next one.'
+                        : 'Hold one card flat, fill the frame, and keep the title sharp.'}
                 </p>
             )}
 
             {(phase === 'live' || phase === 'reading') && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <button
                         type="button"
                         onClick={() => void snap()}
@@ -199,6 +296,28 @@ export default function ScanCard({ index }: Props) {
                     >
                         {phase === 'reading' ? 'Reading...' : 'Snap'}
                     </button>
+                    <button
+                        type="button"
+                        onClick={toggleAuto}
+                        disabled={phase === 'reading'}
+                        aria-pressed={auto}
+                        className={secondaryButtonClasses}
+                    >
+                        {auto ? 'Auto-capture: on' : 'Auto-capture: off'}
+                    </button>
+                    {auto && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setReading(null);
+                                setDebug((on) => !on);
+                            }}
+                            aria-pressed={debug}
+                            className={secondaryButtonClasses}
+                        >
+                            Debug
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={closeCamera}
