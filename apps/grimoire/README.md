@@ -90,7 +90,7 @@ When a new set is released:
 
 ## Auto-capture
 
-Tap _Auto-capture_ while the camera is live and the app watches the video instead of waiting for _Snap_. About ten times a second it shrinks the frame to 64 x 48 grayscale and compares it with the empty background (`src/lib/auto-capture.ts`):
+Tap _Auto-capture_ while the camera is live and the app watches the video instead of waiting for _Snap_. About ten times a second it shrinks the frame to 64 x 48 grayscale and compares it with the empty background (`src/lib/autoCapture.ts`):
 
 1. Start with nothing in frame so it can learn the background.
 2. When a card fills enough of the frame and holds still for about 0.6 s, it captures once and runs the normal scan flow, including the confirm step.
