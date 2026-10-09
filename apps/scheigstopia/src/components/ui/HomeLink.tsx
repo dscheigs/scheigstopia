@@ -9,7 +9,7 @@ export default function HomeLink() {
             href="/"
             className="flex items-center"
         >
-            <GnomeIcon size={32} className="flex-shrink-0" />
+            <GnomeIcon size={26} className="flex-shrink-0" />
         </Link>
     );
 }
