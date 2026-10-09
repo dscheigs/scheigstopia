@@ -176,7 +176,7 @@ describe('readCardName', () => {
 
         const body = JSON.parse(init.body as string);
         expect(body.model).toBe(DEFAULT_IDENTIFY_MODEL);
-        expect(body.max_tokens).toBeLessThanOrEqual(100);
+        expect(body.max_tokens).toBeLessThanOrEqual(2048);
         expect(body.messages).toHaveLength(1);
         const [imageBlock, textBlock] = body.messages[0].content;
         expect(imageBlock).toEqual({

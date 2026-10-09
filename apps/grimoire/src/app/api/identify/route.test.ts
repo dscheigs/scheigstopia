@@ -1,9 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAX_IMAGE_BYTES } from '@/lib/identify';
+import { releaseIdentify, reserveIdentify } from '@/lib/identify-limits';
 import { getUserId } from '@/lib/session';
 import { POST } from './route';
 
 vi.mock('@/lib/session', () => ({ getUserId: vi.fn() }));
+vi.mock('@/lib/db', () => ({ getSql: () => vi.fn() }));
+vi.mock('@/lib/identify-limits', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@/lib/identify-limits')>()),
+    reserveIdentify: vi.fn(),
+    releaseIdentify: vi.fn(),
+}));
 
 const SECRET = 'sk-test-secret';
 
@@ -30,6 +37,8 @@ let fetchMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
     vi.mocked(getUserId).mockResolvedValue('user-1');
+    vi.mocked(reserveIdentify).mockResolvedValue({ allowed: true, id: '7' });
+    vi.mocked(releaseIdentify).mockResolvedValue();
     vi.stubEnv('ANTHROPIC_API_KEY', SECRET);
     vi.stubEnv('IDENTIFY_MODEL', '');
     fetchMock = vi.fn().mockResolvedValue(reply('Lightning Bolt'));
@@ -117,6 +126,33 @@ describe('POST /api/identify', () => {
             (fetchMock.mock.calls[0][1] as RequestInit).body as string
         );
         expect(body.model).toBe('some-other-model');
+    });
+
+    it('refuses past the cap with a friendly message and no API call', async () => {
+        vi.mocked(reserveIdentify).mockResolvedValue({
+            allowed: false,
+            window: 'day',
+        });
+        const response = await POST(post(jpeg()));
+        expect(response.status).toBe(429);
+        expect((await response.json()).error).toMatch(/today's scan limit/);
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('does not count requests that fail validation', async () => {
+        await POST(post(new Uint8Array(0)));
+        await POST(post(jpeg(), 'text/plain'));
+        expect(reserveIdentify).not.toHaveBeenCalled();
+    });
+
+    it('gives back the reserved scan when the provider fails', async () => {
+        fetchMock.mockResolvedValue(new Response('nope', { status: 500 }));
+        await POST(post(jpeg()));
+        expect(releaseIdentify).toHaveBeenCalledWith(
+            expect.anything(),
+            'user-1',
+            '7'
+        );
     });
 
     it('reports a provider failure without leaking details or the key', async () => {
