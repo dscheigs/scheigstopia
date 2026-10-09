@@ -2,10 +2,10 @@
 // each change updates the cache. Components use these hooks, never `fetch`.
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiFetch } from '@/lib/api-client';
-import type { CardEntry, CardNameFile } from '@/lib/card-search';
+import { apiFetch } from '@/lib/apiClient';
+import type { CardEntry, CardNameFile } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
-import { withItem, withoutItem } from '@/lib/collection-cache';
+import { withItem, withoutItem } from '@/lib/collectionCache';
 
 export const queryKeys = {
     collection: ['collection'] as const,

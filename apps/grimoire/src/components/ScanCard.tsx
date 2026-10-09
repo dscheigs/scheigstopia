@@ -1,8 +1,8 @@
 'use client';
 
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
-import type { CardIndex } from '@/lib/card-search';
-import { AUTO_CAPTURE } from '@/lib/auto-capture';
+import type { CardIndex } from '@/lib/cardSearch';
+import { AUTO_CAPTURE } from '@/lib/autoCapture';
 import { useCardScanner } from '@/lib/useCardScanner';
 
 interface Props {

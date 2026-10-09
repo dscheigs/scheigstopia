@@ -54,6 +54,11 @@ changes is a near-instant cache hit.
   New dependency build scripts are blocked until added to `allowBuilds` in
   `pnpm-workspace.yaml`.
 - **Pre-commit hook**: `lint-staged` runs Prettier on staged files.
+- **File names**: camelCase for modules, hooks and their tests (`cardSearch.ts`,
+  `useCardScanner.ts`, `cardNamesLib.mjs`); PascalCase for React components
+  (`ScanCard.tsx`). No kebab-case module files. Leave names a tool requires alone
+  (`next-auth.d.ts`, `eslint.config.mjs`, `next.config.*`, `tsconfig*.json`,
+  `vitest.config.*`). Nx target names stay kebab-case (`check-card-names`).
 - **Commit messages**: conventional commit format enforced by `.husky/commit-msg` —
   `<type>: <description>`, type ∈ feat, fix, docs, style, refactor, test, chore,
   perf, ci, build, revert.
@@ -69,7 +74,7 @@ changes is a near-instant cache hit.
 
 - **Auth**: Auth.js (`next-auth` v5 beta) with GitHub, restricted to `ALLOWED_GITHUB_ID`. Route handlers check the session themselves; there is no middleware.
 - **Data**: Neon Postgres via `@neondatabase/serverless`. Query code takes a `Sql` function so tests can run it against PGlite. Schema changes are new files in `apps/grimoire/db/migrations/`.
-- **Client data**: TanStack Query. Components never call `fetch`; they use the hooks in `src/lib/queries.ts`, which go through `apiFetch` (`src/lib/api-client.ts`). A 401 on any request redirects to `/signin` from the `QueryClient` in `Providers.tsx`.
+- **Client data**: TanStack Query. Components never call `fetch`; they use the hooks in `src/lib/queries.ts`, which go through `apiFetch` (`src/lib/apiClient.ts`). A 401 on any request redirects to `/signin` from the `QueryClient` in `Providers.tsx`.
 - **Card list**: `apps/grimoire/public/data/card-names.json` is committed (built from Scryfall by `nx run grimoire:card-names`, refreshed by hand). The build fails if it is missing or not a real build.
 - **Scanning**: `POST /api/identify` (`src/lib/identify.ts`) sends a phone photo to Claude vision and returns the card name; the client matches it to the card list and the user confirms. Off unless `ANTHROPIC_API_KEY` is set. Every scan costs money: before enabling it in production use a dedicated key with a workspace spend limit. The app-side cap and rate limits (#43) are needed before auto-capture.
 - **Deploys**: manual, via the _Deploy to production_ workflow (pick an app or `all`). Each app has a `production-<app>` GitHub environment holding its Vercel secrets.

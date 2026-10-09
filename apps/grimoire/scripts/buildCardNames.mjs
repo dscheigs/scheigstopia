@@ -1,7 +1,7 @@
 // Builds apps/grimoire/public/data/card-names.json from Scryfall bulk data.
 //
 //   pnpm nx run grimoire:card-names
-//   node apps/grimoire/scripts/build-card-names.mjs --fixture <oracle-cards.json>
+//   node apps/grimoire/scripts/buildCardNames.mjs --fixture <oracle-cards.json>
 //
 // With --fixture it reads a local file instead of calling Scryfall, which is
 // handy offline. Without it, it downloads the current "Oracle Cards" file
@@ -10,7 +10,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
-import { pickOracleCardsEntry, slimOracleCards } from './card-names-lib.mjs';
+import { pickOracleCardsEntry, slimOracleCards } from './cardNamesLib.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const outFile = path.join(scriptDir, '..', 'public', 'data', 'card-names.json');

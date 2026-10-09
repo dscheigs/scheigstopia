@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, apiFetch, isUnauthorized } from '@/lib/api-client';
+import { ApiError, apiFetch, isUnauthorized } from '@/lib/apiClient';
 
 const fetchMock = vi.fn();
 

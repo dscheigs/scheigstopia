@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createTestDb } from '@/test/db';
-import { runMigrations, splitStatements } from './migrate-lib.mjs';
+import { runMigrations, splitStatements } from './migrateLib.mjs';
 
 describe('splitStatements', () => {
     it('splits on semicolons and drops comments and blanks', () => {
