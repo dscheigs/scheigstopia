@@ -4,11 +4,11 @@ An Nx monorepo (pnpm workspaces).
 
 ## Contents
 
-| Path                | What                                                                                                                                        |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/scheigstopia` | Personal site — Next.js 15, App Router, TypeScript, Tailwind.                                                                               |
-| `apps/grimoire`     | Grimoire — private Magic: The Gathering collection tracker (Next.js 15, Auth.js, Neon Postgres). See its [README](apps/grimoire/README.md). |
-| `packages/sylva`    | Sylva — color system as W3C design tokens, built to CSS/JS. See its [README](packages/sylva/README.md).                                     |
+| Path                | What                                                                                                                        |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `apps/scheigstopia` | Personal site — Next.js 15, App Router, TypeScript, Tailwind.                                                               |
+| `apps/grimoire`     | Grimoire — private card collection tracker (Next.js 15, Auth.js, Neon Postgres). See its [README](apps/grimoire/README.md). |
+| `packages/sylva`    | Sylva — color system as W3C design tokens, built to CSS/JS. See its [README](packages/sylva/README.md).                     |
 
 ## Getting started
 
