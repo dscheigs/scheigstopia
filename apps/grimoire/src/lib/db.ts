@@ -2,13 +2,16 @@ import { neon } from '@neondatabase/serverless';
 
 /**
  * The only database surface the app code depends on: a tagged-template
- * function that returns rows. Neon's `neon()` client satisfies it, and the
+ * function that returns rows, plus `transaction` for batches. Neon's `neon()` client satisfies it, and the
  * tests satisfy it with an in-process Postgres (PGlite).
  */
-export type Sql = (
-    strings: TemplateStringsArray,
-    ...values: unknown[]
-) => Promise<Record<string, unknown>[]>;
+export type Rows = Record<string, unknown>[];
+
+export interface Sql {
+    (strings: TemplateStringsArray, ...values: unknown[]): Promise<Rows>;
+    /** Run the queries in order inside one transaction. */
+    transaction(queries: Promise<Rows>[]): Promise<Rows[]>;
+}
 
 let client: Sql | undefined;
 

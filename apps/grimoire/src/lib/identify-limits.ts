@@ -71,15 +71,20 @@ export async function getUsage(
 
 /**
  * Count one identification against the limits, before the paid call is made.
- * The check and the insert are a single statement, so concurrent requests
- * cannot all slip under the limit together. Refused requests are not counted.
+ * Refused requests are not counted. Under READ COMMITTED, a single statement
+ * cannot see rows other in-flight requests have not committed yet, so a
+ * per-user advisory lock goes first in the same transaction: the next request
+ * waits for the previous commit, and its insert statement then sees that row.
+ * The lock is released at commit, before the paid call.
  */
 export async function reserveIdentify(
     sql: Sql,
     userId: string,
     limits: IdentifyLimits
 ): Promise<ReserveResult> {
-    const inserted = await sql`
+    const [, inserted] = await sql.transaction([
+        sql`select pg_advisory_xact_lock(hashtext(${userId}))`,
+        sql`
         insert into identify_log (user_id)
         select ${userId}
         where (
@@ -97,7 +102,8 @@ export async function reserveIdentify(
               and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'
         ) < ${limits.perMonth}
         returning id
-    `;
+    `,
+    ]);
     if (inserted.length > 0)
         return { allowed: true, id: String(inserted[0].id) };
 

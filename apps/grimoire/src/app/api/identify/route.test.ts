@@ -155,6 +155,14 @@ describe('POST /api/identify', () => {
         );
     });
 
+    it('keeps the scan counted when the call may have been billed', async () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        fetchMock.mockRejectedValue(new Error('timeout'));
+        const response = await POST(post(jpeg()));
+        expect(response.status).toBe(502);
+        expect(releaseIdentify).not.toHaveBeenCalled();
+    });
+
     it('reports a provider failure without leaking details or the key', async () => {
         const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
         fetchMock.mockResolvedValue(

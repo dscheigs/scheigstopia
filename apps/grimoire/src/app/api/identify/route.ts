@@ -68,8 +68,11 @@ export async function POST(request: Request) {
         );
         return NextResponse.json({ name });
     } catch (error) {
-        // The call failed, so it should not use up the user's allowance.
-        await releaseIdentify(sql, userId, reservation.id).catch(() => {});
+        // Give the scan back only when the provider answered with an error
+        // status. A timeout or dropped connection may still have been billed.
+        if (error instanceof IdentifyError && error.status !== undefined) {
+            await releaseIdentify(sql, userId, reservation.id).catch(() => {});
+        }
         // Log what failed, never the image or the key.
         console.error(
             'identify failed',

@@ -26,7 +26,7 @@ export async function createTestDb() {
         (await pg.query(text, params)).rows as Record<string, unknown>[];
     const applied = await runMigrations({ query, migrations });
 
-    const sql: Sql = (strings, ...values) =>
+    const sql = ((strings: TemplateStringsArray, ...values: unknown[]) =>
         query(
             strings.reduce(
                 (text, part, i) =>
@@ -34,7 +34,10 @@ export async function createTestDb() {
                 ''
             ),
             values
-        );
+        )) as Sql;
+    // PGlite runs queries one at a time in call order, so awaiting them all
+    // is the same as a batch.
+    sql.transaction = (queries) => Promise.all(queries);
 
     return { pg, sql, query, migrations, applied };
 }
