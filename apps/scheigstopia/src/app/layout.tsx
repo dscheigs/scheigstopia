@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { unstable_ViewTransition as ViewTransition } from 'react';
 import { Inter } from 'next/font/google';
 import '../styles/globals.css';
 import Header from '@/components/layout/Header';
@@ -31,7 +32,7 @@ export default function RootLayout({
                 </a>
                 <Header />
                 <main id="main-content" className="flex-1">
-                    {children}
+                    <ViewTransition>{children}</ViewTransition>
                 </main>
             </body>
         </html>
