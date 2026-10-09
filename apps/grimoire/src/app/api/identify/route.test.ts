@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAX_IMAGE_BYTES } from '@/lib/identify';
-import { releaseIdentify, reserveIdentify } from '@/lib/identify-limits';
+import { releaseIdentify, reserveIdentify } from '@/lib/identifyLimits';
 import { getUserId } from '@/lib/session';
 import { POST } from './route';
 
 vi.mock('@/lib/session', () => ({ getUserId: vi.fn() }));
 vi.mock('@/lib/db', () => ({ getSql: () => vi.fn() }));
-vi.mock('@/lib/identify-limits', async (importOriginal) => ({
-    ...(await importOriginal<typeof import('@/lib/identify-limits')>()),
+vi.mock('@/lib/identifyLimits', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@/lib/identifyLimits')>()),
     reserveIdentify: vi.fn(),
     releaseIdentify: vi.fn(),
 }));

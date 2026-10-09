@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CollectionItem } from '@/lib/collection';
-import { withItem, withoutItem } from '@/lib/collection-cache';
+import { withItem, withoutItem } from '@/lib/collectionCache';
 
 const item = (
     oracleId: string,

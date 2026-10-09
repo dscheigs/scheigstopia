@@ -17,7 +17,7 @@
             "inputs": ["default", "^default"]
         },
         "card-names": {
-            "command": "node apps/grimoire/scripts/build-card-names.mjs",
+            "command": "node apps/grimoire/scripts/buildCardNames.mjs",
             "cache": false
         },
         "migrate": {
@@ -25,7 +25,7 @@
             "cache": false
         },
         "check-card-names": {
-            "command": "node apps/grimoire/scripts/check-card-names.mjs",
+            "command": "node apps/grimoire/scripts/checkCardNames.mjs",
             "cache": false
         }
     }

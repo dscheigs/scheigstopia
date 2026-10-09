@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
-import { runMigrations } from '../../scripts/migrate-lib.mjs';
+import { runMigrations } from '../../scripts/migrateLib.mjs';
 import type { Sql } from '@/lib/db';
 
 const migrationsDir = path.join(__dirname, '..', '..', 'db', 'migrations');

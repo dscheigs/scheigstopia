@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js';
 
-/** Shape of public/data/card-names.json, built by scripts/build-card-names.mjs. */
+/** Shape of public/data/card-names.json, built by scripts/buildCardNames.mjs. */
 export interface CardNameFile {
     version: string;
     count: number;

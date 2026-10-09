@@ -4,7 +4,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { neon } from '@neondatabase/serverless';
-import { runMigrations } from './migrate-lib.mjs';
+import { runMigrations } from './migrateLib.mjs';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {

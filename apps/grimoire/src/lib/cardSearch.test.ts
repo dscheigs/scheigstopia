@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { slimOracleCards } from '../../scripts/card-names-lib.mjs';
+import { slimOracleCards } from '../../scripts/cardNamesLib.mjs';
 import {
     buildIndex,
     matchReadName,
     searchCards,
     type CardIndex,
-} from '@/lib/card-search';
+} from '@/lib/cardSearch';
 
 let index: CardIndex;
 
