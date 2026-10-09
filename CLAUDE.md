@@ -70,6 +70,7 @@ changes is a near-instant cache hit.
 - **Auth**: Auth.js (`next-auth` v5 beta) with GitHub, restricted to `ALLOWED_GITHUB_ID`. Route handlers check the session themselves; there is no middleware.
 - **Data**: Neon Postgres via `@neondatabase/serverless`. Query code takes a `Sql` function so tests can run it against PGlite. Schema changes are new files in `apps/grimoire/db/migrations/`.
 - **Card list**: `apps/grimoire/public/data/card-names.json` is committed (built from Scryfall by `nx run grimoire:card-names`, refreshed by hand). The build fails if it is missing or not a real build.
+- **Scanning**: `POST /api/identify` (`src/lib/identify.ts`) sends a phone photo to Claude vision and returns the card name; the client matches it to the card list and the user confirms. Off unless `ANTHROPIC_API_KEY` is set. Every scan costs money: before enabling it in production use a dedicated key with a workspace spend limit. The app-side cap and rate limits (#43) are needed before auto-capture.
 - **Deploys**: manual, via the _Deploy to production_ workflow (pick an app or `all`). Each app has a `production-<app>` GitHub environment holding its Vercel secrets.
 - **Styling**: same Tailwind setup and typography/color rules as the site. Its `colors.css` imports Sylva like the site's (`nx dev` and `nx build` build Sylva first); `typography.css` is a copy.
 
