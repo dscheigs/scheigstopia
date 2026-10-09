@@ -13,10 +13,9 @@ Colors come from Sylva tokens through the Tailwind classes mapped to them (see C
 System). Type comes from the typography classes below. If the value you need doesn't
 exist, add the token or class first and say so in the PR; don't hard-code around it.
 
-Exceptions, until the color audit retires them: the six site-only colors in
-`apps/scheigstopia/src/styles/colors.css` (listed under Color System), and Grimoire's
-copied CSS until it moves to Sylva (#32). Sylva's token files are where values are
-defined. This file states the rule; a CI check to enforce it is planned (#49), and
+Exception, until the color audit retires it: the six site-only colors in
+`apps/scheigstopia/src/styles/colors.css` (listed under Color System), which Grimoire's
+`colors.css` repeats. Sylva's token files are where values are defined. This file states the rule; a CI check to enforce it is planned (#49), and
 until then it is enforced in review.
 
 ## Typography System
@@ -49,7 +48,7 @@ The project uses custom typography classes with responsive clamp() sizing. **ALW
 
 ### Where the values come from
 
-`colors.css` imports Sylva (`@scheigs/sylva/css`) and points the site's variable
+Each app's `colors.css` imports Sylva (`@scheigs/sylva/css`) and points its variable
 names at Sylva tokens wherever the colors match exactly: background, foreground,
 the primary/accent greens, the neutral scale, the minimal surface colors and
 success/warning/error. These are still literal values, because Sylva has no
