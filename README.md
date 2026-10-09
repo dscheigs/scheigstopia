@@ -1,4 +1,4 @@
-# scheigs
+# scheigstopia
 
 An Nx monorepo (pnpm workspaces).
 
