@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
     describeProblem,
     groupQueue,
+    itemLabel,
+    rowActions,
     planCommit,
     confirmPatch,
     renamePatch,
@@ -115,6 +117,43 @@ describe('confirm', () => {
         });
         const done = item({ status: 'identified', matchedCard: bolt });
         expect(renamePatch(elves, done)).not.toHaveProperty('confirmed');
+    });
+});
+
+describe('rowActions', () => {
+    it('offers confirm only for reviewable items with a card', () => {
+        const confirmable = (patch: Partial<QueueItem>) =>
+            rowActions(item(patch)).confirm;
+        expect(confirmable({ status: 'flagged', matchedCard: bolt })).toBe(
+            true
+        );
+        expect(confirmable({ status: 'failed', matchedCard: bolt })).toBe(true);
+        expect(confirmable({ status: 'identified', matchedCard: bolt })).toBe(
+            false
+        );
+        expect(confirmable({ status: 'queued' })).toBe(false);
+        expect(confirmable({ status: 'flagged' })).toBe(false);
+    });
+
+    it('always offers edit and remove', () => {
+        const actions = rowActions(item());
+        expect(actions.edit && actions.remove).toBe(true);
+    });
+});
+
+describe('itemLabel', () => {
+    it('prefers the matched card, then the read name', () => {
+        expect(itemLabel(item({ matchedCard: bolt, readName: 'Bolt' }))).toBe(
+            'Lightning Bolt'
+        );
+        expect(itemLabel(item({ readName: 'Bolt' }))).toBe('Bolt');
+    });
+
+    it('falls back by status', () => {
+        expect(itemLabel(item({ status: 'queued' }))).toBe(
+            'Waiting to be read'
+        );
+        expect(itemLabel(item({ status: 'flagged' }))).toBe('Unknown card');
     });
 });
 
