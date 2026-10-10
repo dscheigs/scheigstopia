@@ -115,13 +115,13 @@ describe('createScanFeedback', () => {
         expect(request).toHaveBeenCalledOnce();
     });
 
-    it('plays a chime and vibrates on capture', async () => {
+    it('plays a soft ding and vibrates on capture', async () => {
         const { feedback, audio, vibrate } = setup();
         await feedback.start();
         feedback.notifyCaptured();
-        expect(audio.oscillators.map((o) => o.frequency.value)).toEqual([
-            880, 1320,
-        ]);
+        expect(audio.oscillators).toHaveLength(1);
+        expect(audio.oscillators[0].type).toBe('sine');
+        expect(audio.oscillators[0].frequency.value).toBe(1047);
         expect(vibrate).toHaveBeenCalledWith(40);
     });
 

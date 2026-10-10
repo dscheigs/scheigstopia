@@ -41,19 +41,19 @@ interface Note {
     duration: number;
 }
 
-// Capture: a quick rising pair. Attention: two low square beeps, which cannot
-// be mistaken for the chime when you are not looking.
-const CHIME: Note[] = [
-    { freq: 880, start: 0, duration: 0.12 },
-    { freq: 1320, start: 0.09, duration: 0.18 },
-];
+// Capture: one soft sine ding (C6) that rings out. Attention: two low square
+// beeps, which cannot be mistaken for the chime when you are not looking.
+const CHIME: Note[] = [{ freq: 1047, start: 0, duration: 0.45 }];
 const ATTENTION: Note[] = [
     { freq: 330, start: 0, duration: 0.18 },
     { freq: 330, start: 0.26, duration: 0.18 },
 ];
 const CHIME_BUZZ = 40;
 const ATTENTION_BUZZ = [120, 80, 120];
-const PEAK_GAIN = 0.25;
+// The ding is quieter than the attention tone, which must be heard when you
+// are not looking.
+const CHIME_GAIN = 0.12;
+const ATTENTION_GAIN = 0.25;
 
 export function createScanFeedback(env: ScanFeedbackEnv): ScanFeedback {
     let ctx: AudioContext | null = null;
@@ -106,7 +106,7 @@ export function createScanFeedback(env: ScanFeedbackEnv): ScanFeedback {
         publish();
     }
 
-    function play(notes: Note[], shape: OscillatorType) {
+    function play(notes: Note[], shape: OscillatorType, peak: number) {
         if (!ctx || ctx.state !== 'running') return;
         const now = ctx.currentTime;
         for (const note of notes) {
@@ -118,7 +118,7 @@ export function createScanFeedback(env: ScanFeedbackEnv): ScanFeedback {
             const end = at + note.duration;
             // A fast attack and decay avoids clicks.
             gain.gain.setValueAtTime(0, at);
-            gain.gain.linearRampToValueAtTime(PEAK_GAIN, at + 0.01);
+            gain.gain.linearRampToValueAtTime(peak, at + 0.01);
             gain.gain.linearRampToValueAtTime(0, end);
             osc.connect(gain);
             gain.connect(ctx.destination);
@@ -160,11 +160,11 @@ export function createScanFeedback(env: ScanFeedbackEnv): ScanFeedback {
             publish();
         },
         notifyCaptured() {
-            play(CHIME, 'sine');
+            play(CHIME, 'sine', CHIME_GAIN);
             buzz(CHIME_BUZZ);
         },
         notifyAttention() {
-            play(ATTENTION, 'square');
+            play(ATTENTION, 'square', ATTENTION_GAIN);
             buzz(ATTENTION_BUZZ);
         },
         getState: () => state,
