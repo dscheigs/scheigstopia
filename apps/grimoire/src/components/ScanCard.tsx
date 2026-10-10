@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
+import TuningPanel from '@/components/TuningPanel';
 import type { CardIndex } from '@/lib/cardSearch';
 import { AUTO_CAPTURE } from '@/lib/autoCapture';
 import { useCardScanner } from '@/lib/useCardScanner';
@@ -19,6 +21,9 @@ export default function ScanCard({ index }: Props) {
         auto,
         debug,
         reading,
+        tuning,
+        changeTuning,
+        resetTuning,
         adding,
         startCamera,
         closeCamera,
@@ -29,6 +34,7 @@ export default function ScanCard({ index }: Props) {
         dismiss,
     } = useCardScanner(index);
 
+    const [tuningOpen, setTuningOpen] = useState(false);
     const cameraOn =
         phase === 'live' || phase === 'reading' || phase === 'result';
     const best = outcome?.matches[0];
@@ -72,11 +78,10 @@ export default function ScanCard({ index }: Props) {
                         <div>
                             motion: {(reading.vsPrevious * 100).toFixed(1)}%
                             (still at or under{' '}
-                            {(AUTO_CAPTURE.stillFraction * 100).toFixed(0)}%)
+                            {(tuning.stillFraction * 100).toFixed(0)}%)
                         </div>
                         <div>
-                            still: {reading.stillForMs}/{AUTO_CAPTURE.stableMs}{' '}
-                            ms
+                            still: {reading.stillForMs}/{tuning.stableMs} ms
                         </div>
                         <div>
                             empty: {reading.emptyForMs}/{AUTO_CAPTURE.emptyMs}{' '}
@@ -125,6 +130,14 @@ export default function ScanCard({ index }: Props) {
                     )}
                     <button
                         type="button"
+                        onClick={() => setTuningOpen((on) => !on)}
+                        aria-pressed={tuningOpen}
+                        className={secondaryButtonClasses}
+                    >
+                        Tune
+                    </button>
+                    <button
+                        type="button"
                         onClick={closeCamera}
                         disabled={phase === 'reading'}
                         className={secondaryButtonClasses}
@@ -132,6 +145,14 @@ export default function ScanCard({ index }: Props) {
                         Close camera
                     </button>
                 </div>
+            )}
+
+            {cameraOn && tuningOpen && (
+                <TuningPanel
+                    tuning={tuning}
+                    onChange={changeTuning}
+                    onReset={resetTuning}
+                />
             )}
 
             {phase === 'result' && outcome && (

@@ -6,9 +6,17 @@ import {
     AUTO_CAPTURE,
     createDetector,
     toGray,
+    type AutoCaptureConfig,
     type Detector,
     type Reading,
 } from '@/lib/autoCapture';
+import {
+    defaultTuning,
+    loadTuning,
+    saveTuning,
+    type Tuning,
+    type TuningKey,
+} from '@/lib/autoCaptureTuning';
 import { CAPTURE_MAX_EDGE, CAPTURE_QUALITY, fitWithin } from '@/lib/capture';
 import {
     matchReadName,
@@ -46,6 +54,13 @@ export function useCardScanner(index: CardIndex | null) {
     const [auto, setAuto] = useState(false);
     const [debug, setDebug] = useState(false);
     const [reading, setReading] = useState<Reading | null>(null);
+    // TEMPORARY: live-tunable stillness values (see autoCaptureTuning.ts). The
+    // detector reads this object on every step, so edits apply without a restart.
+    const [tuning, setTuning] = useState<Tuning>(loadTuning);
+    const configRef = useRef<AutoCaptureConfig>({
+        ...AUTO_CAPTURE,
+        ...tuning,
+    });
     const detectorRef = useRef<Detector | null>(null);
     const sampleRef = useRef<{
         canvas: HTMLCanvasElement;
@@ -157,10 +172,27 @@ export function useCardScanner(index: CardIndex | null) {
 
     const toggleAuto = useCallback(() => {
         // A fresh detector learns the empty background from the scene as it is now.
-        detectorRef.current = createDetector();
+        detectorRef.current = createDetector(configRef.current);
         setReading(null);
         setAuto((on) => !on);
     }, []);
+
+    const applyTuning = useCallback((next: Tuning) => {
+        Object.assign(configRef.current, next);
+        setTuning(next);
+        saveTuning(next);
+    }, []);
+
+    const changeTuning = useCallback(
+        (key: TuningKey, value: number) =>
+            applyTuning({ ...tuning, [key]: value }),
+        [applyTuning, tuning]
+    );
+
+    const resetTuning = useCallback(
+        () => applyTuning(defaultTuning()),
+        [applyTuning]
+    );
 
     const toggleDebug = useCallback(() => {
         setReading(null);
@@ -170,7 +202,7 @@ export function useCardScanner(index: CardIndex | null) {
     // While live and in auto mode, watch the video and snap when a card settles.
     useEffect(() => {
         if (!auto || phase !== 'live') return;
-        detectorRef.current ??= createDetector();
+        detectorRef.current ??= createDetector(configRef.current);
         const timer = setInterval(() => {
             const video = videoRef.current;
             const detector = detectorRef.current;
@@ -197,9 +229,9 @@ export function useCardScanner(index: CardIndex | null) {
             const result = detector.step(toGray(data), performance.now());
             if (debug) setReading(result);
             if (result.capture) void snapRef.current();
-        }, AUTO_CAPTURE.sampleIntervalMs);
+        }, tuning.sampleIntervalMs);
         return () => clearInterval(timer);
-    }, [auto, phase, debug]);
+    }, [auto, phase, debug, tuning.sampleIntervalMs]);
 
     // On failure the result stays up so you can retry.
     const confirmAdd = useCallback(
@@ -229,6 +261,9 @@ export function useCardScanner(index: CardIndex | null) {
         auto,
         debug,
         reading,
+        tuning,
+        changeTuning,
+        resetTuning,
         adding: addCard.isPending,
         startCamera,
         closeCamera,
