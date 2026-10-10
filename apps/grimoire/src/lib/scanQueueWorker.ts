@@ -32,6 +32,8 @@ export function countQueue(items: QueueItem[]): QueueCounts {
 export type IdentifyFailure =
     | { kind: 'network' }
     | { kind: 'rate-limit'; retryAfterMs?: number }
+    /** 401: the session is gone. Pauses the worker; nothing is counted. */
+    | { kind: 'unauthorized' }
     | { kind: 'error' };
 
 export class IdentifyCallError extends Error {
@@ -59,6 +61,10 @@ export interface WorkerDeps {
     maxAttempts?: number;
     baseBackoffMs?: number;
     maxBackoffMs?: number;
+    /** How often a paused (signed-out) worker tries a single probe send. */
+    authProbeMs?: number;
+    /** Called when the worker pauses on a 401 (true) or resumes (false). */
+    onAuthChange?: (expired: boolean) => void;
 }
 
 export interface ScanQueueWorker {
@@ -75,6 +81,7 @@ export const DEFAULT_CONCURRENCY = 2;
 export const DEFAULT_MAX_ATTEMPTS = 5;
 const DEFAULT_BASE_BACKOFF_MS = 2_000;
 const DEFAULT_MAX_BACKOFF_MS = 60_000;
+const DEFAULT_AUTH_PROBE_MS = 60_000;
 // setTimeout overflows past 2^31 - 1 ms; longer waits just re-check on wake.
 const MAX_TIMER_MS = 2_147_483_647;
 
@@ -172,6 +179,7 @@ export function createScanQueueWorker(deps: WorkerDeps): ScanQueueWorker {
     const maxAttempts = deps.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
     const base = deps.baseBackoffMs ?? DEFAULT_BASE_BACKOFF_MS;
     const maxBackoff = deps.maxBackoffMs ?? DEFAULT_MAX_BACKOFF_MS;
+    const authProbeMs = deps.authProbeMs ?? DEFAULT_AUTH_PROBE_MS;
 
     const inFlight = new Set<string>();
     // Network/429 retries per item. In memory only: a reload restarts backoff.
@@ -181,6 +189,16 @@ export function createScanQueueWorker(deps: WorkerDeps): ScanQueueWorker {
     let timer: unknown = null;
     // A 429 holds back the whole queue, not just the item that hit it.
     let pausedUntil = 0;
+    // A 401 pauses the whole queue until a probe send succeeds or the worker
+    // is restarted (start() clears it, e.g. after signing in again).
+    let authPaused = false;
+    let nextProbeAt = 0;
+
+    function setAuthPaused(value: boolean) {
+        if (authPaused === value) return;
+        authPaused = value;
+        deps.onAuthChange?.(value);
+    }
 
     const backoff = (retries: number) =>
         Math.min(maxBackoff, base * 2 ** Math.max(0, retries - 1));
@@ -203,6 +221,15 @@ export function createScanQueueWorker(deps: WorkerDeps): ScanQueueWorker {
             schedule(pausedUntil);
             return;
         }
+        if (authPaused) {
+            // Signed out: send nothing but one probe now and then, so a
+            // session renewed elsewhere resumes without a reload.
+            if (t < nextProbeAt) {
+                schedule(nextProbeAt);
+                return;
+            }
+            if (inFlight.size > 0) return; // its finish re-pumps
+        }
         let nextWake: number | null = null;
         for (const item of store.getState().items) {
             if (item.status !== 'queued' || inFlight.has(item.id)) continue;
@@ -212,6 +239,7 @@ export function createScanQueueWorker(deps: WorkerDeps): ScanQueueWorker {
             }
             if (inFlight.size >= concurrency) return; // a finish re-pumps
             void send(item.id);
+            if (authPaused) return; // one probe at a time
         }
         if (nextWake !== null) schedule(nextWake);
     }
@@ -242,6 +270,7 @@ export function createScanQueueWorker(deps: WorkerDeps): ScanQueueWorker {
                 requeue(id, 0);
                 return;
             }
+            setAuthPaused(false);
             store.getState().update(id, classifyRead(index, result));
             softRetries.delete(id);
         } catch (error) {
@@ -257,6 +286,14 @@ export function createScanQueueWorker(deps: WorkerDeps): ScanQueueWorker {
             error instanceof IdentifyCallError
                 ? error.failure
                 : { kind: 'error' };
+        if (failure.kind === 'unauthorized') {
+            // The scan is fine; the session is not. Keep it queued with no
+            // attempt counted and no backoff, and hold the whole queue.
+            nextProbeAt = now() + authProbeMs;
+            setAuthPaused(true);
+            requeue(id, 0);
+            return;
+        }
         if (failure.kind === 'network' || failure.kind === 'rate-limit') {
             const retries = (softRetries.get(id) ?? 0) + 1;
             softRetries.set(id, retries);
@@ -292,6 +329,9 @@ export function createScanQueueWorker(deps: WorkerDeps): ScanQueueWorker {
         start() {
             if (running) return;
             running = true;
+            // A restart (for example after signing in) tries again at once.
+            nextProbeAt = 0;
+            setAuthPaused(false);
             // Anything stuck mid-send from a previous run goes back in line.
             for (const item of store.getState().items) {
                 if (item.status === 'sending' && !inFlight.has(item.id)) {

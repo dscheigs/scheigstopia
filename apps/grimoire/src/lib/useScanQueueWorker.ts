@@ -1,6 +1,6 @@
 // Runs the scan queue worker for the scan session and exposes queue counts.
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import { ApiError } from '@/lib/apiClient';
 import { buildIndex } from '@/lib/cardSearch';
@@ -26,9 +26,9 @@ async function identifyForQueue(photo: Blob) {
                     retryAfterMs: error.retryAfterMs,
                 });
             }
-            // Signed out: keep the scan and retry once signed back in.
+            // Signed out: the worker pauses and keeps every scan queued.
             if (error.status === 401) {
-                throw new IdentifyCallError({ kind: 'network' });
+                throw new IdentifyCallError({ kind: 'unauthorized' });
             }
             throw new IdentifyCallError({ kind: 'error' });
         }
@@ -37,11 +37,22 @@ async function identifyForQueue(photo: Blob) {
     }
 }
 
-/** Start the background worker for `userId`; returns counts for the UI. */
-export function useScanQueueWorker(userId: string): QueueCounts {
+/**
+ * Start the background worker for `userId`; returns counts for the UI and
+ * whether it is paused because the session expired.
+ *
+ * Lifetime: the worker lives as long as the component using this hook, which
+ * is the Add Cards layout (camera and queue screens). Leaving /add stops it;
+ * queued items stay in IndexedDB and resume when the user comes back.
+ */
+export function useScanQueueWorker(userId: string): {
+    counts: QueueCounts;
+    sessionExpired: boolean;
+} {
     const store = getScanQueueStore(userId);
     const items = useStore(store, (s) => s.items);
     const counts = useMemo(() => countQueue(items), [items]);
+    const [sessionExpired, setSessionExpired] = useState(false);
 
     const { data: cardNames } = useCardNames();
     const index = useMemo(
@@ -63,6 +74,7 @@ export function useScanQueueWorker(userId: string): QueueCounts {
             getImage: async (id) => (await getBlobs(id))?.image,
             getIndex: () => indexRef.current,
             isOnline: () => navigator.onLine,
+            onAuthChange: setSessionExpired,
         });
         workerRef.current = worker;
         worker.start();
@@ -75,5 +87,5 @@ export function useScanQueueWorker(userId: string): QueueCounts {
         };
     }, [store]);
 
-    return counts;
+    return { counts, sessionExpired };
 }
