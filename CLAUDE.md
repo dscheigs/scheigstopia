@@ -6,15 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is an **Nx monorepo** (pnpm workspaces). It contains the Scheigstopia personal
 site (`apps/scheigstopia`) and Grimoire (`apps/grimoire`), a private Magic: The
-Gathering collection tracker. Both are Next.js 15 App Router apps with TypeScript
+Gathering collection tracker. Both are Next.js 16 App Router apps with TypeScript
 and Tailwind CSS. More apps and shared packages (`packages/*`) will be added over time.
 
 ## Workspace layout
 
 ```
 apps/
-  scheigstopia/          Next.js 15 site (App Router). Its own tsconfig, eslint, next config.
-  grimoire/              Next.js 15 collection tracker (Auth.js, Neon Postgres). See its README.
+  scheigstopia/          Next.js 16 site (App Router). Its own tsconfig, eslint, next config.
+  grimoire/              Next.js 16 collection tracker (Auth.js, Neon Postgres). See its README.
 packages/
   sylva/                 Sylva color system (W3C design tokens -> CSS/JS). `nx build sylva` generates dist/ (git-ignored).
 tsconfig.base.json       Compiler options every project's tsconfig extends.
