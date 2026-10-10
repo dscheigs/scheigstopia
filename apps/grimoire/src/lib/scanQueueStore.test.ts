@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it, vi } from 'vitest';
-import { getBlobs, putBlobs } from '@/lib/scanQueueBlobs';
+import { getBlobs, pickReviewBlob, putBlobs } from '@/lib/scanQueueBlobs';
 import {
     clearQueueForUser,
     createScanQueueStore,
@@ -110,6 +110,58 @@ describe('scan queue store', () => {
             expect(blobs?.image).toBeUndefined();
         });
         expect((await getBlobs(item.id))?.thumbnail).toBeDefined();
+    });
+
+    it('keeps the review image and drops the full one once identified', async () => {
+        const store = createScanQueueStore('blobs-review');
+        const item = store.getState().add();
+        await putBlobs(item.id, { review: blob('r'), image: blob('i') });
+
+        store.getState().update(item.id, { status: 'identified' });
+        await vi.waitFor(async () => {
+            expect((await getBlobs(item.id))?.image).toBeUndefined();
+        });
+        const kept = await getBlobs(item.id);
+        expect(kept?.review).toBeDefined();
+        expect(pickReviewBlob(kept)).toBe(kept?.review);
+    });
+
+    it('removes review images with remove, removeMany and clear', async () => {
+        const store = createScanQueueStore('blobs-review-cleanup');
+        const a = store.getState().add();
+        const b = store.getState().add();
+        const c = store.getState().add();
+        for (const i of [a, b, c]) await putBlobs(i.id, { review: blob('r') });
+
+        store.getState().remove(a.id);
+        store.getState().removeMany([b.id]);
+        await vi.waitFor(async () => {
+            expect(await getBlobs(a.id)).toBeUndefined();
+            expect(await getBlobs(b.id)).toBeUndefined();
+        });
+        store.getState().clear();
+        await vi.waitFor(async () =>
+            expect(await getBlobs(c.id)).toBeUndefined()
+        );
+    });
+
+    it('falls back to the legacy thumbnail when there is no review image', () => {
+        const thumbnail = blob('t');
+        const review = blob('r');
+        expect(pickReviewBlob({ thumbnail })).toBe(thumbnail);
+        expect(pickReviewBlob({ thumbnail, review })).toBe(review);
+        expect(pickReviewBlob(undefined)).toBeUndefined();
+    });
+
+    it('keeps a legacy thumbnail through dropping the full image', async () => {
+        const store = createScanQueueStore('blobs-legacy');
+        const item = store.getState().add();
+        await putBlobs(item.id, { thumbnail: blob('t'), image: blob('i') });
+        store.getState().update(item.id, { status: 'identified' });
+        await vi.waitFor(async () => {
+            expect((await getBlobs(item.id))?.image).toBeUndefined();
+        });
+        expect(pickReviewBlob(await getBlobs(item.id))).toBeDefined();
     });
 
     it('clears items, blobs and the persisted copy on sign-out', async () => {
