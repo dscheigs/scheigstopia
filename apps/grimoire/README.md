@@ -75,18 +75,20 @@ When a new set is released:
 
 ## Commands
 
-| Command                                 | What it does                         |
-| --------------------------------------- | ------------------------------------ |
-| `pnpm dev:grimoire`                     | Dev server on :3000                  |
-| `pnpm nx build grimoire`                | Production build                     |
-| `pnpm nx test grimoire`                 | Unit and database tests (about 10 s) |
-| `pnpm nx run grimoire:migrate`          | Apply `db/migrations/*.sql`          |
-| `pnpm nx run grimoire:card-names`       | Rebuild the card list from Scryfall  |
-| `pnpm nx run grimoire:check-card-names` | Check the card list is deployable    |
+| Command                                 | What it does                                    |
+| --------------------------------------- | ----------------------------------------------- |
+| `pnpm dev:grimoire`                     | Dev server on :3000                             |
+| `pnpm nx build grimoire`                | Production build                                |
+| `pnpm nx test grimoire`                 | Unit, database and component tests (about 10 s) |
+| `pnpm nx run grimoire:migrate`          | Apply `db/migrations/*.sql`                     |
+| `pnpm nx run grimoire:card-names`       | Rebuild the card list from Scryfall             |
+| `pnpm nx run grimoire:check-card-names` | Check the card list is deployable               |
 
 ## Tests
 
 `nx test grimoire` runs Vitest. The database tests apply the real migrations to an in-process Postgres (PGlite) and exercise the real queries, including that one user can never read or change another user's cards. The sign-in gate, input validation, export format, fuzzy search, and card-list filtering have their own tests, and so does scanning: the route's limits and failure handling, the reply parsing, and the request sent to the API (against a stand-in for `fetch`, so no key or network is needed).
+
+React component tests are `*.test.tsx` files. They run in jsdom with Testing Library (setup and a `<dialog>` shim in `vitest.setup.dom.ts`); every other test runs in node. Mock the store and query hooks at the module boundary, as `src/components/QueueView.test.tsx` does.
 
 ## Auto-capture
 

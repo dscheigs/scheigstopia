@@ -34,7 +34,7 @@ Run from the repo root. Root scripts wrap Nx; you can also call Nx directly.
 
 - `pnpm dev` → `nx dev scheigstopia` - dev server (Turbopack) on :3000
 - `pnpm dev:grimoire` → `nx dev grimoire` - Grimoire dev server (needs `apps/grimoire/.env.local`)
-- `nx test grimoire` - Grimoire's Vitest suite (database tests run on in-process Postgres)
+- `nx test grimoire` - Grimoire's Vitest suite (database tests run on in-process Postgres); `*.test.tsx` component tests run in jsdom, all others in node
 - `pnpm build` → `nx build scheigstopia` - production build
 - `pnpm start` → `nx start scheigstopia` - serve the production build
 - `pnpm lint` → `nx run-many -t lint` - ESLint across all projects
