@@ -13,12 +13,7 @@ import {
     type CardEntry,
     type CardIndex,
 } from '@/lib/cardSearch';
-import {
-    describeProblem,
-    groupQueue,
-    planCommit,
-    renamePatch,
-} from '@/lib/queueReview';
+import { describeProblem, groupQueue, planCommit } from '@/lib/queueReview';
 import { discardCopy } from '@/lib/discardMessage';
 import { useCardNames, useCommitQueue } from '@/lib/queries';
 import { getBlobs } from '@/lib/scanQueueBlobs';
@@ -205,7 +200,7 @@ export default function QueueView({ userId }: { userId: string }) {
     const plan = useMemo(() => planCommit(items), [items]);
 
     const rename = (id: string, card: CardEntry) => {
-        store.getState().update(id, renamePatch(card));
+        store.getState().rename(id, card);
         setRenamingId(null);
     };
 

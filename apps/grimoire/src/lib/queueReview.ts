@@ -61,12 +61,49 @@ export function describeProblem(item: QueueItem): string {
     return flagLabels[item.flagReason];
 }
 
-/** What fixing an item by hand sets: the chosen card, and identified. */
-export function renamePatch(card: Pick<CardEntry, 'oracleId' | 'name'>) {
+/** Whether an item is waiting on the user (flagged or failed). */
+export function needsReview(item: QueueItem): boolean {
+    return item.status === 'flagged' || item.status === 'failed';
+}
+
+/** The first reason an item was flagged, which survives confirming. */
+function originalReason(item: QueueItem): FlagReason {
+    return item.originalFlagReason ?? item.flagReason;
+}
+
+/**
+ * What confirming an item sets: identified, the review reason cleared and the
+ * original one kept. Null when the item cannot be confirmed: it does not need
+ * review, or it has no matched card to commit.
+ */
+export function confirmPatch(item: QueueItem) {
+    if (!needsReview(item) || !item.matchedCard) return null;
     return {
+        status: 'identified' as const,
+        flagReason: 'none' as const,
+        confirmed: true,
+        originalFlagReason: originalReason(item),
+    };
+}
+
+/**
+ * What fixing an item by hand sets: the chosen card, and identified. For an
+ * item that needed review this also confirms it.
+ */
+export function renamePatch(
+    card: Pick<CardEntry, 'oracleId' | 'name'>,
+    item?: QueueItem
+) {
+    const patch = {
         status: 'identified' as const,
         matchedCard: { oracleId: card.oracleId, name: card.name },
         flagReason: 'none' as const,
+    };
+    if (!item || !needsReview(item)) return patch;
+    return {
+        ...patch,
+        confirmed: true,
+        originalFlagReason: originalReason(item),
     };
 }
 
