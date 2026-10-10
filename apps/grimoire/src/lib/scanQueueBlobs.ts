@@ -4,7 +4,9 @@
 import { createStore, del, delMany, get, set, type UseStore } from 'idb-keyval';
 
 export interface QueueBlobs {
-    /** Small preview; kept after the item is identified. */
+    /** Medium review image (about 600px); kept after the item is identified. */
+    review?: Blob;
+    /** Legacy 160px preview from older captures. Only read, never written. */
     thumbnail?: Blob;
     /** Full photo awaiting identification; dropped once identified. */
     image?: Blob;
@@ -33,15 +35,30 @@ export async function getBlobs(id: string): Promise<QueueBlobs | undefined> {
     return get<QueueBlobs>(id, s);
 }
 
-/** Drop the full image, keeping the thumbnail. */
+/** The image to show for a row: the review image, else a legacy thumbnail. */
+export function pickReviewBlob(
+    blobs: QueueBlobs | undefined
+): Blob | undefined {
+    return blobs?.review ?? blobs?.thumbnail;
+}
+
+/** Drop the full image, keeping the review image (or legacy thumbnail). */
 export async function dropImage(id: string): Promise<void> {
     const s = blobStore();
     if (!s) return;
     const current = await get<QueueBlobs>(id, s);
     if (!current?.image) return;
-    const { thumbnail } = current;
-    if (thumbnail) await set(id, { thumbnail }, s);
-    else await del(id, s);
+    const { review, thumbnail } = current;
+    if (review || thumbnail) {
+        await set(
+            id,
+            {
+                ...(review ? { review } : {}),
+                ...(thumbnail ? { thumbnail } : {}),
+            },
+            s
+        );
+    } else await del(id, s);
 }
 
 export async function deleteBlobs(ids: string[]): Promise<void> {
