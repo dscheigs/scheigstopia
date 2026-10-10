@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
+    addManyToCollection,
     addToCollection,
     listCollection,
     removeFromCollection,
@@ -196,5 +197,94 @@ describe('database constraints', () => {
                 [me, BOLT, 'Lightning Bolt']
             )
         ).rejects.toThrow();
+    });
+});
+
+describe('addManyToCollection', () => {
+    it('creates new cards and returns them', async () => {
+        const items = await addManyToCollection(sql, me, [
+            { oracleId: BOLT, name: 'Lightning Bolt', delta: 2 },
+            { oracleId: RING, name: 'Sol Ring', delta: 1 },
+        ]);
+        expect(items.map((i) => [i.name, i.quantity]).sort()).toEqual([
+            ['Lightning Bolt', 2],
+            ['Sol Ring', 1],
+        ]);
+        expect(await listCollection(sql, me)).toHaveLength(2);
+    });
+
+    it('merges into cards already owned', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 3,
+        });
+        const items = await addManyToCollection(sql, me, [
+            { oracleId: BOLT, name: 'Lightning Bolt', delta: 2 },
+            { oracleId: RING, name: 'Sol Ring', delta: 1 },
+        ]);
+        expect(items.find((i) => i.oracleId === BOLT)?.quantity).toBe(5);
+        expect(await listCollection(sql, me)).toHaveLength(2);
+    });
+
+    it('sums duplicate oracle ids in one request', async () => {
+        const items = await addManyToCollection(sql, me, [
+            { oracleId: BOLT, name: 'Lightning Bolt', delta: 2 },
+            { oracleId: BOLT, name: 'Lightning Bolt', delta: 3 },
+        ]);
+        expect(items).toHaveLength(1);
+        expect(items[0].quantity).toBe(5);
+    });
+
+    it('caps at the maximum, including duplicates and existing copies', async () => {
+        await addToCollection(sql, me, {
+            oracleId: RING,
+            name: 'Sol Ring',
+            delta: MAX_QUANTITY - 1,
+        });
+        const items = await addManyToCollection(sql, me, [
+            { oracleId: BOLT, name: 'Lightning Bolt', delta: MAX_QUANTITY },
+            { oracleId: BOLT, name: 'Lightning Bolt', delta: MAX_QUANTITY },
+            { oracleId: RING, name: 'Sol Ring', delta: 5 },
+        ]);
+        expect(items.map((i) => i.quantity)).toEqual([
+            MAX_QUANTITY,
+            MAX_QUANTITY,
+        ]);
+    });
+
+    it('does not touch another user', async () => {
+        await addToCollection(sql, other, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        await addManyToCollection(sql, me, [
+            { oracleId: BOLT, name: 'Lightning Bolt', delta: 4 },
+        ]);
+        expect((await listCollection(sql, other))[0].quantity).toBe(1);
+    });
+
+    it('does nothing for an empty list', async () => {
+        expect(await addManyToCollection(sql, me, [])).toEqual([]);
+    });
+
+    it('rolls everything back when one item fails', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        await expect(
+            addManyToCollection(sql, me, [
+                { oracleId: BOLT, name: 'Lightning Bolt', delta: 5 },
+                { oracleId: RING, name: 'Sol Ring', delta: 1 },
+                // A NUL byte is not storable in text, so this item fails.
+                { oracleId: ANGEL, name: 'Bad\u0000Name', delta: 1 },
+            ])
+        ).rejects.toThrow();
+        const owned = await listCollection(sql, me);
+        expect(owned).toHaveLength(1);
+        expect(owned[0].quantity).toBe(1);
     });
 });
