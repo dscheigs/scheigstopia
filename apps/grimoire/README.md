@@ -98,7 +98,7 @@ Tap _Start_ and the app watches the video; there is no Snap button and no per-ca
 
 Every threshold is in the `AUTO_CAPTURE` object at the top of that file. Turn on _Debug_ for a readout over the video (how much of the frame changed, how much is moving, how long it has been still) to tune them under your lighting. The numbers there are starting guesses, tested only against synthetic frames, so expect to adjust them with a real camera.
 
-Nothing is added to the collection while scanning. Review the queue at `/queue` and commit the cards you want. Captured items survive a refresh (they live in IndexedDB) and expire after 12 hours. _Debug_ and _Tune_ are temporary tools for setting the thresholds above.
+Nothing is added to the collection while scanning. Review the queue at `/add/queue` (`/queue` redirects there) and commit the cards you want. Captured items survive a refresh (they live in IndexedDB) and expire after 12 hours. _Debug_ and _Tune_ are temporary tools for setting the thresholds above.
 
 ## Not yet done
 

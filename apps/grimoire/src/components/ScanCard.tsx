@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
 import TuningPanel from '@/components/TuningPanel';
+import { ADD_QUEUE_PATH, videoPlacement } from '@/lib/addRoutes';
 import { AUTO_CAPTURE } from '@/lib/autoCapture';
 import { summarizeQueue } from '@/lib/scanSession';
 import { useCardScanner } from '@/lib/useCardScanner';
@@ -15,8 +16,23 @@ function QueueWorker({ userId }: { userId: string }) {
     return null;
 }
 
+const VIDEO_PLACEMENT_CLASSES = {
+    inline: 'relative',
+    // Off-screen but still rendered, so the stream keeps updating.
+    offscreen:
+        'pointer-events-none fixed left-0 top-0 w-full -translate-x-full',
+    hidden: 'hidden',
+} as const;
+
 /** Hold a card, hear the chime, swap it. Captures go to the queue for review. */
-export default function ScanCard({ userId }: { userId: string }) {
+export default function ScanCard({
+    userId,
+    showCamera,
+}: {
+    userId: string;
+    /** False on the queue screen: the stream keeps running, off-screen. */
+    showCamera: boolean;
+}) {
     const {
         videoRef,
         phase,
@@ -31,17 +47,23 @@ export default function ScanCard({ userId }: { userId: string }) {
         startCamera,
         closeCamera,
         toggleDebug,
-    } = useCardScanner(userId);
+    } = useCardScanner(userId, showCamera);
 
     const [tuningOpen, setTuningOpen] = useState(false);
     const cameraOn = phase === 'live';
+    const placement = videoPlacement(cameraOn, showCamera);
+    const showControls = cameraOn && showCamera;
     const summary = useMemo(() => summarizeQueue(items), [items]);
 
     return (
-        <div className="space-y-3">
+        <div
+            className={
+                showCamera ? 'mx-auto max-w-2xl space-y-3 px-4 py-6' : undefined
+            }
+        >
             {workerOn && <QueueWorker userId={userId} />}
 
-            {phase === 'idle' || phase === 'starting' ? (
+            {showCamera && (phase === 'idle' || phase === 'starting') ? (
                 <button
                     type="button"
                     onClick={() => void startCamera()}
@@ -53,7 +75,10 @@ export default function ScanCard({ userId }: { userId: string }) {
             ) : null}
 
             {/* Always mounted so the stream can attach; hidden until the camera is on. */}
-            <div className={cameraOn ? 'relative' : 'hidden'}>
+            <div
+                className={VIDEO_PLACEMENT_CLASSES[placement]}
+                aria-hidden={placement === 'offscreen' ? true : undefined}
+            >
                 <video
                     ref={videoRef}
                     playsInline
@@ -61,7 +86,7 @@ export default function ScanCard({ userId }: { userId: string }) {
                     aria-label="Camera view"
                     className="aspect-[4/3] w-full rounded-lg bg-neutral-950 object-cover"
                 />
-                {debug && reading && (
+                {showControls && debug && reading && (
                     <dl
                         className="absolute bottom-2 left-2 space-y-0.5 rounded-lg bg-neutral-950/80 p-2 font-mono text-caption text-neutral-100"
                         aria-label="Auto-capture readings"
@@ -88,7 +113,7 @@ export default function ScanCard({ userId }: { userId: string }) {
                 )}
             </div>
 
-            {cameraOn && (
+            {showControls && (
                 <p className="text-caption text-text-minimal">
                     Start with nothing in frame, then hold each card still, flat
                     and filling the frame. A chime means it was captured; take
@@ -97,7 +122,7 @@ export default function ScanCard({ userId }: { userId: string }) {
                 </p>
             )}
 
-            {workerOn && (
+            {showCamera && workerOn && (
                 <p
                     className="flex flex-wrap items-center gap-x-4 gap-y-1 text-body"
                     aria-label="Scan progress"
@@ -107,13 +132,16 @@ export default function ScanCard({ userId }: { userId: string }) {
                     <span>{summary.identified} identified</span>
                     <span>{summary.flagged} flagged</span>
                     <span>{summary.failed} failed</span>
-                    <Link href="/queue" className="font-medium underline">
+                    <Link
+                        href={ADD_QUEUE_PATH}
+                        className="font-medium underline"
+                    >
                         Review queue
                     </Link>
                 </p>
             )}
 
-            {cameraOn && (
+            {showControls && (
                 <div className="flex flex-wrap gap-2">
                     <button
                         type="button"
@@ -141,7 +169,7 @@ export default function ScanCard({ userId }: { userId: string }) {
                 </div>
             )}
 
-            {cameraOn && tuningOpen && (
+            {showControls && tuningOpen && (
                 <TuningPanel
                     tuning={tuning}
                     onChange={changeTuning}
@@ -149,9 +177,15 @@ export default function ScanCard({ userId }: { userId: string }) {
                 />
             )}
 
-            <p role="alert" aria-live="polite" className="text-body text-error">
-                {message}
-            </p>
+            {showCamera && (
+                <p
+                    role="alert"
+                    aria-live="polite"
+                    className="text-body text-error"
+                >
+                    {message}
+                </p>
+            )}
         </div>
     );
 }

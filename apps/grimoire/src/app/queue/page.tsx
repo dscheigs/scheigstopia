@@ -1,13 +1,7 @@
 import { redirect } from 'next/navigation';
-import QueueView from '@/components/QueueView';
-import { getUserId } from '@/lib/session';
+import { ADD_QUEUE_PATH } from '@/lib/addRoutes';
 
-export const dynamic = 'force-dynamic';
-
-export default async function QueuePage() {
-    const userId = await getUserId();
-    if (!userId) {
-        redirect('/signin');
-    }
-    return <QueueView userId={userId} />;
+/** The queue moved under Add Cards; keep old links working. */
+export default function LegacyQueuePage() {
+    redirect(ADD_QUEUE_PATH);
 }
