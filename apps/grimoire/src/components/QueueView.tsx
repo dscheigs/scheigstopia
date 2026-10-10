@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Check, Pencil, X } from 'lucide-react';
+import CardSuggestions from '@/components/CardSuggestions';
 import EditCardDialog from '@/components/EditCardDialog';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
 import { buildIndex, type CardEntry, type CardIndex } from '@/lib/cardSearch';
@@ -129,7 +130,7 @@ export default function QueueView({ userId }: { userId: string }) {
 
     const editing = items.find((item) => item.id === editingId) ?? null;
 
-    const rename = (id: string, card: CardEntry) => {
+    const rename = (id: string, card: Pick<CardEntry, 'oracleId' | 'name'>) => {
         store.getState().rename(id, card);
         setEditingId(null);
     };
@@ -264,7 +265,12 @@ export default function QueueView({ userId }: { userId: string }) {
                     index={index}
                     onPick={(card) => rename(editing.id, card)}
                     onClose={() => setEditingId(null)}
-                />
+                >
+                    <CardSuggestions
+                        item={editing}
+                        onPick={(card) => rename(editing.id, card)}
+                    />
+                </EditCardDialog>
             )}
 
             <p role="alert" aria-live="polite" className="text-body text-error">

@@ -32,6 +32,12 @@ export interface QueueItem {
     matchedCard: MatchedCard | null;
     flagReason: FlagReason;
     /**
+     * The top card-list matches for the read name, best first, capped. Offered
+     * as suggestions in the edit modal. Absent on items saved before this
+     * field existed, and when the read matched nothing.
+     */
+    candidates?: MatchedCard[];
+    /**
      * The model's own confidence in the read. Kept next to `flagReason` (the
      * card-list match quality) so the M5 accuracy test can compare the two.
      * Absent on items scanned before this field existed.

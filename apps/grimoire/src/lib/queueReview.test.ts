@@ -9,6 +9,7 @@ import {
     confirmPatch,
     renamePatch,
     sortQueue,
+    buildSuggestions,
 } from '@/lib/queueReview';
 import type { QueueItem } from '@/lib/scanQueueTypes';
 
@@ -202,5 +203,35 @@ describe('queueCounts', () => {
             item({ status: 'failed', flagReason: 'error' }),
         ];
         expect(queueCounts(items)).toEqual({ total: 5, review: 2 });
+    });
+});
+
+describe('buildSuggestions', () => {
+    const c = (n: number) => ({ oracleId: `c${n}`, name: `Card ${n}` });
+
+    it('is empty for items saved without candidates', () => {
+        expect(buildSuggestions(item())).toEqual([]);
+    });
+
+    it('leaves out the current match', () => {
+        expect(
+            buildSuggestions(
+                item({ matchedCard: c(1), candidates: [c(1), c(2)] })
+            )
+        ).toEqual([c(2)]);
+    });
+
+    it('lists each card once', () => {
+        expect(
+            buildSuggestions(item({ candidates: [c(1), c(2), c(1)] }))
+        ).toEqual([c(1), c(2)]);
+    });
+
+    it('caps the list after dropping the current match', () => {
+        const candidates = [1, 2, 3, 4, 5, 6, 7].map(c);
+        expect(
+            buildSuggestions(item({ matchedCard: c(1), candidates }), 3)
+        ).toEqual([c(2), c(3), c(4)]);
+        expect(buildSuggestions(item({ candidates }))).toHaveLength(5);
     });
 });

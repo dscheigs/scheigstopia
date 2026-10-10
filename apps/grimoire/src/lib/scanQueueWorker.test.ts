@@ -69,6 +69,41 @@ describe('status transitions', () => {
         worker.stop();
     });
 
+    it('stores the top candidates for the edit modal', async () => {
+        const { store, worker } = setup(async () => ({
+            name: 'Lightning Bolt',
+            confidence: 'high' as const,
+        }));
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store).candidates).toEqual([
+            { oracleId: 'bolt', name: 'Lightning Bolt' },
+            { oracleId: 'bolt-art', name: 'Lightning Bolt Art Card' },
+        ]);
+        worker.stop();
+    });
+
+    it('stores candidates on a flagged read, none when unreadable', async () => {
+        const reads = [
+            { name: 'Lightning Bol', confidence: 'high' as const },
+            { name: null, confidence: 'low' as const },
+        ];
+        const { store, worker } = setup(async () => reads.shift()!, {
+            concurrency: 1,
+        });
+        store.getState().add();
+        store.getState().add();
+        worker.start();
+        await settle();
+        const [first, second] = store.getState().items;
+        expect(first.status).toBe('flagged');
+        expect(first.candidates?.length).toBeGreaterThan(0);
+        expect(first.candidates?.length).toBeLessThanOrEqual(5);
+        expect(second.candidates).toEqual([]);
+        worker.stop();
+    });
+
     it('matches a front face exactly', async () => {
         const { store, worker } = setup(async () => ({
             name: 'delver of secrets',

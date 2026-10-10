@@ -4,6 +4,7 @@
 import type { CardEntry } from '@/lib/cardSearch';
 import type {
     FlagReason,
+    MatchedCard,
     QueueItem,
     QueueItemStatus,
 } from '@/lib/scanQueueTypes';
@@ -128,6 +129,30 @@ export function itemLabel(item: QueueItem): string {
             ? 'Waiting to be read'
             : 'Unknown card')
     );
+}
+
+/** Most suggestions the edit modal shows. */
+export const SUGGESTION_LIMIT = 5;
+
+/**
+ * Cards to offer as one-tap fixes in the edit modal: the item's stored
+ * candidates minus the card it already has, each card once, capped. Empty for
+ * items saved without candidates.
+ */
+export function buildSuggestions(
+    item: Pick<QueueItem, 'candidates' | 'matchedCard'>,
+    limit = SUGGESTION_LIMIT
+): MatchedCard[] {
+    const seen = new Set<string>();
+    if (item.matchedCard) seen.add(item.matchedCard.oracleId);
+    const out: MatchedCard[] = [];
+    for (const card of item.candidates ?? []) {
+        if (out.length >= limit) break;
+        if (seen.has(card.oracleId)) continue;
+        seen.add(card.oracleId);
+        out.push(card);
+    }
+    return out;
 }
 
 export interface CommitPlan {

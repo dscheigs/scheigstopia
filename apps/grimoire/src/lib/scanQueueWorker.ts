@@ -9,6 +9,7 @@ import type { IdentifyResult } from '@/lib/identify';
 import type { ScanQueueStore } from '@/lib/scanQueueStore';
 import type {
     FlagReason,
+    MatchedCard,
     QueueItem,
     QueueItemStatus,
 } from '@/lib/scanQueueTypes';
@@ -68,6 +69,8 @@ export interface ScanQueueWorker {
     poke: () => void;
 }
 
+/** How many card-list candidates are kept on each queue item. */
+export const CANDIDATE_LIMIT = 5;
 export const DEFAULT_CONCURRENCY = 2;
 export const DEFAULT_MAX_ATTEMPTS = 5;
 const DEFAULT_BASE_BACKOFF_MS = 2_000;
@@ -80,6 +83,7 @@ type Outcome = {
     flagReason: FlagReason;
     readName: string | null;
     matchedCard: QueueItem['matchedCard'];
+    candidates: MatchedCard[];
     modelConfidence: IdentifyResult['confidence'];
 };
 
@@ -116,10 +120,15 @@ function classifyName(
             flagReason: 'unreadable',
             readName: null,
             matchedCard: null,
+            candidates: [],
         };
     }
-    const matches = matchReadName(index, name);
+    const matches = matchReadName(index, name, CANDIDATE_LIMIT);
     const wanted = normalize(name);
+    const candidates = matches.map(({ oracleId, name }) => ({
+        oracleId,
+        name,
+    }));
     const exact = matches.filter(
         (card) =>
             normalize(card.name) === wanted || normalize(card.front) === wanted
@@ -130,6 +139,7 @@ function classifyName(
             flagReason: 'none',
             readName: name,
             matchedCard: { oracleId: exact[0].oracleId, name: exact[0].name },
+            candidates,
         };
     }
     return {
@@ -145,6 +155,7 @@ function classifyName(
             matches.length === 1
                 ? { oracleId: matches[0].oracleId, name: matches[0].name }
                 : null,
+        candidates,
     };
 }
 
