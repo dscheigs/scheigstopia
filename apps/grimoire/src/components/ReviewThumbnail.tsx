@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { secondaryButtonClasses } from '@/components/styles';
 import { getBlobs, pickReviewBlob } from '@/lib/scanQueueBlobs';
+import { useModalDialog } from '@/lib/useModalDialog';
 
 /** Full-screen viewer on the native dialog element; mount it while open. */
 function ReviewViewer({
@@ -16,18 +17,13 @@ function ReviewViewer({
     onClose: () => void;
 }) {
     const dialogRef = useRef<HTMLDialogElement>(null);
-
-    useEffect(() => {
-        const dialog = dialogRef.current;
-        if (dialog && !dialog.open) dialog.showModal();
-        return () => dialog?.close();
-    }, []);
+    const handleClose = useModalDialog(dialogRef, onClose);
 
     return (
         <dialog
             ref={dialogRef}
             aria-label={`Photo of ${label}`}
-            onClose={onClose}
+            onClose={handleClose}
             onClick={onClose}
             className="m-0 h-dvh max-h-none w-dvw max-w-none bg-neutral-950/90 p-0 backdrop:bg-neutral-950/90"
         >

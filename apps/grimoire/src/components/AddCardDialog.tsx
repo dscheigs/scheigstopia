@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { inputClasses, secondaryButtonClasses } from '@/components/styles';
 import { searchCards, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import { useAddCard } from '@/lib/queries';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { useModalDialog } from '@/lib/useModalDialog';
 
 const SEARCH_DEBOUNCE_MS = 150;
 
@@ -28,6 +29,7 @@ export default function AddCardDialog({
     onClose,
 }: AddCardDialogProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
+    const handleClose = useModalDialog(dialogRef, onClose);
     const searchRef = useRef<HTMLInputElement>(null);
     const [query, setQuery] = useState('');
     const [lastAdded, setLastAdded] = useState<string | null>(null);
@@ -39,12 +41,6 @@ export default function AddCardDialog({
         [index, debouncedQuery]
     );
     const busyId = (addCard.isPending && addCard.variables.oracleId) || null;
-
-    useEffect(() => {
-        const dialog = dialogRef.current;
-        if (dialog && !dialog.open) dialog.showModal();
-        return () => dialog?.close();
-    }, []);
 
     const add = (card: CardEntry) => {
         setLastAdded(null);
@@ -61,7 +57,7 @@ export default function AddCardDialog({
         <dialog
             ref={dialogRef}
             aria-labelledby="add-card-title"
-            onClose={onClose}
+            onClose={handleClose}
             onClick={(event) => {
                 // A click on the backdrop lands on the dialog itself.
                 if (event.target === event.currentTarget) onClose();
