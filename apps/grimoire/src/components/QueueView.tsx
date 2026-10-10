@@ -14,6 +14,7 @@ import {
     type CardIndex,
 } from '@/lib/cardSearch';
 import { describeProblem, groupQueue, planCommit } from '@/lib/queueReview';
+import { discardCopy } from '@/lib/discardMessage';
 import { useCardNames, useCommitQueue } from '@/lib/queries';
 import { getBlobs } from '@/lib/scanQueueBlobs';
 import type { QueueItem } from '@/lib/scanQueueTypes';
@@ -211,15 +212,12 @@ export default function QueueView({ userId }: { userId: string }) {
         });
     };
 
+    const discardText = discardCopy(
+        items.length,
+        groups.review.length + groups.pending.length
+    );
     const discard = () => {
-        const unreviewed = groups.review.length + groups.pending.length;
-        const message =
-            unreviewed > 0
-                ? `Discard the whole queue? ${unreviewed} unreviewed ${
-                      unreviewed === 1 ? 'card' : 'cards'
-                  } will be lost.`
-                : 'Discard the whole queue?';
-        if (window.confirm(message)) store.getState().clear();
+        if (window.confirm(discardText.message)) store.getState().clear();
     };
 
     const rowProps = (item: QueueItem): ItemRowProps => ({
@@ -327,7 +325,7 @@ export default function QueueView({ userId }: { userId: string }) {
                         disabled={commit.isPending}
                         className={secondaryButtonClasses}
                     >
-                        Discard queue
+                        {discardText.label}
                     </button>
                 </div>
             )}
