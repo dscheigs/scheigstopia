@@ -1,18 +1,35 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
 import TuningPanel from '@/components/TuningPanel';
 import { videoPlacement } from '@/lib/addRoutes';
 import { AUTO_CAPTURE } from '@/lib/autoCapture';
+import { sessionNotice } from '@/lib/sessionNotice';
 import { summarizeQueue } from '@/lib/scanSession';
 import { useCardScanner } from '@/lib/useCardScanner';
 import { useScanQueueWorker } from '@/lib/useScanQueueWorker';
 
-/** Runs the background worker while mounted; renders nothing. */
+/**
+ * Runs the background worker while mounted (the Add Cards layout, so it stops
+ * when the user leaves /add). Renders the sign-in notice when it is paused.
+ */
 function QueueWorker({ userId }: { userId: string }) {
-    useScanQueueWorker(userId);
-    return null;
+    const { sessionExpired } = useScanQueueWorker(userId);
+    const notice = sessionNotice(sessionExpired);
+    if (!notice) return null;
+    return (
+        <p
+            role="alert"
+            className="mx-auto max-w-2xl px-4 pt-3 text-body text-error"
+        >
+            {notice.message}{' '}
+            <Link href={notice.href} className="underline">
+                {notice.linkLabel}
+            </Link>
+        </p>
+    );
 }
 
 const VIDEO_PLACEMENT_CLASSES = {
