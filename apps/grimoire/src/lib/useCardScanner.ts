@@ -1,5 +1,6 @@
-// Everything behind the scan screen: the camera, snapping a frame, reading it,
-// and the auto-capture loop. The component only renders what this returns.
+// Everything behind the scan screen: the camera and the auto-capture loop. A
+// captured frame goes straight into the scan queue; the background worker reads
+// it. The component only renders what this returns.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -17,22 +18,21 @@ import {
     type Tuning,
     type TuningKey,
 } from '@/lib/autoCaptureTuning';
-import { CAPTURE_MAX_EDGE, CAPTURE_QUALITY, fitWithin } from '@/lib/capture';
 import {
-    matchReadName,
-    type CardEntry,
-    type CardIndex,
-} from '@/lib/cardSearch';
-import { useAddCard, useIdentify } from '@/lib/queries';
+    CAPTURE_MAX_EDGE,
+    CAPTURE_QUALITY,
+    THUMBNAIL_MAX_EDGE,
+    THUMBNAIL_QUALITY,
+    fitWithin,
+} from '@/lib/capture';
+import { putBlobs } from '@/lib/scanQueueBlobs';
+import { requestPersistentStorage } from '@/lib/scanQueueStore';
+import type { QueueItemStatus } from '@/lib/scanQueueTypes';
+import { newlyAttentionIds, statusSnapshot } from '@/lib/scanSession';
+import { useScanFeedback } from '@/lib/useScanFeedback';
+import { useScanQueue } from '@/lib/useScanQueue';
 
-export type Phase = 'idle' | 'starting' | 'live' | 'reading' | 'result';
-
-export interface Outcome {
-    /** What the model read off the card, or null if it could not read one. */
-    read: string | null;
-    /** Cards in the list that match it, best first. */
-    matches: CardEntry[];
-}
+export type Phase = 'idle' | 'starting' | 'live';
 
 function cameraProblem(error: unknown): string {
     const name = error instanceof DOMException ? error.name : '';
@@ -45,13 +45,20 @@ function cameraProblem(error: unknown): string {
     return 'Could not start the camera.';
 }
 
-export function useCardScanner(index: CardIndex | null) {
+function toJpeg(canvas: HTMLCanvasElement, quality: number) {
+    return new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/jpeg', quality)
+    );
+}
+
+export function useCardScanner(userId: string) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const [phase, setPhase] = useState<Phase>('idle');
-    const [outcome, setOutcome] = useState<Outcome | null>(null);
     const [message, setMessage] = useState<string | null>(null);
-    const [auto, setAuto] = useState(false);
+    // Set by the first Start and kept, so the queue keeps draining after the
+    // camera closes.
+    const [workerOn, setWorkerOn] = useState(false);
     const [debug, setDebug] = useState(false);
     const [reading, setReading] = useState<Reading | null>(null);
     // TEMPORARY: live-tunable stillness values (see autoCaptureTuning.ts). The
@@ -66,8 +73,10 @@ export function useCardScanner(index: CardIndex | null) {
         canvas: HTMLCanvasElement;
         context: CanvasRenderingContext2D;
     } | null>(null);
-    const identify = useIdentify();
-    const addCard = useAddCard();
+    const { items, ready, store } = useScanQueue(userId);
+    const feedback = useScanFeedback();
+    const { start: startFeedback, stop: stopFeedback } = feedback;
+    const { notifyCaptured, notifyAttention } = feedback;
 
     const stopCamera = useCallback(() => {
         streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -80,12 +89,15 @@ export function useCardScanner(index: CardIndex | null) {
 
     const startCamera = useCallback(async () => {
         setMessage(null);
-        setOutcome(null);
         if (!navigator.mediaDevices?.getUserMedia) {
             setMessage('The camera needs a secure (HTTPS) connection.');
             return;
         }
         setPhase('starting');
+        // Inside the tap: unlocks audio and takes the wake lock.
+        void startFeedback();
+        void requestPersistentStorage();
+        setWorkerOn(true);
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
@@ -101,26 +113,31 @@ export function useCardScanner(index: CardIndex | null) {
                 video.srcObject = stream;
                 await video.play();
             }
+            // A fresh detector learns the empty background from the scene as it is now.
+            detectorRef.current = createDetector(configRef.current);
+            setReading(null);
             setPhase('live');
         } catch (error) {
             stopCamera();
+            stopFeedback();
             setMessage(cameraProblem(error));
             setPhase('idle');
         }
-    }, [stopCamera]);
+    }, [stopCamera, startFeedback, stopFeedback]);
 
     const closeCamera = useCallback(() => {
         stopCamera();
-        setAuto(false);
+        stopFeedback();
         setReading(null);
-        setOutcome(null);
         setMessage(null);
         setPhase('idle');
-    }, [stopCamera]);
+    }, [stopCamera, stopFeedback]);
 
-    const snap = useCallback(async () => {
+    const capture = useCallback(async () => {
         const video = videoRef.current;
         if (!video || video.videoWidth === 0) return;
+        // Whatever is in front of the camera now is handled; don't recapture it.
+        detectorRef.current?.hold();
 
         const { width, height } = fitWithin(
             video.videoWidth,
@@ -131,51 +148,41 @@ export function useCardScanner(index: CardIndex | null) {
         canvas.width = width;
         canvas.height = height;
         canvas.getContext('2d')?.drawImage(video, 0, 0, width, height);
-        const blob = await new Promise<Blob | null>((resolve) =>
-            canvas.toBlob(resolve, 'image/jpeg', CAPTURE_QUALITY)
-        );
-        if (!blob) {
-            setMessage('Could not capture that frame. Try again.');
+
+        const thumbSize = fitWithin(width, height, THUMBNAIL_MAX_EDGE);
+        const thumbCanvas = document.createElement('canvas');
+        thumbCanvas.width = thumbSize.width;
+        thumbCanvas.height = thumbSize.height;
+        thumbCanvas
+            .getContext('2d')
+            ?.drawImage(canvas, 0, 0, thumbSize.width, thumbSize.height);
+
+        const [image, thumbnail] = await Promise.all([
+            toJpeg(canvas, CAPTURE_QUALITY),
+            toJpeg(thumbCanvas, THUMBNAIL_QUALITY),
+        ]);
+        if (!image) {
+            setMessage('Could not capture that frame.');
             return;
         }
-
+        const id = crypto.randomUUID();
+        try {
+            // Blobs first, so the worker never sees an item with no image.
+            await putBlobs(id, { image, ...(thumbnail ? { thumbnail } : {}) });
+        } catch {
+            setMessage('Could not save that capture on this device.');
+            return;
+        }
+        store.getState().add({ id });
         setMessage(null);
-        setPhase('reading');
-        // Whatever is in front of the camera now is being handled; don't recapture it.
-        detectorRef.current?.hold();
-        identify.mutate(blob, {
-            onSuccess: ({ name }) => {
-                setOutcome({
-                    read: name,
-                    matches: name && index ? matchReadName(index, name) : [],
-                });
-                setPhase('result');
-            },
-            onError: (error) => {
-                // A failing or capped scan must never turn into a retry loop.
-                setAuto(false);
-                setMessage(
-                    auto
-                        ? `${error.message} Auto-capture is off.`
-                        : error.message
-                );
-                setPhase('live');
-            },
-        });
-    }, [index, identify, auto]);
+        notifyCaptured();
+    }, [store, notifyCaptured]);
 
-    // Latest snap for the sampling timer, which outlives any one render.
-    const snapRef = useRef(snap);
+    // Latest capture for the sampling timer, which outlives any one render.
+    const captureRef = useRef(capture);
     useEffect(() => {
-        snapRef.current = snap;
-    }, [snap]);
-
-    const toggleAuto = useCallback(() => {
-        // A fresh detector learns the empty background from the scene as it is now.
-        detectorRef.current = createDetector(configRef.current);
-        setReading(null);
-        setAuto((on) => !on);
-    }, []);
+        captureRef.current = capture;
+    }, [capture]);
 
     const applyTuning = useCallback((next: Tuning) => {
         Object.assign(configRef.current, next);
@@ -199,9 +206,9 @@ export function useCardScanner(index: CardIndex | null) {
         setDebug((on) => !on);
     }, []);
 
-    // While live and in auto mode, watch the video and snap when a card settles.
+    // While the camera is live, watch the video and capture when a card settles.
     useEffect(() => {
-        if (!auto || phase !== 'live') return;
+        if (phase !== 'live') return;
         detectorRef.current ??= createDetector(configRef.current);
         const timer = setInterval(() => {
             const video = videoRef.current;
@@ -228,49 +235,41 @@ export function useCardScanner(index: CardIndex | null) {
             );
             const result = detector.step(toGray(data), performance.now());
             if (debug) setReading(result);
-            if (result.capture) void snapRef.current();
+            if (result.capture) void captureRef.current();
         }, tuning.sampleIntervalMs);
         return () => clearInterval(timer);
-    }, [auto, phase, debug, tuning.sampleIntervalMs]);
+    }, [phase, debug, tuning.sampleIntervalMs]);
 
-    // On failure the result stays up so you can retry.
-    const confirmAdd = useCallback(
-        (card: CardEntry) => {
-            setMessage(null);
-            addCard.mutate(card, {
-                onSuccess: () => {
-                    setOutcome(null);
-                    setPhase('live');
-                },
-                onError: (error) => setMessage(error.message),
-            });
-        },
-        [addCard]
-    );
-
-    const dismiss = useCallback(() => {
-        setOutcome(null);
-        setPhase('live');
-    }, []);
+    // Play the attention tone once when an item becomes flagged or failed.
+    const seenRef = useRef<ReadonlyMap<string, QueueItemStatus> | null>(null);
+    useEffect(() => {
+        if (phase !== 'live' || !ready) {
+            seenRef.current = null;
+            return;
+        }
+        // The first look is the baseline: older items already had their say.
+        if (
+            seenRef.current &&
+            newlyAttentionIds(seenRef.current, items).length > 0
+        ) {
+            notifyAttention();
+        }
+        seenRef.current = statusSnapshot(items);
+    }, [phase, ready, items, notifyAttention]);
 
     return {
         videoRef,
         phase,
-        outcome,
         message,
-        auto,
         debug,
         reading,
         tuning,
         changeTuning,
         resetTuning,
-        adding: addCard.isPending,
+        items,
+        workerOn,
         startCamera,
         closeCamera,
-        snap,
-        toggleAuto,
         toggleDebug,
-        confirmAdd,
-        dismiss,
     };
 }

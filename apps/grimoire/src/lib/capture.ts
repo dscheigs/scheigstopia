@@ -6,6 +6,12 @@ export const CAPTURE_MAX_EDGE = 1280;
 /** JPEG quality, 0 to 1. */
 export const CAPTURE_QUALITY = 0.85;
 
+/** Longest side of the queue thumbnail, in pixels. */
+export const THUMBNAIL_MAX_EDGE = 160;
+
+/** JPEG quality for the queue thumbnail, 0 to 1. */
+export const THUMBNAIL_QUALITY = 0.7;
+
 /** Scale `width` x `height` down to fit `maxEdge` on the longest side. Never up. */
 export function fitWithin(
     width: number,

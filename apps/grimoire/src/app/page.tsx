@@ -5,8 +5,9 @@ import { getUserId } from '@/lib/session';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-    if (!(await getUserId())) {
+    const userId = await getUserId();
+    if (!userId) {
         redirect('/signin');
     }
-    return <CollectionView />;
+    return <CollectionView userId={userId} />;
 }

@@ -90,19 +90,19 @@ When a new set is released:
 
 ## Auto-capture
 
-Tap _Auto-capture_ while the camera is live and the app watches the video instead of waiting for _Snap_. About ten times a second it shrinks the frame to 64 x 48 grayscale and compares it with the empty background (`src/lib/autoCapture.ts`):
+Tap _Start_ and the app watches the video; there is no Snap button and no per-card confirmation. Start also unlocks the capture sounds, holds a screen wake lock (where the browser allows it) and starts the background worker. About ten times a second it shrinks the frame to 64 x 48 grayscale and compares it with the empty background (`src/lib/autoCapture.ts`):
 
 1. Start with nothing in frame so it can learn the background.
-2. When a card fills enough of the frame and holds still for about 0.6 s, it captures once and runs the normal scan flow, including the confirm step.
+2. When a card fills enough of the frame and holds still for about 0.6 s, it captures once: the frame (plus a small thumbnail) is saved to the scan queue on the device and a chime plays. The worker reads each queued photo in the background; a low double tone plays when a card is flagged or fails. A running count (captured, identified, flagged, failed) and a link to _Review queue_ sit under the camera.
 3. It will not capture again until the card is taken away for about 0.8 s, or a clearly different card replaces it. Captures are at least 2 s apart.
 
 Every threshold is in the `AUTO_CAPTURE` object at the top of that file. Turn on _Debug_ for a readout over the video (how much of the frame changed, how much is moving, how long it has been still) to tune them under your lighting. The numbers there are starting guesses, tested only against synthetic frames, so expect to adjust them with a real camera.
 
-Confirming each card is still manual; the background queue that removes it is milestone 4.
+Nothing is added to the collection while scanning. Review the queue at `/queue` and commit the cards you want. Captured items survive a refresh (they live in IndexedDB) and expire after 12 hours. _Debug_ and _Tune_ are temporary tools for setting the thresholds above.
 
 ## Not yet done
 
 - The rest of issue #43: showing the remaining scan budget in the UI, and a rate limit on sign-in. Set a spend limit on the API key's workspace before enabling scanning in production.
-- The background queue and review list, and the OCR-first accuracy and cost test (milestones 4 and 5).
+- The model confidence flag (M4.7), and the OCR-first accuracy and cost test (milestone 5).
 - Installing as a home-screen app and requesting persistent storage.
 - A cached copy of the card list in IndexedDB; for now it is fetched as a static file and cached by the browser.

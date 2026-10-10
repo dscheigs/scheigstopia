@@ -24,7 +24,7 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
     return debounced;
 }
 
-export default function CollectionView() {
+export default function CollectionView({ userId }: { userId: string }) {
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('');
     const searchRef = useRef<HTMLInputElement>(null);
@@ -111,7 +111,7 @@ export default function CollectionView() {
                 <h2 id="add-heading" className="text-subheading">
                     Add a card
                 </h2>
-                <ScanCard index={index} />
+                <ScanCard userId={userId} />
                 <label htmlFor="card-search" className="sr-only">
                     Card name
                 </label>
