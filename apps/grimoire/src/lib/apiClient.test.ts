@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, apiFetch, isUnauthorized } from '@/lib/apiClient';
+import {
+    ApiError,
+    apiFetch,
+    isUnauthorized,
+    parseRetryAfter,
+} from '@/lib/apiClient';
 
 const fetchMock = vi.fn();
 
@@ -62,5 +67,19 @@ describe('isUnauthorized', () => {
         expect(isUnauthorized(new ApiError('x', 401))).toBe(true);
         expect(isUnauthorized(new ApiError('x', 403))).toBe(false);
         expect(isUnauthorized(new Error('x'))).toBe(false);
+    });
+});
+
+describe('parseRetryAfter', () => {
+    it('reads seconds and dates, and ignores junk', () => {
+        expect(parseRetryAfter('30')).toBe(30_000);
+        expect(
+            parseRetryAfter(
+                'Thu, 01 Jan 2026 00:00:10 GMT',
+                Date.UTC(2026, 0, 1)
+            )
+        ).toBe(10_000);
+        expect(parseRetryAfter('soon')).toBeUndefined();
+        expect(parseRetryAfter(null)).toBeUndefined();
     });
 });

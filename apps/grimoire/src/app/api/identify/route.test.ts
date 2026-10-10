@@ -135,6 +135,7 @@ describe('POST /api/identify', () => {
         });
         const response = await POST(post(jpeg()));
         expect(response.status).toBe(429);
+        expect(Number(response.headers.get('Retry-After'))).toBeGreaterThan(0);
         expect((await response.json()).error).toMatch(/today's scan limit/);
         expect(fetchMock).not.toHaveBeenCalled();
     });
