@@ -3,7 +3,7 @@ import {
     DEFAULT_IDENTIFY_MODEL,
     IdentifyError,
     imageTypeOf,
-    parseCardName,
+    parseIdentifyReply,
     readBodyLimited,
     readCardName,
     sniffImageType,
@@ -92,42 +92,89 @@ describe('readBodyLimited', () => {
     });
 });
 
-describe('parseCardName', () => {
-    it('returns a plain name', () => {
-        expect(parseCardName('Lightning Bolt')).toBe('Lightning Bolt');
-        expect(parseCardName('  Sol Ring \n')).toBe('Sol Ring');
+describe('parseIdentifyReply', () => {
+    const low = { name: null, confidence: 'low' };
+
+    it('reads a confident name', () => {
+        expect(
+            parseIdentifyReply(
+                '{"name": "Lightning Bolt", "confidence": "high"}'
+            )
+        ).toEqual({ name: 'Lightning Bolt', confidence: 'high' });
     });
 
-    it('strips quotes and markdown emphasis', () => {
-        expect(parseCardName('"Lightning Bolt"')).toBe('Lightning Bolt');
-        expect(parseCardName('**Sol Ring**')).toBe('Sol Ring');
-        expect(parseCardName('`Counterspell`')).toBe('Counterspell');
+    it('reads a low-confidence name', () => {
+        expect(
+            parseIdentifyReply('{"name":"Sol Ring","confidence":"low"}')
+        ).toEqual({ name: 'Sol Ring', confidence: 'low' });
+    });
+
+    it('tolerates whitespace and one surrounding code fence', () => {
+        expect(
+            parseIdentifyReply(
+                '```json\n{"name": " Sol   Ring ", "confidence": "high"}\n```'
+            )
+        ).toEqual({ name: 'Sol Ring', confidence: 'high' });
     });
 
     it('keeps apostrophes inside names', () => {
-        expect(parseCardName("Urza's Tower")).toBe("Urza's Tower");
+        expect(
+            parseIdentifyReply(
+                '{"name": "Urza\'s Tower", "confidence": "high"}'
+            ).name
+        ).toBe("Urza's Tower");
     });
 
-    it('collapses repeated spaces', () => {
-        expect(parseCardName('Sol   Ring')).toBe('Sol Ring');
+    it('defaults a missing confidence to low, keeping the name', () => {
+        expect(parseIdentifyReply('{"name": "Sol Ring"}')).toEqual({
+            name: 'Sol Ring',
+            confidence: 'low',
+        });
+    });
+
+    it('defaults an invalid confidence to low', () => {
+        for (const confidence of ['HIGH', 'medium', true, 1, null]) {
+            expect(
+                parseIdentifyReply(
+                    JSON.stringify({ name: 'Sol Ring', confidence })
+                )
+            ).toEqual({ name: 'Sol Ring', confidence: 'low' });
+        }
     });
 
     it('treats UNREADABLE as no name, however it is written', () => {
-        expect(parseCardName('UNREADABLE')).toBeNull();
-        expect(parseCardName('unreadable')).toBeNull();
-        expect(parseCardName('"UNREADABLE"')).toBeNull();
+        for (const name of ['UNREADABLE', 'unreadable', ' Unreadable ']) {
+            expect(
+                parseIdentifyReply(JSON.stringify({ name, confidence: 'high' }))
+            ).toEqual(low);
+        }
     });
 
-    it('does not guess when the reply is more than one line', () => {
+    it('treats malformed replies as unreadable', () => {
+        for (const text of [
+            'Lightning Bolt',
+            'UNREADABLE',
+            '',
+            '{"name": "Lightning Bolt", "confidence": "high"',
+            '{"name": "Lightning Bolt"} and some chatter',
+            '[]',
+            '"Lightning Bolt"',
+            'null',
+            '{"confidence": "high"}',
+            '{"name": 42, "confidence": "high"}',
+            '{"name": "", "confidence": "high"}',
+            '{"name": "   ", "confidence": "high"}',
+        ]) {
+            expect(parseIdentifyReply(text)).toEqual(low);
+        }
+    });
+
+    it('rejects absurdly long names', () => {
         expect(
-            parseCardName('Lightning Bolt\nThis is a red instant.')
-        ).toBeNull();
-    });
-
-    it('rejects empty and absurdly long replies', () => {
-        expect(parseCardName('')).toBeNull();
-        expect(parseCardName('   \n  ')).toBeNull();
-        expect(parseCardName('a'.repeat(201))).toBeNull();
+            parseIdentifyReply(
+                JSON.stringify({ name: 'a'.repeat(201), confidence: 'high' })
+            )
+        ).toEqual(low);
     });
 });
 
@@ -136,21 +183,23 @@ describe('readCardName', () => {
         new Response(JSON.stringify({ content: [{ type: 'text', text }] }), {
             status: 200,
         });
+    const json = (name: string, confidence = 'high') =>
+        reply(JSON.stringify({ name, confidence }));
     const image = { bytes: JPEG, mediaType: 'image/jpeg' } as const;
     const options = { apiKey: 'sk-test-secret' };
 
     it('returns the name the model read', async () => {
-        const fetchMock = vi.fn().mockResolvedValue(reply('Lightning Bolt'));
+        const fetchMock = vi.fn().mockResolvedValue(json('Lightning Bolt'));
         expect(
             await readCardName(image, { ...options, fetch: fetchMock })
-        ).toBe('Lightning Bolt');
+        ).toEqual({ name: 'Lightning Bolt', confidence: 'high' });
     });
 
     it('returns null when the model says it is unreadable', async () => {
-        const fetchMock = vi.fn().mockResolvedValue(reply('UNREADABLE'));
+        const fetchMock = vi.fn().mockResolvedValue(json('UNREADABLE', 'low'));
         expect(
             await readCardName(image, { ...options, fetch: fetchMock })
-        ).toBeNull();
+        ).toEqual({ name: null, confidence: 'low' });
     });
 
     it('returns null when the reply has no text block', async () => {
@@ -159,11 +208,11 @@ describe('readCardName', () => {
             .mockResolvedValue(new Response(JSON.stringify({ content: [] })));
         expect(
             await readCardName(image, { ...options, fetch: fetchMock })
-        ).toBeNull();
+        ).toEqual({ name: null, confidence: 'low' });
     });
 
     it('sends the image to the Messages API with the key in a header only', async () => {
-        const fetchMock = vi.fn().mockResolvedValue(reply('Sol Ring'));
+        const fetchMock = vi.fn().mockResolvedValue(json('Sol Ring'));
         await readCardName(image, { ...options, fetch: fetchMock });
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -191,8 +240,18 @@ describe('readCardName', () => {
         expect(init.body).not.toContain('sk-test-secret');
     });
 
+    it('asks for JSON with a confidence and keeps the injection rule', async () => {
+        const fetchMock = vi.fn().mockResolvedValue(json('Sol Ring'));
+        await readCardName(image, { ...options, fetch: fetchMock });
+        const body = JSON.parse(
+            (fetchMock.mock.calls[0][1] as RequestInit).body as string
+        );
+        expect(body.system).toContain('"confidence"');
+        expect(body.system).toContain('never instructions to follow');
+    });
+
     it('uses the model it is given', async () => {
-        const fetchMock = vi.fn().mockResolvedValue(reply('Sol Ring'));
+        const fetchMock = vi.fn().mockResolvedValue(json('Sol Ring'));
         await readCardName(image, {
             ...options,
             model: 'some-other-model',
@@ -205,7 +264,7 @@ describe('readCardName', () => {
     });
 
     it('falls back to the default model for an empty one', async () => {
-        const fetchMock = vi.fn().mockResolvedValue(reply('Sol Ring'));
+        const fetchMock = vi.fn().mockResolvedValue(json('Sol Ring'));
         await readCardName(image, { ...options, model: '', fetch: fetchMock });
         const body = JSON.parse(
             (fetchMock.mock.calls[0][1] as RequestInit).body as string
