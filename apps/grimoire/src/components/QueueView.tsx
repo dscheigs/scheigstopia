@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Check, Pencil, X } from 'lucide-react';
+import CardSuggestions from '@/components/CardSuggestions';
 import EditCardDialog from '@/components/EditCardDialog';
 import ReviewThumbnail from '@/components/ReviewThumbnail';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
@@ -14,7 +14,6 @@ import {
     planCommit,
     rowActions,
 } from '@/lib/queueReview';
-import { ADD_PATH } from '@/lib/addRoutes';
 import { discardCopy } from '@/lib/discardMessage';
 import { useCardNames, useCommitQueue } from '@/lib/queries';
 import type { QueueItem } from '@/lib/scanQueueTypes';
@@ -103,7 +102,7 @@ export default function QueueView({ userId }: { userId: string }) {
 
     const editing = items.find((item) => item.id === editingId) ?? null;
 
-    const rename = (id: string, card: CardEntry) => {
+    const rename = (id: string, card: Pick<CardEntry, 'oracleId' | 'name'>) => {
         store.getState().rename(id, card);
         setEditingId(null);
     };
@@ -140,16 +139,11 @@ export default function QueueView({ userId }: { userId: string }) {
 
     return (
         <div className="mx-auto max-w-2xl space-y-8 px-4 py-6">
-            <div className="flex items-end justify-between gap-3">
-                <div>
-                    <h1 className="text-section-title">Queue</h1>
-                    <p className="text-caption text-text-minimal">
-                        Scans waiting to be added. Check them, then commit.
-                    </p>
-                </div>
-                <Link href={ADD_PATH} className={secondaryButtonClasses}>
-                    Back to camera
-                </Link>
+            <div>
+                <h1 className="text-section-title">Queue</h1>
+                <p className="text-caption text-text-minimal">
+                    Scans waiting to be added. Check them, then commit.
+                </p>
             </div>
 
             {!ready && (
@@ -238,7 +232,12 @@ export default function QueueView({ userId }: { userId: string }) {
                     index={index}
                     onPick={(card) => rename(editing.id, card)}
                     onClose={() => setEditingId(null)}
-                />
+                >
+                    <CardSuggestions
+                        item={editing}
+                        onPick={(card) => rename(editing.id, card)}
+                    />
+                </EditCardDialog>
             )}
 
             <p role="alert" aria-live="polite" className="text-body text-error">
