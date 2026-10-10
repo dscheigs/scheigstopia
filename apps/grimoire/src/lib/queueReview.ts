@@ -156,3 +156,15 @@ export function planCommit(items: QueueItem[]): CommitPlan {
     }
     return { payload: [...byCard.values()], ids, count: ids.length };
 }
+
+export interface QueueCounts {
+    /** Every item in the queue, whatever its status. */
+    total: number;
+    /** Items waiting on the user (flagged or failed). */
+    review: number;
+}
+
+/** Counts for the Camera | Queue control: queue size and how many need review. */
+export function queueCounts(items: QueueItem[]): QueueCounts {
+    return { total: items.length, review: items.filter(needsReview).length };
+}

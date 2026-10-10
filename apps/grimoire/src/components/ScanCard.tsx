@@ -1,10 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
 import TuningPanel from '@/components/TuningPanel';
-import { ADD_QUEUE_PATH, videoPlacement } from '@/lib/addRoutes';
+import { videoPlacement } from '@/lib/addRoutes';
 import { AUTO_CAPTURE } from '@/lib/autoCapture';
 import { summarizeQueue } from '@/lib/scanSession';
 import { useCardScanner } from '@/lib/useCardScanner';
@@ -132,12 +131,6 @@ export default function ScanCard({
                     <span>{summary.identified} identified</span>
                     <span>{summary.flagged} flagged</span>
                     <span>{summary.failed} failed</span>
-                    <Link
-                        href={ADD_QUEUE_PATH}
-                        className="font-medium underline"
-                    >
-                        Review queue
-                    </Link>
                 </p>
             )}
 

@@ -5,6 +5,7 @@ import {
     itemLabel,
     rowActions,
     planCommit,
+    queueCounts,
     confirmPatch,
     renamePatch,
     sortQueue,
@@ -185,5 +186,21 @@ describe('planCommit', () => {
         ]);
         expect(plan.payload).toEqual([{ ...elves, delta: 1 }]);
         expect(plan.ids).toHaveLength(1);
+    });
+});
+
+describe('queueCounts', () => {
+    it('is zero for an empty queue', () => {
+        expect(queueCounts([])).toEqual({ total: 0, review: 0 });
+    });
+    it('counts every item and the flagged or failed ones for review', () => {
+        const items = [
+            item({ status: 'queued' }),
+            item({ status: 'sending' }),
+            item({ status: 'identified', matchedCard: bolt }),
+            item({ status: 'flagged', flagReason: 'no-match' }),
+            item({ status: 'failed', flagReason: 'error' }),
+        ];
+        expect(queueCounts(items)).toEqual({ total: 5, review: 2 });
     });
 });

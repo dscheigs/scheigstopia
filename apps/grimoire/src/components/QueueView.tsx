@@ -13,6 +13,7 @@ import {
     planCommit,
     rowActions,
 } from '@/lib/queueReview';
+import { ADD_PATH } from '@/lib/addRoutes';
 import { discardCopy } from '@/lib/discardMessage';
 import { useCardNames, useCommitQueue } from '@/lib/queries';
 import { getBlobs } from '@/lib/scanQueueBlobs';
@@ -172,8 +173,8 @@ export default function QueueView({ userId }: { userId: string }) {
                         Scans waiting to be added. Check them, then commit.
                     </p>
                 </div>
-                <Link href="/" className={secondaryButtonClasses}>
-                    Collection
+                <Link href={ADD_PATH} className={secondaryButtonClasses}>
+                    Back to camera
                 </Link>
             </div>
 
