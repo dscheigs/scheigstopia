@@ -2,9 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { Check } from 'lucide-react';
-import { Pencil } from 'lucide-react';
-import { X } from 'lucide-react';
+import { Check, Pencil, X } from 'lucide-react';
 import EditCardDialog from '@/components/EditCardDialog';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
 import { buildIndex, type CardEntry, type CardIndex } from '@/lib/cardSearch';
