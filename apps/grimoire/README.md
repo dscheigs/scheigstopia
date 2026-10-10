@@ -100,6 +100,10 @@ Every threshold is in the `AUTO_CAPTURE` object at the top of that file. Turn on
 
 Nothing is added to the collection while scanning. Review the queue at `/add/queue` (`/queue` redirects there) and commit the cards you want. Captured items survive a refresh (they live in IndexedDB) and expire after 12 hours. _Debug_ and _Tune_ are temporary tools for setting the thresholds above.
 
+### Worker lifetime and signed-out behavior
+
+The background worker starts on the first _Start_ and runs while the Add Cards layout (`/add` and `/add/queue`) is mounted. Leaving `/add` stops it; queued photos stay in IndexedDB and are picked up when you come back and press _Start_. A 401 from `/api/identify` pauses the worker: scans stay queued, no attempt is counted, and the Add Cards screens show "Your session expired. Sign in again to keep scanning." with a link to `/signin`. A paused worker tries one photo a minute, so it resumes by itself if you sign in elsewhere, and a fresh start after signing in resumes at once.
+
 ## Not yet done
 
 - The rest of issue #43: showing the remaining scan budget in the UI, and a rate limit on sign-in. Set a spend limit on the API key's workspace before enabling scanning in production.

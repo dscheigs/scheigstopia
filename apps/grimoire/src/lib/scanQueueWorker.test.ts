@@ -398,6 +398,100 @@ describe('failures and backoff', () => {
     });
 });
 
+describe('signed out (401)', () => {
+    const unauthorized = () => new IdentifyCallError({ kind: 'unauthorized' });
+    const bolt = { name: 'Lightning Bolt', confidence: 'high' as const };
+
+    it('pauses with every item queued and counts no attempt', async () => {
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockRejectedValue(unauthorized());
+        const onAuthChange = vi.fn();
+        const { store, worker } = setup(identify, { onAuthChange });
+        store.getState().add();
+        store.getState().add();
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(onAuthChange).toHaveBeenCalledExactlyOnceWith(true);
+        for (const item of store.getState().items) {
+            expect(item).toMatchObject({ status: 'queued', attempts: 0 });
+        }
+        // Held back far past the normal backoff and retry budget.
+        const calls = identify.mock.calls.length;
+        await vi.advanceTimersByTimeAsync(30_000);
+        expect(identify).toHaveBeenCalledTimes(calls);
+        worker.poke();
+        await settle();
+        expect(identify).toHaveBeenCalledTimes(calls);
+        worker.stop();
+    });
+
+    it('never fails an item however many 401s it gets', async () => {
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockRejectedValue(unauthorized());
+        const { store, worker } = setup(identify, {
+            maxAttempts: 2,
+            authProbeMs: 1000,
+        });
+        store.getState().add();
+        worker.start();
+        await vi.advanceTimersByTimeAsync(10_000);
+        expect(identify.mock.calls.length).toBeGreaterThan(3);
+        expect(only(store)).toMatchObject({ status: 'queued', attempts: 0 });
+        worker.stop();
+    });
+
+    it('resumes by itself when a probe send succeeds', async () => {
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockRejectedValueOnce(unauthorized())
+            .mockRejectedValueOnce(unauthorized())
+            .mockResolvedValue(bolt);
+        const onAuthChange = vi.fn();
+        const { store, worker } = setup(identify, {
+            onAuthChange,
+            authProbeMs: 5000,
+        });
+        store.getState().add();
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(identify).toHaveBeenCalledTimes(2); // both hit the 401
+        expect(onAuthChange).toHaveBeenLastCalledWith(true);
+        await vi.advanceTimersByTimeAsync(4999);
+        expect(identify).toHaveBeenCalledTimes(2);
+        await vi.advanceTimersByTimeAsync(1);
+        expect(onAuthChange).toHaveBeenLastCalledWith(false);
+        expect(
+            store.getState().items.every((i) => i.status === 'identified')
+        ).toBe(true);
+        worker.stop();
+    });
+
+    it('resumes at once when the worker is restarted after signing in', async () => {
+        let signedIn = false;
+        const identify = vi.fn<WorkerDeps['identify']>(async () => {
+            if (!signedIn) throw unauthorized();
+            return bolt;
+        });
+        const onAuthChange = vi.fn();
+        const { store, worker } = setup(identify, { onAuthChange });
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store).status).toBe('queued');
+        worker.stop();
+        signedIn = true;
+        worker.start();
+        await settle();
+        expect(only(store).status).toBe('identified');
+        expect(onAuthChange).toHaveBeenLastCalledWith(false);
+        worker.stop();
+    });
+});
+
 describe('offline and resume', () => {
     it('sends nothing while offline and drains when poked back online', async () => {
         let online = false;
