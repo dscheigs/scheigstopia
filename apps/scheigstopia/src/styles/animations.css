@@ -49,3 +49,34 @@
         transform: translateY(0);
     }
 }
+
+/* View Transitions: page content cross-fades with a small upward drift on
+   navigation. Browsers without the View Transitions API just navigate. */
+@keyframes page-fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes page-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.5rem);
+    }
+}
+
+::view-transition-old(.page-fade) {
+    animation: page-fade-out 0.15s ease-in both;
+}
+
+::view-transition-new(.page-fade) {
+    animation: page-fade-in 0.25s ease-out 0.1s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
