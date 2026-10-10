@@ -49,6 +49,30 @@ export function useAddCard() {
     });
 }
 
+/** Commit a list of `{ oracleId, name, delta }` in one all-or-nothing request. */
+export function useCommitQueue() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (
+            items: { oracleId: string; name: string; delta: number }[]
+        ) =>
+            apiFetch<{ items: CollectionItem[] }>('/api/collection/bulk', {
+                method: 'POST',
+                json: { items },
+            }),
+        onSuccess: ({ items }) => {
+            queryClient.setQueryData<CollectionItem[]>(
+                queryKeys.collection,
+                (current) =>
+                    items.reduce(
+                        (all, item) => withItem(all, item),
+                        current ?? []
+                    )
+            );
+        },
+    });
+}
+
 /** Set how many copies are owned. Zero removes the card. */
 export function useSetQuantity() {
     const queryClient = useQueryClient();
