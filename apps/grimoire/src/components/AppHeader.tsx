@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { auth, signOut } from '@/auth';
-import QueueLink from '@/components/QueueLink';
+import NavLinks from '@/components/NavLinks';
 import SignOutForm from '@/components/SignOutForm';
 
 export default async function AppHeader() {
@@ -15,7 +15,7 @@ export default async function AppHeader() {
                 </Link>
                 {userId ? (
                     <div className="flex items-center gap-1">
-                        <QueueLink userId={userId} />
+                        <NavLinks />
                         <SignOutForm
                             userId={userId}
                             signOutAction={async () => {

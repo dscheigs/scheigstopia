@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import ScanCard from '@/components/ScanCard';
 import { buttonClasses, inputClasses } from '@/components/styles';
 import { buildIndex, searchCards, type CardEntry } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
@@ -24,7 +23,7 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
     return debounced;
 }
 
-export default function CollectionView({ userId }: { userId: string }) {
+export default function CollectionView() {
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('');
     const searchRef = useRef<HTMLInputElement>(null);
@@ -111,7 +110,6 @@ export default function CollectionView({ userId }: { userId: string }) {
                 <h2 id="add-heading" className="text-subheading">
                     Add a card
                 </h2>
-                <ScanCard userId={userId} />
                 <label htmlFor="card-search" className="sr-only">
                     Card name
                 </label>
