@@ -90,6 +90,7 @@ describe('createScanFeedback', () => {
         expect(feedback.getState()).toEqual({
             audioActive: false,
             wakeLockActive: false,
+            muted: false,
         });
     });
 
@@ -103,6 +104,7 @@ describe('createScanFeedback', () => {
         expect(feedback.getState()).toEqual({
             audioActive: true,
             wakeLockActive: true,
+            muted: false,
         });
         expect(listener).toHaveBeenCalled();
     });
@@ -135,6 +137,37 @@ describe('createScanFeedback', () => {
         expect(vibrate).toHaveBeenCalledWith([120, 80, 120]);
     });
 
+    it('is silent when muted but still vibrates', async () => {
+        const { feedback, audio, vibrate } = setup();
+        await feedback.start();
+        feedback.setMuted(true);
+        feedback.notifyCaptured();
+        feedback.notifyAttention();
+        expect(audio.oscillators).toHaveLength(0);
+        expect(vibrate).toHaveBeenCalledWith(40);
+        feedback.setMuted(false);
+        feedback.notifyCaptured();
+        expect(audio.oscillators).toHaveLength(1);
+    });
+
+    it('publishes the mute state and remembers the choice', async () => {
+        const save = vi.fn();
+        const { feedback } = setup({ muted: { load: () => false, save } });
+        const listener = vi.fn();
+        feedback.subscribe(listener);
+        feedback.setMuted(true);
+        expect(feedback.getState().muted).toBe(true);
+        expect(listener).toHaveBeenCalledTimes(1);
+        expect(save).toHaveBeenCalledWith(true);
+    });
+
+    it('starts muted when the saved choice says so', () => {
+        const { feedback } = setup({
+            muted: { load: () => true, save: vi.fn() },
+        });
+        expect(feedback.getState().muted).toBe(true);
+    });
+
     it('stays silent before audio is unlocked', () => {
         const { feedback, audio } = setup();
         feedback.notifyCaptured();
@@ -165,6 +198,7 @@ describe('createScanFeedback', () => {
         expect(feedback.getState()).toEqual({
             audioActive: false,
             wakeLockActive: false,
+            muted: false,
         });
     });
 

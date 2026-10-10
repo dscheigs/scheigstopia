@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { Volume2, VolumeOff } from 'lucide-react';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
 import TuningPanel from '@/components/TuningPanel';
 import { videoPlacement } from '@/lib/addRoutes';
@@ -60,6 +61,8 @@ export default function ScanCard({
         resetTuning,
         items,
         workerOn,
+        muted,
+        setMuted,
         startCamera,
         closeCamera,
         toggleDebug,
@@ -102,6 +105,21 @@ export default function ScanCard({
                     aria-label="Camera view"
                     className="aspect-[4/3] w-full rounded-lg bg-neutral-950 object-cover"
                 />
+                {showControls && (
+                    <button
+                        type="button"
+                        onClick={() => setMuted(!muted)}
+                        aria-pressed={muted}
+                        aria-label="Mute sounds"
+                        className="absolute right-2 top-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-neutral-950/80 text-neutral-100 transition-colors hover:bg-neutral-950"
+                    >
+                        {muted ? (
+                            <VolumeOff aria-hidden="true" />
+                        ) : (
+                            <Volume2 aria-hidden="true" />
+                        )}
+                    </button>
+                )}
                 {showControls && debug && reading && (
                     <dl
                         className="absolute bottom-2 left-2 space-y-0.5 rounded-lg bg-neutral-950/80 p-2 font-mono text-caption text-neutral-100"

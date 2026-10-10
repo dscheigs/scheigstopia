@@ -279,6 +279,8 @@ export function useCardScanner(userId: string, active = true) {
         resetTuning,
         items,
         workerOn,
+        muted: feedback.muted,
+        setMuted: feedback.setMuted,
         startCamera,
         closeCamera,
         toggleDebug,
