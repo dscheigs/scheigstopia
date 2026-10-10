@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { inputClasses, secondaryButtonClasses } from '@/components/styles';
 import { searchCards, type CardEntry, type CardIndex } from '@/lib/cardSearch';
+import { useModalDialog } from '@/lib/useModalDialog';
 
 interface EditCardDialogProps {
     /** What the row is called now, shown as the dialog title context. */
@@ -28,23 +29,18 @@ export default function EditCardDialog({
     children,
 }: EditCardDialogProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
+    const handleClose = useModalDialog(dialogRef, onClose);
     const [query, setQuery] = useState('');
     const results = useMemo(
         () => (index ? searchCards(index, query) : []),
         [index, query]
     );
 
-    useEffect(() => {
-        const dialog = dialogRef.current;
-        if (dialog && !dialog.open) dialog.showModal();
-        return () => dialog?.close();
-    }, []);
-
     return (
         <dialog
             ref={dialogRef}
             aria-labelledby="edit-card-title"
-            onClose={onClose}
+            onClose={handleClose}
             onClick={(event) => {
                 // A click on the backdrop lands on the dialog itself.
                 if (event.target === event.currentTarget) onClose();
