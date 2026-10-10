@@ -49,6 +49,48 @@ export async function addToCollection(
     return toItem(rows[0]);
 }
 
+/**
+ * Add many cards in one statement, so it applies fully or not at all. Neon's
+ * HTTP client has no interactive transaction, and `Sql.transaction` is not
+ * atomic in the PGlite test double, so one statement is the form that behaves
+ * the same in production and in tests. Repeated oracle ids are summed first,
+ * since one statement cannot upsert a row twice. Same cap and conflict
+ * behavior as `addToCollection`.
+ */
+export async function addManyToCollection(
+    sql: Sql,
+    userId: string,
+    cards: { oracleId: string; name: string; delta: number }[]
+): Promise<CollectionItem[]> {
+    const merged = new Map<
+        string,
+        { oracle_id: string; name: string; delta: number }
+    >();
+    for (const card of cards) {
+        const existing = merged.get(card.oracleId);
+        merged.set(card.oracleId, {
+            oracle_id: card.oracleId,
+            // The last name wins, like repeated single adds.
+            name: card.name,
+            delta: Math.min((existing?.delta ?? 0) + card.delta, MAX_QUANTITY),
+        });
+    }
+    if (merged.size === 0) return [];
+
+    const rows = await sql`
+        insert into collection (user_id, oracle_id, name, quantity)
+        select ${userId}::uuid, c.oracle_id, c.name, c.delta
+        from jsonb_to_recordset(${JSON.stringify([...merged.values()])}::jsonb)
+            as c(oracle_id uuid, name text, delta integer)
+        on conflict (user_id, oracle_id) do update set
+            quantity = least(collection.quantity + excluded.quantity, ${MAX_QUANTITY}),
+            name = excluded.name,
+            updated_at = now()
+        returning oracle_id, name, quantity, updated_at
+    `;
+    return rows.map(toItem);
+}
+
 export type SetQuantityResult =
     | { status: 'updated'; item: CollectionItem }
     | { status: 'removed' }

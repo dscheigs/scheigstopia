@@ -1,4 +1,5 @@
 export const MAX_QUANTITY = 9999;
+export const MAX_BULK_ITEMS = 500;
 const MAX_NAME_LENGTH = 200;
 
 const UUID_PATTERN =
@@ -60,6 +61,35 @@ export function parseAddBody(body: unknown): Parsed<AddBody> {
         };
     }
     return { ok: true, value: { oracleId: body.oracleId, name, delta } };
+}
+
+/** Body for committing many cards: { items: [{ oracleId, name, delta }] }. */
+export function parseBulkBody(body: unknown): Parsed<{ items: AddBody[] }> {
+    if (!isRecord(body) || !Array.isArray(body.items)) {
+        return { ok: false, error: 'items must be an array.' };
+    }
+    if (body.items.length === 0 || body.items.length > MAX_BULK_ITEMS) {
+        return {
+            ok: false,
+            error: `items must have 1-${MAX_BULK_ITEMS} entries.`,
+        };
+    }
+    const items: AddBody[] = [];
+    for (const [index, raw] of body.items.entries()) {
+        // Unlike the single add, delta is required: a queue always has one.
+        if (!isRecord(raw) || raw.delta === undefined) {
+            return {
+                ok: false,
+                error: `items[${index}] must be { oracleId, name, delta }.`,
+            };
+        }
+        const parsed = parseAddBody(raw);
+        if (!parsed.ok) {
+            return { ok: false, error: `items[${index}]: ${parsed.error}` };
+        }
+        items.push(parsed.value);
+    }
+    return { ok: true, value: { items } };
 }
 
 /** Body for setting an exact quantity: { quantity }. Zero removes the card. */
