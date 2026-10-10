@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ScanCard from '@/components/ScanCard';
 import { buttonClasses, inputClasses } from '@/components/styles';
 import { buildIndex, searchCards, type CardEntry } from '@/lib/cardSearch';
@@ -35,7 +35,10 @@ export default function CollectionView() {
     const setQuantityMutation = useSetQuantity();
 
     // null while loading; a failed load shows the error and an empty list.
-    const items = collection.data ?? (collection.isError ? [] : null);
+    const items = useMemo(
+        () => collection.data ?? (collection.isError ? [] : null),
+        [collection.data, collection.isError]
+    );
     const cardList = cardNames.isError
         ? 'missing'
         : cardNames.isPending
