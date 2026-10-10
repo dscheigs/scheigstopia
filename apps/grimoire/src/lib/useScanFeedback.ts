@@ -15,11 +15,13 @@ export interface UseScanFeedback extends FeedbackState {
     stop: () => void;
     notifyCaptured: () => void;
     notifyAttention: () => void;
+    setMuted: (muted: boolean) => void;
 }
 
 const SERVER_STATE: FeedbackState = {
     audioActive: false,
     wakeLockActive: false,
+    muted: false,
 };
 
 export function useScanFeedback(): UseScanFeedback {
@@ -50,6 +52,7 @@ export function useScanFeedback(): UseScanFeedback {
             stop: () => get().stop(),
             notifyCaptured: () => get().notifyCaptured(),
             notifyAttention: () => get().notifyAttention(),
+            setMuted: (muted: boolean) => get().setMuted(muted),
         }),
         // get only reads a ref, so it is stable.
         // eslint-disable-next-line react-hooks/exhaustive-deps

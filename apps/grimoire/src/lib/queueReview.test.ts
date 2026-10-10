@@ -2,10 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
     describeProblem,
     groupQueue,
+    itemLabel,
+    rowActions,
     planCommit,
+    queueCounts,
     confirmPatch,
     renamePatch,
     sortQueue,
+    buildSuggestions,
 } from '@/lib/queueReview';
 import type { QueueItem } from '@/lib/scanQueueTypes';
 
@@ -118,6 +122,43 @@ describe('confirm', () => {
     });
 });
 
+describe('rowActions', () => {
+    it('offers confirm only for reviewable items with a card', () => {
+        const confirmable = (patch: Partial<QueueItem>) =>
+            rowActions(item(patch)).confirm;
+        expect(confirmable({ status: 'flagged', matchedCard: bolt })).toBe(
+            true
+        );
+        expect(confirmable({ status: 'failed', matchedCard: bolt })).toBe(true);
+        expect(confirmable({ status: 'identified', matchedCard: bolt })).toBe(
+            false
+        );
+        expect(confirmable({ status: 'queued' })).toBe(false);
+        expect(confirmable({ status: 'flagged' })).toBe(false);
+    });
+
+    it('always offers edit and remove', () => {
+        const actions = rowActions(item());
+        expect(actions.edit && actions.remove).toBe(true);
+    });
+});
+
+describe('itemLabel', () => {
+    it('prefers the matched card, then the read name', () => {
+        expect(itemLabel(item({ matchedCard: bolt, readName: 'Bolt' }))).toBe(
+            'Lightning Bolt'
+        );
+        expect(itemLabel(item({ readName: 'Bolt' }))).toBe('Bolt');
+    });
+
+    it('falls back by status', () => {
+        expect(itemLabel(item({ status: 'queued' }))).toBe(
+            'Waiting to be read'
+        );
+        expect(itemLabel(item({ status: 'flagged' }))).toBe('Unknown card');
+    });
+});
+
 describe('planCommit', () => {
     it('merges duplicates into a quantity and lists the items it covers', () => {
         const a = item({ status: 'identified', matchedCard: bolt });
@@ -146,5 +187,51 @@ describe('planCommit', () => {
         ]);
         expect(plan.payload).toEqual([{ ...elves, delta: 1 }]);
         expect(plan.ids).toHaveLength(1);
+    });
+});
+
+describe('queueCounts', () => {
+    it('is zero for an empty queue', () => {
+        expect(queueCounts([])).toEqual({ total: 0, review: 0 });
+    });
+    it('counts every item and the flagged or failed ones for review', () => {
+        const items = [
+            item({ status: 'queued' }),
+            item({ status: 'sending' }),
+            item({ status: 'identified', matchedCard: bolt }),
+            item({ status: 'flagged', flagReason: 'no-match' }),
+            item({ status: 'failed', flagReason: 'error' }),
+        ];
+        expect(queueCounts(items)).toEqual({ total: 5, review: 2 });
+    });
+});
+
+describe('buildSuggestions', () => {
+    const c = (n: number) => ({ oracleId: `c${n}`, name: `Card ${n}` });
+
+    it('is empty for items saved without candidates', () => {
+        expect(buildSuggestions(item())).toEqual([]);
+    });
+
+    it('leaves out the current match', () => {
+        expect(
+            buildSuggestions(
+                item({ matchedCard: c(1), candidates: [c(1), c(2)] })
+            )
+        ).toEqual([c(2)]);
+    });
+
+    it('lists each card once', () => {
+        expect(
+            buildSuggestions(item({ candidates: [c(1), c(2), c(1)] }))
+        ).toEqual([c(1), c(2)]);
+    });
+
+    it('caps the list after dropping the current match', () => {
+        const candidates = [1, 2, 3, 4, 5, 6, 7].map(c);
+        expect(
+            buildSuggestions(item({ matchedCard: c(1), candidates }), 3)
+        ).toEqual([c(2), c(3), c(4)]);
+        expect(buildSuggestions(item({ candidates }))).toHaveLength(5);
     });
 });

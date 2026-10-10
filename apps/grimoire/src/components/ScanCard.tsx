@@ -2,18 +2,35 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { Volume2, VolumeOff } from 'lucide-react';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
 import TuningPanel from '@/components/TuningPanel';
-import { ADD_QUEUE_PATH, videoPlacement } from '@/lib/addRoutes';
+import { videoPlacement } from '@/lib/addRoutes';
 import { AUTO_CAPTURE } from '@/lib/autoCapture';
+import { sessionNotice } from '@/lib/sessionNotice';
 import { summarizeQueue } from '@/lib/scanSession';
 import { useCardScanner } from '@/lib/useCardScanner';
 import { useScanQueueWorker } from '@/lib/useScanQueueWorker';
 
-/** Runs the background worker while mounted; renders nothing. */
+/**
+ * Runs the background worker while mounted (the Add Cards layout, so it stops
+ * when the user leaves /add). Renders the sign-in notice when it is paused.
+ */
 function QueueWorker({ userId }: { userId: string }) {
-    useScanQueueWorker(userId);
-    return null;
+    const { sessionExpired } = useScanQueueWorker(userId);
+    const notice = sessionNotice(sessionExpired);
+    if (!notice) return null;
+    return (
+        <p
+            role="alert"
+            className="mx-auto max-w-2xl px-4 pt-3 text-body text-error"
+        >
+            {notice.message}{' '}
+            <Link href={notice.href} className="underline">
+                {notice.linkLabel}
+            </Link>
+        </p>
+    );
 }
 
 const VIDEO_PLACEMENT_CLASSES = {
@@ -44,6 +61,8 @@ export default function ScanCard({
         resetTuning,
         items,
         workerOn,
+        muted,
+        setMuted,
         startCamera,
         closeCamera,
         toggleDebug,
@@ -86,6 +105,21 @@ export default function ScanCard({
                     aria-label="Camera view"
                     className="aspect-[4/3] w-full rounded-lg bg-neutral-950 object-cover"
                 />
+                {showControls && (
+                    <button
+                        type="button"
+                        onClick={() => setMuted(!muted)}
+                        aria-pressed={muted}
+                        aria-label="Mute sounds"
+                        className="absolute right-2 top-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-neutral-950/80 text-neutral-100 transition-colors hover:bg-neutral-950"
+                    >
+                        {muted ? (
+                            <VolumeOff aria-hidden="true" />
+                        ) : (
+                            <Volume2 aria-hidden="true" />
+                        )}
+                    </button>
+                )}
                 {showControls && debug && reading && (
                     <dl
                         className="absolute bottom-2 left-2 space-y-0.5 rounded-lg bg-neutral-950/80 p-2 font-mono text-caption text-neutral-100"
@@ -132,12 +166,6 @@ export default function ScanCard({
                     <span>{summary.identified} identified</span>
                     <span>{summary.flagged} flagged</span>
                     <span>{summary.failed} failed</span>
-                    <Link
-                        href={ADD_QUEUE_PATH}
-                        className="font-medium underline"
-                    >
-                        Review queue
-                    </Link>
                 </p>
             )}
 

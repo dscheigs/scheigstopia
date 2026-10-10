@@ -1,142 +1,42 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { Check, Pencil, X } from 'lucide-react';
+import CardSuggestions from '@/components/CardSuggestions';
+import EditCardDialog from '@/components/EditCardDialog';
+import ReviewThumbnail from '@/components/ReviewThumbnail';
+import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
+import { buildIndex, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import {
-    buttonClasses,
-    inputClasses,
-    secondaryButtonClasses,
-} from '@/components/styles';
-import {
-    buildIndex,
-    searchCards,
-    type CardEntry,
-    type CardIndex,
-} from '@/lib/cardSearch';
-import { describeProblem, groupQueue, planCommit } from '@/lib/queueReview';
+    describeProblem,
+    groupQueue,
+    itemLabel,
+    planCommit,
+    rowActions,
+} from '@/lib/queueReview';
 import { discardCopy } from '@/lib/discardMessage';
 import { useCardNames, useCommitQueue } from '@/lib/queries';
-import { getBlobs } from '@/lib/scanQueueBlobs';
 import type { QueueItem } from '@/lib/scanQueueTypes';
 import { useScanQueue } from '@/lib/useScanQueue';
 
-function Thumbnail({ id }: { id: string }) {
-    const [url, setUrl] = useState<string | null>(null);
-    useEffect(() => {
-        let objectUrl: string | null = null;
-        let cancelled = false;
-        void getBlobs(id).then((blobs) => {
-            if (cancelled || !blobs?.thumbnail) return;
-            objectUrl = URL.createObjectURL(blobs.thumbnail);
-            setUrl(objectUrl);
-        });
-        return () => {
-            cancelled = true;
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
-        };
-    }, [id]);
-
-    return (
-        <div className="h-16 w-12 shrink-0 overflow-hidden rounded-md border border-border-minimal bg-surface-minimal-hover">
-            {url && (
-                // eslint-disable-next-line @next/next/no-img-element -- a local blob URL
-                <img src={url} alt="" className="h-full w-full object-cover" />
-            )}
-        </div>
-    );
-}
-
-function RenameSearch({
-    index,
-    onPick,
-    onCancel,
-}: {
-    index: CardIndex | null;
-    onPick: (card: CardEntry) => void;
-    onCancel: () => void;
-}) {
-    const [query, setQuery] = useState('');
-    const results = useMemo(
-        () => (index ? searchCards(index, query) : []),
-        [index, query]
-    );
-    return (
-        <div className="w-full space-y-2">
-            <label htmlFor="rename-search" className="sr-only">
-                Card name
-            </label>
-            <input
-                id="rename-search"
-                type="search"
-                autoFocus
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={
-                    index ? 'Search the card list' : 'Card list unavailable'
-                }
-                disabled={!index}
-                autoComplete="off"
-                className={inputClasses}
-            />
-            {results.length > 0 && (
-                <ul className="divide-y divide-border-minimal overflow-hidden rounded-lg border border-border-minimal bg-surface-minimal">
-                    {results.map((card) => (
-                        <li key={card.oracleId}>
-                            <button
-                                type="button"
-                                onClick={() => onPick(card)}
-                                className="flex min-h-11 w-full items-center px-4 py-2 text-left text-body transition-colors hover:bg-surface-minimal-hover"
-                            >
-                                {card.name}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            )}
-            <button
-                type="button"
-                onClick={onCancel}
-                className={secondaryButtonClasses}
-            >
-                Cancel
-            </button>
-        </div>
-    );
-}
+const iconButtonClasses = `${secondaryButtonClasses} min-w-11 px-0`;
 
 interface ItemRowProps {
     item: QueueItem;
-    index: CardIndex | null;
-    renaming: boolean;
-    onStartRename: () => void;
-    onCancelRename: () => void;
-    onRename: (card: CardEntry) => void;
+    onEdit: () => void;
+    onConfirm: () => void;
     onRemove: () => void;
     onRetry: () => void;
 }
 
-function ItemRow({
-    item,
-    index,
-    renaming,
-    onStartRename,
-    onCancelRename,
-    onRename,
-    onRemove,
-    onRetry,
-}: ItemRowProps) {
+function ItemRow({ item, onEdit, onConfirm, onRemove, onRetry }: ItemRowProps) {
     const needsReview = item.status === 'flagged' || item.status === 'failed';
-    const title =
-        item.matchedCard?.name ??
-        item.readName ??
-        (item.status === 'queued' || item.status === 'sending'
-            ? 'Waiting to be read'
-            : 'Unknown card');
-    const label = title;
+    const label = itemLabel(item);
+    const actions = rowActions(item);
 
     return (
         <li className="flex flex-wrap items-center gap-3 px-4 py-3">
-            <Thumbnail id={item.id} />
+            <ReviewThumbnail id={item.id} label={label} />
             <div className="min-w-0 flex-1">
                 <p className="text-body">{label}</p>
                 {needsReview && (
@@ -145,43 +45,44 @@ function ItemRow({
                     </p>
                 )}
             </div>
-            {!renaming && (
-                <div className="flex items-center gap-2">
-                    {item.status === 'failed' && (
-                        <button
-                            type="button"
-                            onClick={onRetry}
-                            aria-label={`Retry ${label}`}
-                            className={secondaryButtonClasses}
-                        >
-                            Retry
-                        </button>
-                    )}
+            <div className="flex items-center gap-2">
+                {item.status === 'failed' && (
                     <button
                         type="button"
-                        onClick={onStartRename}
-                        aria-label={`Rename ${label}`}
+                        onClick={onRetry}
+                        aria-label={`Retry ${label}`}
                         className={secondaryButtonClasses}
                     >
-                        Rename
+                        Retry
                     </button>
+                )}
+                {actions.confirm && (
                     <button
                         type="button"
-                        onClick={onRemove}
-                        aria-label={`Remove ${label}`}
-                        className={secondaryButtonClasses}
+                        onClick={onConfirm}
+                        aria-label={`Confirm ${label}`}
+                        className={iconButtonClasses}
                     >
-                        Remove
+                        <Check aria-hidden="true" />
                     </button>
-                </div>
-            )}
-            {renaming && (
-                <RenameSearch
-                    index={index}
-                    onPick={onRename}
-                    onCancel={onCancelRename}
-                />
-            )}
+                )}
+                <button
+                    type="button"
+                    onClick={onEdit}
+                    aria-label={`Edit ${label}`}
+                    className={iconButtonClasses}
+                >
+                    <Pencil aria-hidden="true" />
+                </button>
+                <button
+                    type="button"
+                    onClick={onRemove}
+                    aria-label={`Remove ${label}`}
+                    className={iconButtonClasses}
+                >
+                    <X aria-hidden="true" />
+                </button>
+            </div>
         </li>
     );
 }
@@ -190,7 +91,7 @@ export default function QueueView({ userId }: { userId: string }) {
     const { items, ready, store } = useScanQueue(userId);
     const cardNames = useCardNames();
     const commit = useCommitQueue();
-    const [renamingId, setRenamingId] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     const index = useMemo(
         () => (cardNames.data ? buildIndex(cardNames.data) : null),
@@ -199,9 +100,11 @@ export default function QueueView({ userId }: { userId: string }) {
     const groups = useMemo(() => groupQueue(items), [items]);
     const plan = useMemo(() => planCommit(items), [items]);
 
-    const rename = (id: string, card: CardEntry) => {
+    const editing = items.find((item) => item.id === editingId) ?? null;
+
+    const rename = (id: string, card: Pick<CardEntry, 'oracleId' | 'name'>) => {
         store.getState().rename(id, card);
-        setRenamingId(null);
+        setEditingId(null);
     };
 
     const commitAll = () => {
@@ -222,13 +125,10 @@ export default function QueueView({ userId }: { userId: string }) {
 
     const rowProps = (item: QueueItem): ItemRowProps => ({
         item,
-        index,
-        renaming: renamingId === item.id,
-        onStartRename: () => setRenamingId(item.id),
-        onCancelRename: () => setRenamingId(null),
-        onRename: (card) => rename(item.id, card),
+        onEdit: () => setEditingId(item.id),
+        onConfirm: () => store.getState().confirm(item.id),
         onRemove: () => {
-            if (renamingId === item.id) setRenamingId(null);
+            if (editingId === item.id) setEditingId(null);
             store.getState().remove(item.id);
         },
         onRetry: () => store.getState().retry(item.id),
@@ -239,16 +139,11 @@ export default function QueueView({ userId }: { userId: string }) {
 
     return (
         <div className="mx-auto max-w-2xl space-y-8 px-4 py-6">
-            <div className="flex items-end justify-between gap-3">
-                <div>
-                    <h1 className="text-section-title">Queue</h1>
-                    <p className="text-caption text-text-minimal">
-                        Scans waiting to be added. Check them, then commit.
-                    </p>
-                </div>
-                <Link href="/" className={secondaryButtonClasses}>
-                    Collection
-                </Link>
+            <div>
+                <h1 className="text-section-title">Queue</h1>
+                <p className="text-caption text-text-minimal">
+                    Scans waiting to be added. Check them, then commit.
+                </p>
             </div>
 
             {!ready && (
@@ -328,6 +223,21 @@ export default function QueueView({ userId }: { userId: string }) {
                         {discardText.label}
                     </button>
                 </div>
+            )}
+
+            {editing && (
+                <EditCardDialog
+                    key={editing.id}
+                    label={itemLabel(editing)}
+                    index={index}
+                    onPick={(card) => rename(editing.id, card)}
+                    onClose={() => setEditingId(null)}
+                >
+                    <CardSuggestions
+                        item={editing}
+                        onPick={(card) => rename(editing.id, card)}
+                    />
+                </EditCardDialog>
             )}
 
             <p role="alert" aria-live="polite" className="text-body text-error">

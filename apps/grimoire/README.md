@@ -75,18 +75,20 @@ When a new set is released:
 
 ## Commands
 
-| Command                                 | What it does                         |
-| --------------------------------------- | ------------------------------------ |
-| `pnpm dev:grimoire`                     | Dev server on :3000                  |
-| `pnpm nx build grimoire`                | Production build                     |
-| `pnpm nx test grimoire`                 | Unit and database tests (about 10 s) |
-| `pnpm nx run grimoire:migrate`          | Apply `db/migrations/*.sql`          |
-| `pnpm nx run grimoire:card-names`       | Rebuild the card list from Scryfall  |
-| `pnpm nx run grimoire:check-card-names` | Check the card list is deployable    |
+| Command                                 | What it does                                    |
+| --------------------------------------- | ----------------------------------------------- |
+| `pnpm dev:grimoire`                     | Dev server on :3000                             |
+| `pnpm nx build grimoire`                | Production build                                |
+| `pnpm nx test grimoire`                 | Unit, database and component tests (about 10 s) |
+| `pnpm nx run grimoire:migrate`          | Apply `db/migrations/*.sql`                     |
+| `pnpm nx run grimoire:card-names`       | Rebuild the card list from Scryfall             |
+| `pnpm nx run grimoire:check-card-names` | Check the card list is deployable               |
 
 ## Tests
 
 `nx test grimoire` runs Vitest. The database tests apply the real migrations to an in-process Postgres (PGlite) and exercise the real queries, including that one user can never read or change another user's cards. The sign-in gate, input validation, export format, fuzzy search, and card-list filtering have their own tests, and so does scanning: the route's limits and failure handling, the reply parsing, and the request sent to the API (against a stand-in for `fetch`, so no key or network is needed).
+
+React component tests are `*.test.tsx` files. They run in jsdom with Testing Library (setup and a `<dialog>` shim in `vitest.setup.dom.ts`); every other test runs in node. Mock the store and query hooks at the module boundary, as `src/components/QueueView.test.tsx` does.
 
 ## Auto-capture
 
@@ -99,6 +101,10 @@ Tap _Start_ and the app watches the video; there is no Snap button and no per-ca
 Every threshold is in the `AUTO_CAPTURE` object at the top of that file. Turn on _Debug_ for a readout over the video (how much of the frame changed, how much is moving, how long it has been still) to tune them under your lighting. The numbers there are starting guesses, tested only against synthetic frames, so expect to adjust them with a real camera.
 
 Nothing is added to the collection while scanning. Review the queue at `/add/queue` (`/queue` redirects there) and commit the cards you want. Captured items survive a refresh (they live in IndexedDB) and expire after 12 hours. _Debug_ and _Tune_ are temporary tools for setting the thresholds above.
+
+### Worker lifetime and signed-out behavior
+
+The background worker starts on the first _Start_ and runs while the Add Cards layout (`/add` and `/add/queue`) is mounted. Leaving `/add` stops it; queued photos stay in IndexedDB and are picked up when you come back and press _Start_. A 401 from `/api/identify` pauses the worker: scans stay queued, no attempt is counted, and the Add Cards screens show "Your session expired. Sign in again to keep scanning." with a link to `/signin`. A paused worker tries one photo a minute, so it resumes by itself if you sign in elsewhere, and a fresh start after signing in resumes at once.
 
 ## Not yet done
 

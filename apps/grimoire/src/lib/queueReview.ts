@@ -4,6 +4,7 @@
 import type { CardEntry } from '@/lib/cardSearch';
 import type {
     FlagReason,
+    MatchedCard,
     QueueItem,
     QueueItemStatus,
 } from '@/lib/scanQueueTypes';
@@ -107,6 +108,53 @@ export function renamePatch(
     };
 }
 
+export interface RowActions {
+    remove: true;
+    edit: true;
+    /** Only for items waiting on review that have a card to confirm. */
+    confirm: boolean;
+}
+
+/** Which icon buttons a queue row shows. */
+export function rowActions(item: QueueItem): RowActions {
+    return { remove: true, edit: true, confirm: confirmPatch(item) !== null };
+}
+
+/** The name a row shows and its buttons are labelled with. */
+export function itemLabel(item: QueueItem): string {
+    return (
+        item.matchedCard?.name ??
+        item.readName ??
+        (item.status === 'queued' || item.status === 'sending'
+            ? 'Waiting to be read'
+            : 'Unknown card')
+    );
+}
+
+/** Most suggestions the edit modal shows. */
+export const SUGGESTION_LIMIT = 5;
+
+/**
+ * Cards to offer as one-tap fixes in the edit modal: the item's stored
+ * candidates minus the card it already has, each card once, capped. Empty for
+ * items saved without candidates.
+ */
+export function buildSuggestions(
+    item: Pick<QueueItem, 'candidates' | 'matchedCard'>,
+    limit = SUGGESTION_LIMIT
+): MatchedCard[] {
+    const seen = new Set<string>();
+    if (item.matchedCard) seen.add(item.matchedCard.oracleId);
+    const out: MatchedCard[] = [];
+    for (const card of item.candidates ?? []) {
+        if (out.length >= limit) break;
+        if (seen.has(card.oracleId)) continue;
+        seen.add(card.oracleId);
+        out.push(card);
+    }
+    return out;
+}
+
 export interface CommitPlan {
     /** The request body for the bulk endpoint; duplicates merged into delta. */
     payload: { oracleId: string; name: string; delta: number }[];
@@ -132,4 +180,16 @@ export function planCommit(items: QueueItem[]): CommitPlan {
         else byCard.set(oracleId, { oracleId, name, delta: 1 });
     }
     return { payload: [...byCard.values()], ids, count: ids.length };
+}
+
+export interface QueueCounts {
+    /** Every item in the queue, whatever its status. */
+    total: number;
+    /** Items waiting on the user (flagged or failed). */
+    review: number;
+}
+
+/** Counts for the Camera | Queue control: queue size and how many need review. */
+export function queueCounts(items: QueueItem[]): QueueCounts {
+    return { total: items.length, review: items.filter(needsReview).length };
 }
