@@ -1,3 +1,4 @@
+import { copyFile, mkdir } from 'node:fs/promises';
 import StyleDictionary from 'style-dictionary';
 
 /**
@@ -9,6 +10,7 @@ import StyleDictionary from 'style-dictionary';
  *           dist/sylva.js    - nested object of resolved values, `export default`
  *           dist/sylva.d.ts  - types for the above
  *           dist/sylva.tokens.json - the same nested object as JSON
+ *           dist/motion.css  - view-transition rules (motion/*.css, copied as is)
  */
 
 const isSemantic = (token) => (token.filePath ?? '').includes('semantic');
@@ -136,3 +138,6 @@ const sd = new StyleDictionary({
 
 await sd.hasInitialized;
 await sd.buildAllPlatforms();
+
+await mkdir('dist', { recursive: true });
+await copyFile('motion/viewTransitions.css', 'dist/motion.css');

@@ -3,7 +3,8 @@
 A small, reusable **color system** — a forest-green and sage palette as
 [W3C design tokens](https://tr.designtokens.org/format/).
 
-Colors only. No components, no framework.
+Colors, plus a little motion (duration/easing tokens and the page view
+transition). No components, no framework.
 
 ## Install
 
@@ -24,6 +25,19 @@ pnpm add @scheigs/sylva
     color: var(--color-text-primary);
     border: 1px solid var(--color-border-default);
 }
+```
+
+**View transitions** — page content cross-fades with a small upward drift on
+navigation (disabled under `prefers-reduced-motion`). Import after the main
+CSS, then mark the element with React's `ViewTransition`:
+
+```css
+@import '@scheigs/sylva/css';
+@import '@scheigs/sylva/motion';
+```
+
+```tsx
+<ViewTransition default="page-fade">{children}</ViewTransition>
 ```
 
 **JS / TS constants** (resolved values, nested):
@@ -48,6 +62,9 @@ import semantic from '@scheigs/sylva/tokens/semantic';
 tokens/
   primitives.tokens.json   Tier 1 — raw palette (green, sage, neutral, feedback, base)
   semantic.tokens.json     Tier 2 — aliases (bg / text / border / action / feedback), per theme
+  motion.tokens.json       Durations, easings and distances for the page transition
+motion/
+  viewTransitions.css      Page-fade view-transition rules; copied to dist/motion.css
 brand/
   gnome.svg                The mascot — standalone pixel SVG
 build.mjs                  Style Dictionary build -> dist/
@@ -56,7 +73,8 @@ build.mjs                  Style Dictionary build -> dist/
 `dist/` (git-ignored, built on `nx build sylva` and before publish):
 
 ```
-sylva.css            themed CSS custom properties
+sylva.css            themed CSS custom properties (colors and --motion-*)
+motion.css           view-transition rules, built on the --motion-* tokens
 sylva.js  sylva.d.ts nested resolved values + types
 sylva.tokens.json    the same, as JSON
 ```

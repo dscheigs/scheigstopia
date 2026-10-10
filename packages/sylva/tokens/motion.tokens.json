@@ -1,0 +1,38 @@
+{
+    "$schema": "https://tr.designtokens.org/format/",
+    "motion": {
+        "duration": {
+            "$type": "duration",
+            "page-out": {
+                "$value": "150ms",
+                "$description": "Outgoing page content fading away."
+            },
+            "page-in": {
+                "$value": "250ms",
+                "$description": "Incoming page content fading and drifting in."
+            },
+            "page-in-delay": {
+                "$value": "100ms",
+                "$description": "Incoming content waits this long so it overlaps the end of the fade-out."
+            }
+        },
+        "easing": {
+            "$type": "cubicBezier",
+            "in": {
+                "$value": [0.42, 0, 1, 1],
+                "$description": "Ease-in, for things leaving."
+            },
+            "out": {
+                "$value": [0, 0, 0.58, 1],
+                "$description": "Ease-out, for things arriving."
+            }
+        },
+        "distance": {
+            "$type": "dimension",
+            "page-drift": {
+                "$value": "0.5rem",
+                "$description": "Upward drift of incoming page content."
+            }
+        }
+    }
+}
