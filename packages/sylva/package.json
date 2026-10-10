@@ -1,7 +1,7 @@
 {
     "name": "@scheigs/sylva",
     "version": "0.1.0",
-    "description": "Sylva — a forest-green and sage color system as W3C design tokens.",
+    "description": "Sylva — a forest-green and sage color system, with motion tokens, as W3C design tokens.",
     "license": "MIT",
     "author": "dscheigs",
     "type": "module",
@@ -11,6 +11,7 @@
     "files": [
         "dist",
         "tokens",
+        "motion",
         "brand"
     ],
     "exports": {
@@ -19,6 +20,7 @@
             "default": "./dist/sylva.js"
         },
         "./css": "./dist/sylva.css",
+        "./motion": "./dist/motion.css",
         "./tokens/primitives": "./tokens/primitives.tokens.json",
         "./tokens/semantic": "./tokens/semantic.tokens.json",
         "./gnome.svg": "./brand/gnome.svg",

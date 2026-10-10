@@ -11,6 +11,7 @@
             "inputs": [
                 "{projectRoot}/tokens/**/*",
                 "{projectRoot}/brand/**/*",
+                "{projectRoot}/motion/**/*",
                 "{projectRoot}/build.mjs"
             ],
             "outputs": ["{projectRoot}/dist"],

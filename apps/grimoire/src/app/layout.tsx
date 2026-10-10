@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ViewTransition } from 'react';
 import { Inter } from 'next/font/google';
 import '../styles/globals.css';
 import AppHeader from '@/components/AppHeader';
@@ -31,7 +32,11 @@ export default function RootLayout({
                 </a>
                 <AppHeader />
                 <main id="main-content" className="flex-1">
-                    <Providers>{children}</Providers>
+                    <Providers>
+                        <ViewTransition default="page-fade">
+                            {children}
+                        </ViewTransition>
+                    </Providers>
                 </main>
             </body>
         </html>

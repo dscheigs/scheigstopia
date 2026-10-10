@@ -1,0 +1,39 @@
+/**
+ * Sylva view transitions.
+ *
+ * Page content cross-fades with a small upward drift on navigation. Needs
+ * sylva.css (the --motion-* tokens). Mark the transitioning element with React's
+ * <ViewTransition default="page-fade">. Browsers without the View Transitions
+ * API just navigate.
+ */
+
+@keyframes page-fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes page-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(var(--motion-distance-page-drift));
+    }
+}
+
+::view-transition-old(.page-fade) {
+    animation: page-fade-out var(--motion-duration-page-out)
+        var(--motion-easing-in) both;
+}
+
+::view-transition-new(.page-fade) {
+    animation: page-fade-in var(--motion-duration-page-in)
+        var(--motion-easing-out) var(--motion-duration-page-in-delay) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
