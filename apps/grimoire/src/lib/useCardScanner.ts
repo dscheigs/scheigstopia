@@ -21,8 +21,8 @@ import {
 import {
     CAPTURE_MAX_EDGE,
     CAPTURE_QUALITY,
-    THUMBNAIL_MAX_EDGE,
-    THUMBNAIL_QUALITY,
+    REVIEW_MAX_EDGE,
+    REVIEW_QUALITY,
     fitWithin,
 } from '@/lib/capture';
 import { putBlobs } from '@/lib/scanQueueBlobs';
@@ -153,17 +153,17 @@ export function useCardScanner(userId: string, active = true) {
         canvas.height = height;
         canvas.getContext('2d')?.drawImage(video, 0, 0, width, height);
 
-        const thumbSize = fitWithin(width, height, THUMBNAIL_MAX_EDGE);
-        const thumbCanvas = document.createElement('canvas');
-        thumbCanvas.width = thumbSize.width;
-        thumbCanvas.height = thumbSize.height;
-        thumbCanvas
+        const reviewSize = fitWithin(width, height, REVIEW_MAX_EDGE);
+        const reviewCanvas = document.createElement('canvas');
+        reviewCanvas.width = reviewSize.width;
+        reviewCanvas.height = reviewSize.height;
+        reviewCanvas
             .getContext('2d')
-            ?.drawImage(canvas, 0, 0, thumbSize.width, thumbSize.height);
+            ?.drawImage(canvas, 0, 0, reviewSize.width, reviewSize.height);
 
-        const [image, thumbnail] = await Promise.all([
+        const [image, review] = await Promise.all([
             toJpeg(canvas, CAPTURE_QUALITY),
-            toJpeg(thumbCanvas, THUMBNAIL_QUALITY),
+            toJpeg(reviewCanvas, REVIEW_QUALITY),
         ]);
         if (!image) {
             setMessage('Could not capture that frame.');
@@ -172,7 +172,7 @@ export function useCardScanner(userId: string, active = true) {
         const id = crypto.randomUUID();
         try {
             // Blobs first, so the worker never sees an item with no image.
-            await putBlobs(id, { image, ...(thumbnail ? { thumbnail } : {}) });
+            await putBlobs(id, { image, ...(review ? { review } : {}) });
         } catch {
             setMessage('Could not save that capture on this device.');
             return;

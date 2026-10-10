@@ -6,11 +6,11 @@ export const CAPTURE_MAX_EDGE = 1280;
 /** JPEG quality, 0 to 1. */
 export const CAPTURE_QUALITY = 0.85;
 
-/** Longest side of the queue thumbnail, in pixels. */
-export const THUMBNAIL_MAX_EDGE = 160;
+/** Longest side of the review image kept in the queue, in pixels. */
+export const REVIEW_MAX_EDGE = 600;
 
-/** JPEG quality for the queue thumbnail, 0 to 1. */
-export const THUMBNAIL_QUALITY = 0.7;
+/** JPEG quality for the review image, 0 to 1. */
+export const REVIEW_QUALITY = 0.75;
 
 /** Scale `width` x `height` down to fit `maxEdge` on the longest side. Never up. */
 export function fitWithin(

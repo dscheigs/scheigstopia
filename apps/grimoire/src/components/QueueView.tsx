@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Check, Pencil, X } from 'lucide-react';
 import EditCardDialog from '@/components/EditCardDialog';
+import ReviewThumbnail from '@/components/ReviewThumbnail';
 import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
 import { buildIndex, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import {
@@ -16,35 +17,8 @@ import {
 import { ADD_PATH } from '@/lib/addRoutes';
 import { discardCopy } from '@/lib/discardMessage';
 import { useCardNames, useCommitQueue } from '@/lib/queries';
-import { getBlobs } from '@/lib/scanQueueBlobs';
 import type { QueueItem } from '@/lib/scanQueueTypes';
 import { useScanQueue } from '@/lib/useScanQueue';
-
-function Thumbnail({ id }: { id: string }) {
-    const [url, setUrl] = useState<string | null>(null);
-    useEffect(() => {
-        let objectUrl: string | null = null;
-        let cancelled = false;
-        void getBlobs(id).then((blobs) => {
-            if (cancelled || !blobs?.thumbnail) return;
-            objectUrl = URL.createObjectURL(blobs.thumbnail);
-            setUrl(objectUrl);
-        });
-        return () => {
-            cancelled = true;
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
-        };
-    }, [id]);
-
-    return (
-        <div className="h-16 w-12 shrink-0 overflow-hidden rounded-md border border-border-minimal bg-surface-minimal-hover">
-            {url && (
-                // eslint-disable-next-line @next/next/no-img-element -- a local blob URL
-                <img src={url} alt="" className="h-full w-full object-cover" />
-            )}
-        </div>
-    );
-}
 
 const iconButtonClasses = `${secondaryButtonClasses} min-w-11 px-0`;
 
@@ -63,7 +37,7 @@ function ItemRow({ item, onEdit, onConfirm, onRemove, onRetry }: ItemRowProps) {
 
     return (
         <li className="flex flex-wrap items-center gap-3 px-4 py-3">
-            <Thumbnail id={item.id} />
+            <ReviewThumbnail id={item.id} label={label} />
             <div className="min-w-0 flex-1">
                 <p className="text-body">{label}</p>
                 {needsReview && (
