@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
     MAX_QUANTITY,
     isUuid,
+    MAX_BULK_ITEMS,
     parseAddBody,
+    parseBulkBody,
     parseQuantityBody,
 } from '@/lib/validation';
 
@@ -75,5 +77,43 @@ describe('parseQuantityBody', () => {
         ['not an object', 3],
     ])('rejects %s', (_label, body) => {
         expect(parseQuantityBody(body).ok).toBe(false);
+    });
+});
+
+describe('parseBulkBody', () => {
+    it('accepts items and trims names', () => {
+        expect(
+            parseBulkBody({
+                items: [{ oracleId: ID, name: ' Sol Ring ', delta: 2 }],
+            })
+        ).toEqual({
+            ok: true,
+            value: { items: [{ oracleId: ID, name: 'Sol Ring', delta: 2 }] },
+        });
+    });
+
+    const item = { oracleId: ID, name: 'Sol Ring', delta: 1 };
+    it.each([
+        ['a non-object', 5],
+        ['missing items', {}],
+        ['items not an array', { items: 'x' }],
+        ['no items', { items: [] }],
+        [
+            'too many items',
+            { items: Array.from({ length: MAX_BULK_ITEMS + 1 }, () => item) },
+        ],
+        ['a non-object item', { items: [item, 3] }],
+        ['a missing delta', { items: [{ oracleId: ID, name: 'Sol Ring' }] }],
+        ['a bad oracleId', { items: [{ ...item, oracleId: 'nope' }] }],
+        ['a zero delta', { items: [{ ...item, delta: 0 }] }],
+        ['a huge delta', { items: [{ ...item, delta: MAX_QUANTITY + 1 }] }],
+        ['an empty name', { items: [{ ...item, name: ' ' }] }],
+    ])('rejects %s', (_label, body) => {
+        expect(parseBulkBody(body).ok).toBe(false);
+    });
+
+    it('accepts the maximum batch size', () => {
+        const items = Array.from({ length: MAX_BULK_ITEMS }, () => item);
+        expect(parseBulkBody({ items }).ok).toBe(true);
     });
 });
