@@ -7,7 +7,7 @@ import { ADD_PATH, COLLECTION_PATH, isAddRoute } from '@/lib/addRoutes';
 const linkClasses =
     'inline-flex min-h-11 items-center rounded-md px-3 text-body font-medium transition-colors hover:bg-surface-hover';
 
-/** Header navigation between the collection and Add Cards. */
+/** Header navigation between the collection and the scan screen. */
 export default function NavLinks() {
     const pathname = usePathname();
     return (
@@ -24,7 +24,7 @@ export default function NavLinks() {
                 aria-current={isAddRoute(pathname) ? 'page' : undefined}
                 className={linkClasses}
             >
-                Add Cards
+                Scan Cards
             </Link>
         </nav>
     );
