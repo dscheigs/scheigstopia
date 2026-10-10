@@ -37,6 +37,16 @@ export interface QueueItem {
      * Absent on items scanned before this field existed.
      */
     modelConfidence?: 'high' | 'low';
+    /**
+     * The user vouched for this item (confirmed it, or fixed its name) while it
+     * was flagged. Absent on items saved before this field existed.
+     */
+    confirmed?: boolean;
+    /**
+     * The flag reason the item had when it was confirmed, kept because
+     * `flagReason` is cleared then. For the M5 accuracy check.
+     */
+    originalFlagReason?: FlagReason;
     attempts: number;
     /** Epoch milliseconds; null when the item is not waiting on a retry. */
     nextAttemptAt: number | null;

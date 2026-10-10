@@ -3,6 +3,7 @@ import {
     describeProblem,
     groupQueue,
     planCommit,
+    confirmPatch,
     renamePatch,
     sortQueue,
 } from '@/lib/queueReview';
@@ -69,6 +70,51 @@ describe('rename', () => {
             matchedCard: elves,
             flagReason: 'none',
         });
+    });
+});
+
+describe('confirm', () => {
+    it('clears the reason, keeps the original and joins identified', () => {
+        const flagged = item({
+            status: 'flagged',
+            flagReason: 'fuzzy-match',
+            matchedCard: bolt,
+        });
+        const patch = confirmPatch(flagged);
+        expect(patch).toEqual({
+            status: 'identified',
+            flagReason: 'none',
+            confirmed: true,
+            originalFlagReason: 'fuzzy-match',
+        });
+        const confirmed = { ...flagged, ...patch! };
+        const groups = groupQueue([confirmed]);
+        expect(groups.identified).toHaveLength(1);
+        expect(groups.review).toHaveLength(0);
+        expect(planCommit([confirmed]).payload).toEqual([
+            { ...bolt, delta: 1 },
+        ]);
+    });
+
+    it('refuses items that need no review or have no card', () => {
+        expect(
+            confirmPatch(item({ status: 'identified', matchedCard: bolt }))
+        ).toBeNull();
+        expect(confirmPatch(item({ status: 'queued' }))).toBeNull();
+        expect(
+            confirmPatch(item({ status: 'flagged', flagReason: 'no-match' }))
+        ).toBeNull();
+    });
+
+    it('counts a rename of a flagged item as confirming it', () => {
+        const flagged = item({ status: 'flagged', flagReason: 'no-match' });
+        expect(renamePatch(elves, flagged)).toMatchObject({
+            confirmed: true,
+            originalFlagReason: 'no-match',
+            matchedCard: elves,
+        });
+        const done = item({ status: 'identified', matchedCard: bolt });
+        expect(renamePatch(elves, done)).not.toHaveProperty('confirmed');
     });
 });
 

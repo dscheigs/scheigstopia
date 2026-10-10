@@ -126,6 +126,81 @@ describe('scan queue store', () => {
     });
 });
 
+describe('confirming', () => {
+    const bolt = { oracleId: 'bolt', name: 'Lightning Bolt' };
+    const elves = { oracleId: 'elves', name: 'Llanowar Elves' };
+
+    it('moves a flagged item to identified and keeps the reason', () => {
+        const store = createScanQueueStore('confirm');
+        const item = store.getState().add({
+            status: 'flagged',
+            flagReason: 'fuzzy-match',
+            matchedCard: bolt,
+        });
+        store.getState().confirm(item.id);
+        expect(store.getState().items[0]).toMatchObject({
+            status: 'identified',
+            flagReason: 'none',
+            confirmed: true,
+            originalFlagReason: 'fuzzy-match',
+        });
+    });
+
+    it('ignores items that do not need review or have no card', () => {
+        const store = createScanQueueStore('confirm-ignored');
+        const ok = store
+            .getState()
+            .add({ status: 'identified', matchedCard: bolt });
+        const noCard = store
+            .getState()
+            .add({ status: 'flagged', flagReason: 'no-match' });
+        store.getState().confirm(ok.id);
+        store.getState().confirm(noCard.id);
+        const [a, b] = store.getState().items;
+        expect(a.confirmed).toBeUndefined();
+        expect(b).toMatchObject({ status: 'flagged', flagReason: 'no-match' });
+        expect(b.confirmed).toBeUndefined();
+    });
+
+    it('treats editing the name of a flagged item as confirming', () => {
+        const store = createScanQueueStore('rename-confirms');
+        const item = store
+            .getState()
+            .add({ status: 'flagged', flagReason: 'no-match' });
+        store.getState().rename(item.id, elves);
+        expect(store.getState().items[0]).toMatchObject({
+            status: 'identified',
+            matchedCard: elves,
+            confirmed: true,
+            originalFlagReason: 'no-match',
+        });
+    });
+
+    it('persists, and loads items saved without the new fields', async () => {
+        const store = createScanQueueStore('confirm-persist');
+        const old = store
+            .getState()
+            .add({ status: 'identified', matchedCard: bolt });
+        const flagged = store.getState().add({
+            status: 'flagged',
+            flagReason: 'ambiguous',
+            matchedCard: elves,
+        });
+        store.getState().confirm(flagged.id);
+        await vi.waitFor(async () => {
+            const items = (await reload('confirm-persist')).getState().items;
+            expect(items.find((i) => i.id === flagged.id)?.confirmed).toBe(
+                true
+            );
+        });
+        const items = (await reload('confirm-persist')).getState().items;
+        expect(items.find((i) => i.id === old.id)).toMatchObject({
+            status: 'identified',
+        });
+        expect(items.find((i) => i.id === old.id)?.confirmed).toBeUndefined();
+    });
+});
+
 describe('queue expiry', () => {
     it('drops items older than the TTL when the queue loads', async () => {
         const now = Date.now();
