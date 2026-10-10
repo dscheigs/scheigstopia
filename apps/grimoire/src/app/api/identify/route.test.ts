@@ -41,7 +41,11 @@ beforeEach(() => {
     vi.mocked(releaseIdentify).mockResolvedValue();
     vi.stubEnv('ANTHROPIC_API_KEY', SECRET);
     vi.stubEnv('IDENTIFY_MODEL', '');
-    fetchMock = vi.fn().mockResolvedValue(reply('Lightning Bolt'));
+    fetchMock = vi
+        .fn()
+        .mockResolvedValue(
+            reply('{"name": "Lightning Bolt", "confidence": "high"}')
+        );
     vi.stubGlobal('fetch', fetchMock);
 });
 
@@ -108,15 +112,52 @@ describe('POST /api/identify', () => {
     it('returns the name the model read', async () => {
         const response = await POST(post(jpeg()));
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual({ name: 'Lightning Bolt' });
+        expect(await response.json()).toEqual({
+            name: 'Lightning Bolt',
+            confidence: 'high',
+        });
         expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
     it('returns a null name for an unreadable photo', async () => {
-        fetchMock.mockResolvedValue(reply('UNREADABLE'));
+        fetchMock.mockResolvedValue(
+            reply('{"name": "UNREADABLE", "confidence": "low"}')
+        );
         const response = await POST(post(jpeg()));
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual({ name: null });
+        expect(await response.json()).toEqual({
+            name: null,
+            confidence: 'low',
+        });
+    });
+
+    it('returns low confidence when the model says so', async () => {
+        fetchMock.mockResolvedValue(
+            reply('{"name": "Sol Ring", "confidence": "low"}')
+        );
+        const response = await POST(post(jpeg()));
+        expect(await response.json()).toEqual({
+            name: 'Sol Ring',
+            confidence: 'low',
+        });
+    });
+
+    it('returns low confidence when the reply has none', async () => {
+        fetchMock.mockResolvedValue(reply('{"name": "Sol Ring"}'));
+        const response = await POST(post(jpeg()));
+        expect(await response.json()).toEqual({
+            name: 'Sol Ring',
+            confidence: 'low',
+        });
+    });
+
+    it('treats a plain-text reply as unreadable', async () => {
+        fetchMock.mockResolvedValue(reply('Sol Ring'));
+        const response = await POST(post(jpeg()));
+        expect(await response.json()).toEqual({
+            name: null,
+            confidence: 'low',
+        });
     });
 
     it('uses IDENTIFY_MODEL when it is set', async () => {

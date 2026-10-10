@@ -31,6 +31,12 @@ export interface QueueItem {
     readName: string | null;
     matchedCard: MatchedCard | null;
     flagReason: FlagReason;
+    /**
+     * The model's own confidence in the read. Kept next to `flagReason` (the
+     * card-list match quality) so the M5 accuracy test can compare the two.
+     * Absent on items scanned before this field existed.
+     */
+    modelConfidence?: 'high' | 'low';
     attempts: number;
     /** Epoch milliseconds; null when the item is not waiting on a retry. */
     nextAttemptAt: number | null;
