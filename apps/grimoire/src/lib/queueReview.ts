@@ -107,6 +107,29 @@ export function renamePatch(
     };
 }
 
+export interface RowActions {
+    remove: true;
+    edit: true;
+    /** Only for items waiting on review that have a card to confirm. */
+    confirm: boolean;
+}
+
+/** Which icon buttons a queue row shows. */
+export function rowActions(item: QueueItem): RowActions {
+    return { remove: true, edit: true, confirm: confirmPatch(item) !== null };
+}
+
+/** The name a row shows and its buttons are labelled with. */
+export function itemLabel(item: QueueItem): string {
+    return (
+        item.matchedCard?.name ??
+        item.readName ??
+        (item.status === 'queued' || item.status === 'sending'
+            ? 'Waiting to be read'
+            : 'Unknown card')
+    );
+}
+
 export interface CommitPlan {
     /** The request body for the bulk endpoint; duplicates merged into delta. */
     payload: { oracleId: string; name: string; delta: number }[];
