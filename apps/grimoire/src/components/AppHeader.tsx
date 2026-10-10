@@ -1,8 +1,11 @@
 import Link from 'next/link';
 import { auth, signOut } from '@/auth';
+import QueueLink from '@/components/QueueLink';
+import SignOutForm from '@/components/SignOutForm';
 
 export default async function AppHeader() {
     const session = await auth();
+    const userId = session?.user?.id;
 
     return (
         <header className="sticky top-0 z-50 bg-surface">
@@ -10,20 +13,17 @@ export default async function AppHeader() {
                 <Link href="/" className="text-subheading">
                     Grimoire
                 </Link>
-                {session?.user ? (
-                    <form
-                        action={async () => {
-                            'use server';
-                            await signOut({ redirectTo: '/signin' });
-                        }}
-                    >
-                        <button
-                            type="submit"
-                            className="min-h-11 rounded-md px-3 text-body font-medium transition-colors hover:bg-surface-hover"
-                        >
-                            Sign out
-                        </button>
-                    </form>
+                {userId ? (
+                    <div className="flex items-center gap-1">
+                        <QueueLink userId={userId} />
+                        <SignOutForm
+                            userId={userId}
+                            signOutAction={async () => {
+                                'use server';
+                                await signOut({ redirectTo: '/signin' });
+                            }}
+                        />
+                    </div>
                 ) : null}
             </div>
         </header>

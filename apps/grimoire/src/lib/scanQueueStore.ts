@@ -12,10 +12,14 @@ export interface ScanQueueState {
     add: (input?: NewQueueItem) => QueueItem;
     update: (id: string, patch: Partial<Omit<QueueItem, 'id'>>) => void;
     remove: (id: string) => void;
+    removeMany: (ids: string[]) => void;
     /** Put an item back in line for another attempt. */
     retry: (id: string) => void;
     clear: () => void;
 }
+
+/** Queue items older than this are dropped when the queue loads (12 hours). */
+export const QUEUE_ITEM_TTL_MS = 12 * 60 * 60 * 1000;
 
 export type ScanQueueStore = ReturnType<typeof createScanQueueStore>;
 
@@ -79,6 +83,13 @@ export function createScanQueueStore(userId: string) {
                     }));
                     void deleteBlobs([id]);
                 },
+                removeMany: (ids) => {
+                    const gone = new Set(ids);
+                    setState((s) => ({
+                        items: s.items.filter((item) => !gone.has(item.id)),
+                    }));
+                    void deleteBlobs(ids);
+                },
                 retry: (id) =>
                     getState().update(id, {
                         status: 'queued',
@@ -102,8 +113,19 @@ export function createScanQueueStore(userId: string) {
                         (persisted as Pick<ScanQueueState, 'items'> | undefined)
                             ?.items ?? [];
                     const live = new Set(current.items.map((item) => item.id));
+                    // Items past the TTL are dropped, with their blobs.
+                    const cutoff = Date.now() - QUEUE_ITEM_TTL_MS;
+                    const expired = saved.filter(
+                        (item) => item.createdAt < cutoff
+                    );
+                    if (expired.length > 0) {
+                        void deleteBlobs(expired.map((item) => item.id));
+                    }
                     const restored = saved
-                        .filter((item) => !live.has(item.id))
+                        .filter(
+                            (item) =>
+                                !live.has(item.id) && item.createdAt >= cutoff
+                        )
                         .map((item) =>
                             item.status === 'sending'
                                 ? { ...item, status: 'queued' as const }
