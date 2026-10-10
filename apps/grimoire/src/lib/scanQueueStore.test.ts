@@ -5,6 +5,7 @@ import {
     clearQueueForUser,
     createScanQueueStore,
     getScanQueueStore,
+    QUEUE_ITEM_TTL_MS,
     requestPersistentStorage,
 } from '@/lib/scanQueueStore';
 
@@ -122,6 +123,41 @@ describe('scan queue store', () => {
         await clearQueueForUser('sign-out');
         expect(await getBlobs(item.id)).toBeUndefined();
         expect((await reload('sign-out')).getState().items).toEqual([]);
+    });
+});
+
+describe('queue expiry', () => {
+    it('drops items older than the TTL when the queue loads', async () => {
+        const now = Date.now();
+        const store = createScanQueueStore('ttl');
+        const stale = store
+            .getState()
+            .add({ createdAt: now - QUEUE_ITEM_TTL_MS - 1000 });
+        const fresh = store
+            .getState()
+            .add({ createdAt: now - QUEUE_ITEM_TTL_MS + 60_000 });
+        await putBlobs(stale.id, { thumbnail: blob('t') });
+        await vi.waitFor(async () => {
+            expect((await reload('ttl')).getState().items).toHaveLength(1);
+        });
+        const items = (await reload('ttl')).getState().items;
+        expect(items.map((i) => i.id)).toEqual([fresh.id]);
+        await vi.waitFor(async () =>
+            expect(await getBlobs(stale.id)).toBeUndefined()
+        );
+    });
+
+    it('removeMany drops several items and their blobs', async () => {
+        const store = createScanQueueStore('remove-many');
+        const a = store.getState().add();
+        const b = store.getState().add();
+        const c = store.getState().add();
+        await putBlobs(a.id, { thumbnail: blob('t') });
+        store.getState().removeMany([a.id, b.id]);
+        expect(store.getState().items.map((i) => i.id)).toEqual([c.id]);
+        await vi.waitFor(async () =>
+            expect(await getBlobs(a.id)).toBeUndefined()
+        );
     });
 });
 
