@@ -51,7 +51,11 @@ function toJpeg(canvas: HTMLCanvasElement, quality: number) {
     );
 }
 
-export function useCardScanner(userId: string) {
+/**
+ * @param active False while the camera view is hidden (the queue screen). The
+ *   stream stays up so switching back is instant, but nothing is captured.
+ */
+export function useCardScanner(userId: string, active = true) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const [phase, setPhase] = useState<Phase>('idle');
@@ -206,9 +210,16 @@ export function useCardScanner(userId: string) {
         setDebug((on) => !on);
     }, []);
 
-    // While the camera is live, watch the video and capture when a card settles.
+    // Pausing drops the detector, so it learns the empty background afresh when
+    // the camera view comes back.
     useEffect(() => {
-        if (phase !== 'live') return;
+        if (!active) detectorRef.current = null;
+    }, [active]);
+
+    // While the camera is live and in view, watch the video and capture when a
+    // card settles.
+    useEffect(() => {
+        if (phase !== 'live' || !active) return;
         detectorRef.current ??= createDetector(configRef.current);
         const timer = setInterval(() => {
             const video = videoRef.current;
@@ -238,7 +249,7 @@ export function useCardScanner(userId: string) {
             if (result.capture) void captureRef.current();
         }, tuning.sampleIntervalMs);
         return () => clearInterval(timer);
-    }, [phase, debug, tuning.sampleIntervalMs]);
+    }, [phase, active, debug, tuning.sampleIntervalMs]);
 
     // Play the attention tone once when an item becomes flagged or failed.
     const seenRef = useRef<ReadonlyMap<string, QueueItemStatus> | null>(null);

@@ -47,7 +47,7 @@ export default function ScanCard({
         startCamera,
         closeCamera,
         toggleDebug,
-    } = useCardScanner(userId);
+    } = useCardScanner(userId, showCamera);
 
     const [tuningOpen, setTuningOpen] = useState(false);
     const cameraOn = phase === 'live';
@@ -177,9 +177,15 @@ export default function ScanCard({
                 />
             )}
 
-            <p role="alert" aria-live="polite" className="text-body text-error">
-                {message}
-            </p>
+            {showCamera && (
+                <p
+                    role="alert"
+                    aria-live="polite"
+                    className="text-body text-error"
+                >
+                    {message}
+                </p>
+            )}
         </div>
     );
 }
