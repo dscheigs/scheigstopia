@@ -110,7 +110,3 @@ export function identifyPhoto(photo: Blob) {
         body: photo,
     });
 }
-
-export function useIdentify() {
-    return useMutation({ mutationFn: identifyPhoto });
-}
