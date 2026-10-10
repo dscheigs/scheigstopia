@@ -129,3 +129,17 @@ export const limitMessage: Record<Window, string> = {
     day: "You've hit today's scan limit. It resets at midnight UTC.",
     month: "You've hit this month's scan limit. It resets on the 1st (UTC).",
 };
+
+/** Whole seconds until the refused window opens up again (for Retry-After). */
+export function retryAfterSeconds(window: Window, now = new Date()): number {
+    if (window === 'minute') return 60;
+    const next =
+        window === 'day'
+            ? Date.UTC(
+                  now.getUTCFullYear(),
+                  now.getUTCMonth(),
+                  now.getUTCDate() + 1
+              )
+            : Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1);
+    return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
+}

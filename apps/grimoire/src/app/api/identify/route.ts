@@ -14,6 +14,7 @@ import {
     readLimits,
     releaseIdentify,
     reserveIdentify,
+    retryAfterSeconds,
 } from '@/lib/identifyLimits';
 import { getUserId } from '@/lib/session';
 
@@ -58,7 +59,17 @@ export async function POST(request: Request) {
     const sql = getSql();
     const reservation = await reserveIdentify(sql, userId, readLimits());
     if (!reservation.allowed) {
-        return fail(limitMessage[reservation.window], 429);
+        return NextResponse.json(
+            { error: limitMessage[reservation.window] },
+            {
+                status: 429,
+                headers: {
+                    'Retry-After': String(
+                        retryAfterSeconds(reservation.window)
+                    ),
+                },
+            }
+        );
     }
 
     try {

@@ -1,0 +1,385 @@
+import 'fake-indexeddb/auto';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { buildIndex } from '@/lib/cardSearch';
+import { createScanQueueStore } from '@/lib/scanQueueStore';
+import {
+    countQueue,
+    createScanQueueWorker,
+    IdentifyCallError,
+    type WorkerDeps,
+} from '@/lib/scanQueueWorker';
+
+const index = buildIndex({
+    version: 't',
+    count: 4,
+    cards: [
+        ['bolt', 'Lightning Bolt'],
+        ['bolt-art', 'Lightning Bolt Art Card'],
+        ['fire', 'Fire // Ice'],
+        ['delver', 'Delver of Secrets // Insectile Aberration'],
+    ],
+});
+
+const photo = new Blob(['x']);
+let seq = 0;
+const uniqueUser = () => `worker-${seq++}`;
+
+beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+});
+afterEach(() => {
+    vi.useRealTimers();
+});
+
+function setup(
+    identify: WorkerDeps['identify'],
+    extra: Partial<WorkerDeps> = {}
+) {
+    const store = createScanQueueStore(uniqueUser());
+    const worker = createScanQueueWorker({
+        store,
+        identify,
+        getImage: async () => photo,
+        getIndex: () => index,
+        ...extra,
+    });
+    return { store, worker };
+}
+
+const settle = () => vi.advanceTimersByTimeAsync(0);
+const only = (store: ReturnType<typeof createScanQueueStore>) =>
+    store.getState().items[0];
+
+describe('status transitions', () => {
+    it('identifies an exact, unique match', async () => {
+        const { store, worker } = setup(async () => ({
+            name: 'Lightning Bolt',
+        }));
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store)).toMatchObject({
+            status: 'identified',
+            flagReason: 'none',
+            readName: 'Lightning Bolt',
+            matchedCard: { oracleId: 'bolt', name: 'Lightning Bolt' },
+        });
+        worker.stop();
+    });
+
+    it('matches a front face exactly', async () => {
+        const { store, worker } = setup(async () => ({
+            name: 'delver of secrets',
+        }));
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store).status).toBe('identified');
+        worker.stop();
+    });
+
+    it('flags a fuzzy match', async () => {
+        const { store, worker } = setup(async () => ({
+            name: 'Lightnin Bolt',
+        }));
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store).status).toBe('flagged');
+        expect(only(store).flagReason).not.toBe('none');
+        expect(['fuzzy-match', 'ambiguous']).toContain(only(store).flagReason);
+        worker.stop();
+    });
+
+    it('flags no match', async () => {
+        const { store, worker } = setup(async () => ({
+            name: 'Zzzzqqqq Xyzzy',
+        }));
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store)).toMatchObject({
+            status: 'flagged',
+            flagReason: 'no-match',
+        });
+        worker.stop();
+    });
+
+    it('flags unreadable photos', async () => {
+        const { store, worker } = setup(async () => ({ name: null }));
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store)).toMatchObject({
+            status: 'flagged',
+            flagReason: 'unreadable',
+        });
+        worker.stop();
+    });
+
+    it('marks the item sending while the call is in flight', async () => {
+        let release: (v: { name: string | null }) => void = () => {};
+        const { store, worker } = setup(
+            () => new Promise((resolve) => (release = resolve))
+        );
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store).status).toBe('sending');
+        release({ name: 'Lightning Bolt' });
+        await settle();
+        expect(only(store).status).toBe('identified');
+        worker.stop();
+    });
+
+    it('respects the concurrency limit', async () => {
+        const resolvers: (() => void)[] = [];
+        const identify = vi.fn(
+            () =>
+                new Promise<{ name: string | null }>((resolve) =>
+                    resolvers.push(() => resolve({ name: 'Lightning Bolt' }))
+                )
+        );
+        const { store, worker } = setup(identify, { concurrency: 2 });
+        for (let i = 0; i < 4; i++) store.getState().add();
+        worker.start();
+        await settle();
+        expect(identify).toHaveBeenCalledTimes(2);
+        expect(countQueue(store.getState().items)).toMatchObject({
+            sending: 2,
+            queued: 2,
+        });
+        resolvers.shift()!();
+        await settle();
+        expect(identify).toHaveBeenCalledTimes(3);
+        worker.stop();
+    });
+});
+
+describe('failures and backoff', () => {
+    it('keeps the item queued on network failure and backs off exponentially', async () => {
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockRejectedValue(new IdentifyCallError({ kind: 'network' }));
+        const { store, worker } = setup(identify, { baseBackoffMs: 1000 });
+        store.getState().add();
+        worker.start();
+        await settle();
+        const t0 = Date.now();
+        expect(only(store)).toMatchObject({
+            status: 'queued',
+            flagReason: 'none',
+            nextAttemptAt: t0 + 1000,
+        });
+
+        await vi.advanceTimersByTimeAsync(999);
+        expect(identify).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(1);
+        expect(identify).toHaveBeenCalledTimes(2);
+        expect(only(store).nextAttemptAt).toBe(Date.now() + 2000);
+
+        await vi.advanceTimersByTimeAsync(2000);
+        expect(identify).toHaveBeenCalledTimes(3);
+        expect(only(store).nextAttemptAt).toBe(Date.now() + 4000);
+        // Network trouble never exhausts the item.
+        expect(only(store).attempts).toBe(0);
+        worker.stop();
+    });
+
+    it('caps the backoff', async () => {
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockRejectedValue(new IdentifyCallError({ kind: 'network' }));
+        const { store, worker } = setup(identify, {
+            baseBackoffMs: 1000,
+            maxBackoffMs: 3000,
+        });
+        store.getState().add();
+        worker.start();
+        await settle();
+        await vi.advanceTimersByTimeAsync(1000);
+        await vi.advanceTimersByTimeAsync(2000);
+        expect(only(store).nextAttemptAt).toBe(Date.now() + 3000);
+        worker.stop();
+    });
+
+    it('a 429 stays queued, never a no-match, and honors Retry-After', async () => {
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockRejectedValueOnce(
+                new IdentifyCallError({
+                    kind: 'rate-limit',
+                    retryAfterMs: 30_000,
+                })
+            )
+            .mockResolvedValue({ name: 'Lightning Bolt' });
+        const { store, worker } = setup(identify, { baseBackoffMs: 1000 });
+        store.getState().add();
+        worker.start();
+        await settle();
+        const t0 = Date.now();
+        expect(only(store)).toMatchObject({
+            status: 'queued',
+            flagReason: 'none',
+            nextAttemptAt: t0 + 30_000,
+        });
+        await vi.advanceTimersByTimeAsync(29_999);
+        expect(identify).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(1);
+        expect(identify).toHaveBeenCalledTimes(2);
+        expect(only(store).status).toBe('identified');
+        worker.stop();
+    });
+
+    it('a 429 pauses other items too', async () => {
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockRejectedValueOnce(
+                new IdentifyCallError({
+                    kind: 'rate-limit',
+                    retryAfterMs: 10_000,
+                })
+            )
+            .mockResolvedValue({ name: 'Lightning Bolt' });
+        const { store, worker } = setup(identify, { concurrency: 1 });
+        store.getState().add();
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(identify).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(9_999);
+        expect(identify).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(1);
+        await settle();
+        expect(identify).toHaveBeenCalledTimes(3);
+        worker.stop();
+    });
+
+    it('fails with reason error after the capped attempts on other errors', async () => {
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockRejectedValue(new IdentifyCallError({ kind: 'error' }));
+        const { store, worker } = setup(identify, {
+            maxAttempts: 3,
+            baseBackoffMs: 1000,
+        });
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store)).toMatchObject({ status: 'queued', attempts: 1 });
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(only(store)).toMatchObject({ status: 'queued', attempts: 2 });
+        await vi.advanceTimersByTimeAsync(2000);
+        expect(only(store)).toMatchObject({
+            status: 'failed',
+            flagReason: 'error',
+            attempts: 3,
+        });
+        await vi.advanceTimersByTimeAsync(60_000);
+        expect(identify).toHaveBeenCalledTimes(3);
+        worker.stop();
+    });
+
+    it('fails an item whose image is gone', async () => {
+        const identify = vi.fn<WorkerDeps['identify']>();
+        const { store, worker } = setup(identify, {
+            getImage: async () => undefined,
+        });
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store)).toMatchObject({
+            status: 'failed',
+            flagReason: 'error',
+        });
+        expect(identify).not.toHaveBeenCalled();
+        worker.stop();
+    });
+});
+
+describe('offline and resume', () => {
+    it('sends nothing while offline and drains when poked back online', async () => {
+        let online = false;
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockResolvedValue({ name: 'Lightning Bolt' });
+        const { store, worker } = setup(identify, { isOnline: () => online });
+        store.getState().add();
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(identify).not.toHaveBeenCalled();
+        online = true;
+        worker.poke();
+        await settle();
+        expect(countQueue(store.getState().items).identified).toBe(2);
+        worker.stop();
+    });
+
+    it('waits for the card index', async () => {
+        let ready = false;
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockResolvedValue({ name: 'Lightning Bolt' });
+        const { store, worker } = setup(identify, {
+            getIndex: () => (ready ? index : null),
+        });
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(identify).not.toHaveBeenCalled();
+        ready = true;
+        worker.poke();
+        await settle();
+        expect(only(store).status).toBe('identified');
+        worker.stop();
+    });
+});
+
+describe('resume after reload', () => {
+    it('picks up queued and interrupted items from the persisted queue', async () => {
+        vi.useRealTimers();
+        const userId = uniqueUser();
+        const first = createScanQueueStore(userId);
+        await first.persist.rehydrate();
+        const queued = first.getState().add({ status: 'queued' });
+        const sending = first.getState().add({ status: 'sending' });
+        const done = first.getState().add({ status: 'identified' });
+        // The persist write is async; give it a moment to land.
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        const reloaded = createScanQueueStore(userId);
+        await reloaded.persist.rehydrate();
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockResolvedValue({ name: 'Lightning Bolt' });
+        const worker = createScanQueueWorker({
+            store: reloaded,
+            identify,
+            getImage: async () => photo,
+            getIndex: () => index,
+        });
+        worker.start();
+        await vi.waitFor(() =>
+            expect(countQueue(reloaded.getState().items).identified).toBe(3)
+        );
+        expect(identify).toHaveBeenCalledTimes(2);
+        const byId = new Map(reloaded.getState().items.map((i) => [i.id, i]));
+        expect(byId.get(queued.id)?.status).toBe('identified');
+        expect(byId.get(sending.id)?.status).toBe('identified');
+        expect(byId.get(done.id)?.status).toBe('identified');
+        worker.stop();
+    });
+
+    it('requeues an item left sending when started on a live store', async () => {
+        const identify = vi
+            .fn<WorkerDeps['identify']>()
+            .mockResolvedValue({ name: 'Lightning Bolt' });
+        const { store, worker } = setup(identify);
+        store.getState().add({ status: 'sending' });
+        worker.start();
+        await settle();
+        expect(only(store).status).toBe('identified');
+        worker.stop();
+    });
+});

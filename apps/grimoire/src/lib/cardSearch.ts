@@ -33,7 +33,7 @@ export function buildIndex(file: CardNameFile): CardIndex {
     });
 }
 
-const normalize = (text: string) =>
+export const normalize = (text: string) =>
     text.trim().replace(/\s+/g, ' ').toLowerCase();
 
 /**

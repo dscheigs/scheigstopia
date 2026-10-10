@@ -101,13 +101,14 @@ export function useSetQuantity() {
 }
 
 /** Read the card name off a JPEG photo. `name` is null when unreadable. */
-export function useIdentify() {
-    return useMutation({
-        mutationFn: (photo: Blob) =>
-            apiFetch<{ name: string | null }>('/api/identify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'image/jpeg' },
-                body: photo,
-            }),
+export function identifyPhoto(photo: Blob) {
+    return apiFetch<{ name: string | null }>('/api/identify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'image/jpeg' },
+        body: photo,
     });
+}
+
+export function useIdentify() {
+    return useMutation({ mutationFn: identifyPhoto });
 }

@@ -5,6 +5,7 @@ import {
     readLimits,
     releaseIdentify,
     reserveIdentify,
+    retryAfterSeconds,
 } from '@/lib/identifyLimits';
 import { upsertUser } from '@/lib/users';
 import { createTestDb } from '@/test/db';
@@ -127,5 +128,18 @@ describe('readLimits', () => {
                 IDENTIFY_LIMIT_PER_MONTH: '400',
             })
         ).toEqual({ perMinute: 5, perDay: 50, perMonth: 400 });
+    });
+});
+
+describe('retryAfterSeconds', () => {
+    const at = new Date('2026-03-31T23:00:00Z');
+    it('waits a minute for the minute window', () => {
+        expect(retryAfterSeconds('minute', at)).toBe(60);
+    });
+    it('waits until UTC midnight for the day window', () => {
+        expect(retryAfterSeconds('day', at)).toBe(3600);
+    });
+    it('waits until the 1st for the month window', () => {
+        expect(retryAfterSeconds('month', at)).toBe(3600);
     });
 });
