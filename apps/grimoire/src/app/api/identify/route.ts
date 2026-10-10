@@ -25,8 +25,9 @@ const fail = (error: string, status: number) =>
 
 /**
  * Read the card name from a photo. The body is the image itself (not JSON),
- * sent with its own Content-Type. Replies { name } where name is null when the
- * photo could not be read. Matching to a real card happens on the client.
+ * sent with its own Content-Type. Replies { name, confidence } where name is null
+ * when the photo could not be read and confidence is the model's own
+ * "high" | "low". Matching to a real card happens on the client.
  */
 export async function POST(request: Request) {
     const userId = await getUserId();
@@ -73,11 +74,11 @@ export async function POST(request: Request) {
     }
 
     try {
-        const name = await readCardName(
+        const result = await readCardName(
             { bytes, mediaType },
             { apiKey, model: process.env.IDENTIFY_MODEL }
         );
-        return NextResponse.json({ name });
+        return NextResponse.json(result);
     } catch (error) {
         // Give the scan back only when the provider answered with an error
         // status. A timeout or dropped connection may still have been billed.

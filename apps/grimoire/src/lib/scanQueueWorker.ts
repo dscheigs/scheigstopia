@@ -5,6 +5,7 @@
 // timers and a fake fetch.
 
 import { matchReadName, normalize, type CardIndex } from '@/lib/cardSearch';
+import type { IdentifyResult } from '@/lib/identify';
 import type { ScanQueueStore } from '@/lib/scanQueueStore';
 import type {
     FlagReason,
@@ -42,7 +43,7 @@ export class IdentifyCallError extends Error {
 export interface WorkerDeps {
     store: ScanQueueStore;
     /** Send one photo. Throws `IdentifyCallError` on failure. */
-    identify: (photo: Blob) => Promise<{ name: string | null }>;
+    identify: (photo: Blob) => Promise<IdentifyResult>;
     /** The full photo for an item, if it is still stored. */
     getImage: (id: string) => Promise<Blob | undefined>;
     /** The card index, or null while the card list is still loading. */
@@ -79,13 +80,35 @@ type Outcome = {
     flagReason: FlagReason;
     readName: string | null;
     matchedCard: QueueItem['matchedCard'];
+    modelConfidence: IdentifyResult['confidence'];
 };
 
-/** Turn a read name into a queue outcome. */
+/**
+ * Turn an identify result into a queue outcome. Card-list match problems take
+ * priority as the flag reason; a clean exact match is still flagged
+ * `low-confidence` when the model said it was not sure.
+ */
 export function classifyRead(
     index: CardIndex,
-    readName: string | null
+    result: IdentifyResult
 ): Outcome {
+    const outcome = classifyName(index, result.name);
+    const modelConfidence = result.confidence;
+    if (outcome.status === 'identified' && modelConfidence === 'low') {
+        return {
+            ...outcome,
+            status: 'flagged',
+            flagReason: 'low-confidence',
+            modelConfidence,
+        };
+    }
+    return { ...outcome, modelConfidence };
+}
+
+function classifyName(
+    index: CardIndex,
+    readName: string | null
+): Omit<Outcome, 'modelConfidence'> {
     const name = readName?.trim() ?? '';
     if (!name) {
         return {
@@ -202,13 +225,13 @@ export function createScanQueueWorker(deps: WorkerDeps): ScanQueueWorker {
                 });
                 return;
             }
-            const { name } = await identify(image);
+            const result = await identify(image);
             const index = getIndex();
             if (!index) {
                 requeue(id, 0);
                 return;
             }
-            store.getState().update(id, classifyRead(index, name));
+            store.getState().update(id, classifyRead(index, result));
             softRetries.delete(id);
         } catch (error) {
             handleFailure(id, error);

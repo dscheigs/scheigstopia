@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildIndex } from '@/lib/cardSearch';
+import type { IdentifyResult } from '@/lib/identify';
 import { createScanQueueStore } from '@/lib/scanQueueStore';
 import {
     countQueue,
@@ -54,6 +55,7 @@ describe('status transitions', () => {
     it('identifies an exact, unique match', async () => {
         const { store, worker } = setup(async () => ({
             name: 'Lightning Bolt',
+            confidence: 'high' as const,
         }));
         store.getState().add();
         worker.start();
@@ -70,6 +72,7 @@ describe('status transitions', () => {
     it('matches a front face exactly', async () => {
         const { store, worker } = setup(async () => ({
             name: 'delver of secrets',
+            confidence: 'high' as const,
         }));
         store.getState().add();
         worker.start();
@@ -81,6 +84,7 @@ describe('status transitions', () => {
     it('flags a fuzzy match', async () => {
         const { store, worker } = setup(async () => ({
             name: 'Lightnin Bolt',
+            confidence: 'high' as const,
         }));
         store.getState().add();
         worker.start();
@@ -94,6 +98,7 @@ describe('status transitions', () => {
     it('flags no match', async () => {
         const { store, worker } = setup(async () => ({
             name: 'Zzzzqqqq Xyzzy',
+            confidence: 'high' as const,
         }));
         store.getState().add();
         worker.start();
@@ -105,8 +110,58 @@ describe('status transitions', () => {
         worker.stop();
     });
 
+    it('flags an exact match the model was not sure about', async () => {
+        const { store, worker } = setup(async () => ({
+            name: 'Lightning Bolt',
+            confidence: 'low' as const,
+        }));
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store)).toMatchObject({
+            status: 'flagged',
+            flagReason: 'low-confidence',
+            modelConfidence: 'low',
+            matchedCard: { oracleId: 'bolt', name: 'Lightning Bolt' },
+        });
+        worker.stop();
+    });
+
+    it('keeps the card-list flag when the model was also unsure', async () => {
+        const { store, worker } = setup(async () => ({
+            name: 'Zzzzqqqq Xyzzy',
+            confidence: 'low' as const,
+        }));
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store)).toMatchObject({
+            flagReason: 'no-match',
+            modelConfidence: 'low',
+        });
+        worker.stop();
+    });
+
+    it('records high model confidence on a clean match', async () => {
+        const { store, worker } = setup(async () => ({
+            name: 'Lightning Bolt',
+            confidence: 'high' as const,
+        }));
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store)).toMatchObject({
+            status: 'identified',
+            modelConfidence: 'high',
+        });
+        worker.stop();
+    });
+
     it('flags unreadable photos', async () => {
-        const { store, worker } = setup(async () => ({ name: null }));
+        const { store, worker } = setup(async () => ({
+            name: null,
+            confidence: 'low' as const,
+        }));
         store.getState().add();
         worker.start();
         await settle();
@@ -118,7 +173,7 @@ describe('status transitions', () => {
     });
 
     it('marks the item sending while the call is in flight', async () => {
-        let release: (v: { name: string | null }) => void = () => {};
+        let release: (v: IdentifyResult) => void = () => {};
         const { store, worker } = setup(
             () => new Promise((resolve) => (release = resolve))
         );
@@ -126,7 +181,7 @@ describe('status transitions', () => {
         worker.start();
         await settle();
         expect(only(store).status).toBe('sending');
-        release({ name: 'Lightning Bolt' });
+        release({ name: 'Lightning Bolt', confidence: 'high' as const });
         await settle();
         expect(only(store).status).toBe('identified');
         worker.stop();
@@ -136,8 +191,13 @@ describe('status transitions', () => {
         const resolvers: (() => void)[] = [];
         const identify = vi.fn(
             () =>
-                new Promise<{ name: string | null }>((resolve) =>
-                    resolvers.push(() => resolve({ name: 'Lightning Bolt' }))
+                new Promise<IdentifyResult>((resolve) =>
+                    resolvers.push(() =>
+                        resolve({
+                            name: 'Lightning Bolt',
+                            confidence: 'high' as const,
+                        })
+                    )
                 )
         );
         const { store, worker } = setup(identify, { concurrency: 2 });
@@ -212,7 +272,10 @@ describe('failures and backoff', () => {
                     retryAfterMs: 30_000,
                 })
             )
-            .mockResolvedValue({ name: 'Lightning Bolt' });
+            .mockResolvedValue({
+                name: 'Lightning Bolt',
+                confidence: 'high' as const,
+            });
         const { store, worker } = setup(identify, { baseBackoffMs: 1000 });
         store.getState().add();
         worker.start();
@@ -240,7 +303,10 @@ describe('failures and backoff', () => {
                     retryAfterMs: 10_000,
                 })
             )
-            .mockResolvedValue({ name: 'Lightning Bolt' });
+            .mockResolvedValue({
+                name: 'Lightning Bolt',
+                confidence: 'high' as const,
+            });
         const { store, worker } = setup(identify, { concurrency: 1 });
         store.getState().add();
         store.getState().add();
@@ -300,9 +366,10 @@ describe('failures and backoff', () => {
 describe('offline and resume', () => {
     it('sends nothing while offline and drains when poked back online', async () => {
         let online = false;
-        const identify = vi
-            .fn<WorkerDeps['identify']>()
-            .mockResolvedValue({ name: 'Lightning Bolt' });
+        const identify = vi.fn<WorkerDeps['identify']>().mockResolvedValue({
+            name: 'Lightning Bolt',
+            confidence: 'high' as const,
+        });
         const { store, worker } = setup(identify, { isOnline: () => online });
         store.getState().add();
         store.getState().add();
@@ -318,9 +385,10 @@ describe('offline and resume', () => {
 
     it('waits for the card index', async () => {
         let ready = false;
-        const identify = vi
-            .fn<WorkerDeps['identify']>()
-            .mockResolvedValue({ name: 'Lightning Bolt' });
+        const identify = vi.fn<WorkerDeps['identify']>().mockResolvedValue({
+            name: 'Lightning Bolt',
+            confidence: 'high' as const,
+        });
         const { store, worker } = setup(identify, {
             getIndex: () => (ready ? index : null),
         });
@@ -350,9 +418,10 @@ describe('resume after reload', () => {
 
         const reloaded = createScanQueueStore(userId);
         await reloaded.persist.rehydrate();
-        const identify = vi
-            .fn<WorkerDeps['identify']>()
-            .mockResolvedValue({ name: 'Lightning Bolt' });
+        const identify = vi.fn<WorkerDeps['identify']>().mockResolvedValue({
+            name: 'Lightning Bolt',
+            confidence: 'high' as const,
+        });
         const worker = createScanQueueWorker({
             store: reloaded,
             identify,
@@ -372,9 +441,10 @@ describe('resume after reload', () => {
     });
 
     it('requeues an item left sending when started on a live store', async () => {
-        const identify = vi
-            .fn<WorkerDeps['identify']>()
-            .mockResolvedValue({ name: 'Lightning Bolt' });
+        const identify = vi.fn<WorkerDeps['identify']>().mockResolvedValue({
+            name: 'Lightning Bolt',
+            confidence: 'high' as const,
+        });
         const { store, worker } = setup(identify);
         store.getState().add({ status: 'sending' });
         worker.start();

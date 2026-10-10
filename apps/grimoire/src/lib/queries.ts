@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/apiClient';
 import type { CardEntry, CardNameFile } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
+import type { IdentifyResult } from '@/lib/identify';
 import { withItem, withoutItem } from '@/lib/collectionCache';
 
 export const queryKeys = {
@@ -100,9 +101,10 @@ export function useSetQuantity() {
     });
 }
 
-/** Read the card name off a JPEG photo. `name` is null when unreadable. */
+/** Read the card name off a JPEG photo. `name` is null when unreadable;
+ * `confidence` is the model's own read quality. */
 export function identifyPhoto(photo: Blob) {
-    return apiFetch<{ name: string | null }>('/api/identify', {
+    return apiFetch<IdentifyResult>('/api/identify', {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg' },
         body: photo,
