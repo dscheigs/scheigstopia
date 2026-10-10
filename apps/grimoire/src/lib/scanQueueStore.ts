@@ -5,6 +5,7 @@ import { createStore as createIdbStore, del, get, set } from 'idb-keyval';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { createStore } from 'zustand/vanilla';
 import { deleteBlobs, dropImage } from '@/lib/scanQueueBlobs';
+import { confirmPatch, renamePatch } from '@/lib/queueReview';
 import type { NewQueueItem, QueueItem } from '@/lib/scanQueueTypes';
 
 export interface ScanQueueState {
@@ -15,6 +16,13 @@ export interface ScanQueueState {
     removeMany: (ids: string[]) => void;
     /** Put an item back in line for another attempt. */
     retry: (id: string) => void;
+    /**
+     * Mark a flagged item as right: it moves to identified. Does nothing for
+     * items that do not need review or have no matched card.
+     */
+    confirm: (id: string) => void;
+    /** Set an item's card by hand; confirms it if it needed review. */
+    rename: (id: string, card: { oracleId: string; name: string }) => void;
     clear: () => void;
 }
 
@@ -96,6 +104,15 @@ export function createScanQueueStore(userId: string) {
                         flagReason: 'none',
                         nextAttemptAt: null,
                     }),
+                confirm: (id) => {
+                    const item = getState().items.find((i) => i.id === id);
+                    const patch = item && confirmPatch(item);
+                    if (patch) getState().update(id, patch);
+                },
+                rename: (id, card) => {
+                    const item = getState().items.find((i) => i.id === id);
+                    if (item) getState().update(id, renamePatch(card, item));
+                },
                 clear: () => {
                     const ids = getState().items.map((item) => item.id);
                     setState({ items: [] });
