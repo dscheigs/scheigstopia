@@ -1,0 +1,81 @@
+name: Refresh Grimoire card list
+
+# Rebuilds apps/grimoire/public/data/card-names.json from Scryfall and, if it
+# changed, opens a PR with the new file. It never merges: a person reviews and
+# merges the PR like any other change.
+#
+# Uses plain git and gh (no third-party action). Needs the repo setting
+# "Allow GitHub Actions to create and approve pull requests" turned on.
+# PRs opened with the default GITHUB_TOKEN do not start other workflows, so
+# the `verify` check will not run on its own; close and reopen the PR from your
+# own account to run it.
+on:
+    schedule:
+        - cron: '17 6 * * 1' # Mondays, 06:17 UTC
+    workflow_dispatch:
+
+concurrency:
+    group: refresh-card-names
+    cancel-in-progress: false
+
+permissions:
+    contents: write
+    pull-requests: write
+
+env:
+    BRANCH: chore/refresh-card-names
+    LIST: apps/grimoire/public/data/card-names.json
+
+jobs:
+    refresh:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: main
+
+            - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+
+            - run: pnpm install --frozen-lockfile
+
+            - name: Keep the committed list for comparison
+              run: cp "$LIST" "$RUNNER_TEMP/previous-card-names.json"
+
+            - name: Rebuild the list from Scryfall
+              run: pnpm exec nx run grimoire:card-names
+
+            - name: Check the new list is sane
+              run: node apps/grimoire/scripts/checkCardNameRefresh.mjs "$RUNNER_TEMP/previous-card-names.json"
+
+            - name: Open a PR if the list changed
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  if git diff --quiet -- "$LIST"; then
+                      echo "Card list is up to date."
+                      exit 0
+                  fi
+
+                  open=$(gh pr list --head "$BRANCH" --state open --json number --jq length)
+                  if [ "$open" != "0" ]; then
+                      echo "A refresh PR is already open; leaving it for review."
+                      exit 0
+                  fi
+
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git checkout -B "$BRANCH"
+                  git add "$LIST"
+                  git commit -m "chore: refresh Grimoire card list"
+                  git push --force-with-lease origin "$BRANCH"
+
+                  gh pr create \
+                      --base main \
+                      --head "$BRANCH" \
+                      --title "chore: refresh Grimoire card list" \
+                      --body "Automated refresh of \`$LIST\` from Scryfall Oracle Cards. Review the diff and merge by hand; this workflow never merges."
