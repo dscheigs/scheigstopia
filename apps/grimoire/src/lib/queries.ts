@@ -3,7 +3,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/apiClient';
-import type { CardEntry, CardNameFile } from '@/lib/cardSearch';
+import { loadCardNames } from '@/lib/cardNamesSource';
+import type { CardEntry } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
 import type { IdentifyResult } from '@/lib/identify';
 import { withItem, withoutItem } from '@/lib/collectionCache';
@@ -22,11 +23,18 @@ export function useCollection() {
     });
 }
 
-/** The committed card list. It only changes with a deploy, so never refetch. */
+/**
+ * The card list: the published Blob when NEXT_PUBLIC_CARD_NAMES_URL is set,
+ * else (or on any failure) the committed file. Fetched once per page load.
+ */
 export function useCardNames() {
     return useQuery({
         queryKey: queryKeys.cardNames,
-        queryFn: () => apiFetch<CardNameFile>('/data/card-names.json'),
+        queryFn: () =>
+            loadCardNames(
+                (url) => apiFetch<unknown>(url),
+                process.env.NEXT_PUBLIC_CARD_NAMES_URL
+            ),
         staleTime: Infinity,
         retry: false,
     });

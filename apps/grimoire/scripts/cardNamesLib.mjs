@@ -122,3 +122,45 @@ export function pickOracleCardsEntry(bulk) {
                 : '')
     );
 }
+
+/**
+ * True if `value` looks like a card list: a count that matches a non-empty
+ * array of [oracleId, name] string pairs. This is the shape check only; use
+ * `assertDeployableCardList` for the "is it a real Scryfall build" checks.
+ * @param {unknown} value
+ */
+export function isCardList(value) {
+    if (typeof value !== 'object' || value === null) return false;
+    const { version, count, cards } = /** @type {Record<string, unknown>} */ (
+        value
+    );
+    return (
+        typeof version === 'string' &&
+        Array.isArray(cards) &&
+        cards.length > 0 &&
+        count === cards.length &&
+        cards.every(
+            (pair) =>
+                Array.isArray(pair) &&
+                pair.length === 2 &&
+                typeof pair[0] === 'string' &&
+                typeof pair[1] === 'string'
+        )
+    );
+}
+
+/**
+ * Decides whether a freshly built list needs uploading. The `version` label
+ * is ignored on purpose: Scryfall's timestamp changes daily even when no card
+ * was added, and an upload for that would be pointless.
+ * @param {unknown} published  The list currently published, or null if none.
+ * @param {{ cards: [string, string][] }} next  The freshly built list.
+ */
+export function shouldUploadCardList(published, next) {
+    if (!isCardList(published)) return true;
+    if (published.cards.length !== next.cards.length) return true;
+    return published.cards.some(
+        ([oracleId, name], i) =>
+            oracleId !== next.cards[i][0] || name !== next.cards[i][1]
+    );
+}

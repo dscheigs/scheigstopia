@@ -25,7 +25,7 @@ This is milestones 1 to 3 of the plan: sign-in, database, the card list, a colle
 3. **Your GitHub user id.** Open `https://api.github.com/users/<your-username>` and copy the numeric `id`.
 4. **Environment variables.** Copy `.env.example` to `apps/grimoire/.env.local` for local work, and set the same names in Vercel for production. Generate `AUTH_SECRET` with `npx auth secret` or `openssl rand -base64 32`.
 5. **Create the tables.** `pnpm nx run grimoire:migrate` (reads `apps/grimoire/.env.local` if present).
-6. **Card list.** It is already committed, so there is nothing to do. See [Refreshing the card list](#refreshing-the-card-list) when a new set comes out.
+6. **Card list.** It is already committed, so there is nothing to do (the Blob is optional). See [Refreshing the card list](#refreshing-the-card-list) when a new set comes out.
 7. **Run it.** `pnpm dev:grimoire`, then open http://localhost:3000.
 
 ## Card scanning
@@ -68,12 +68,21 @@ The build checks that the committed card list is a real Scryfall build and fails
 
 ## Refreshing the card list
 
-When a new set is released:
+The list lives in two places. `apps/grimoire/public/data/card-names.json` is committed: it seeds the build (`check-card-names` guards it) and is the fallback. In production the app reads a copy published to a **public Vercel Blob**, which the weekly workflow updates, so new cards appear without a PR or a deploy. The app uses the Blob only when `NEXT_PUBLIC_CARD_NAMES_URL` is set; if it is unset, unreachable, or returns something that is not a card list, the committed file is used.
 
-1. `pnpm nx run grimoire:card-names` (downloads about 150 MB from Scryfall and rewrites the list).
-2. Commit `apps/grimoire/public/data/card-names.json` and open a PR.
+The weekly _Refresh Grimoire card list_ workflow (also runnable by hand from the Actions tab) rebuilds the list from Scryfall, refuses to go on if the new one is empty, from the fixture, or more than 5% smaller than the live one, and uploads it only if it changed. A list that fails the check is never uploaded. It never opens a PR and never touches `main`. The upload is cached for an hour (`cacheControlMaxAge`), so browsers pick up a new list within about an hour (the CDN can take up to a minute to propagate an overwrite).
 
-A weekly _Refresh Grimoire card list_ workflow (also runnable by hand from the Actions tab) does this for you: it rebuilds the list, refuses to go on if the new one is empty, from the fixture, or more than 5% smaller, and opens a PR only if the file changed. It never merges. It needs _Allow GitHub Actions to create and approve pull requests_ turned on in the repo's Actions settings, and because the PR is opened with the default token, the `verify` check does not start by itself; close and reopen the PR from your own account to run it.
+### One-time setup (owner)
+
+1. In Vercel, create a **public** Blob store (Storage -> Blob). The access mode cannot be changed later.
+2. Add its read-write token to the GitHub repo as the `BLOB_READ_WRITE_TOKEN` secret. The workflow runs outside Vercel, so it needs the long-lived token. Without it the upload step fails with a clear message.
+3. Set `NEXT_PUBLIC_CARD_NAMES_URL` in the Vercel `grimoire` project to the list's public URL (`https://<store-id>.public.blob.vercel-storage.com/card-names.json`; shown after the first upload) and redeploy once, since `NEXT_PUBLIC_` values are inlined at build time.
+4. Optional: set the same URL as the `CARD_NAMES_URL` repository variable, so the workflow compares against what is live and skips unchanged uploads.
+5. Run the workflow once by hand from the Actions tab to publish the first list. The first run needs no `CARD_NAMES_URL`; it compares with the committed file.
+
+### By hand
+
+Now and then, refresh the committed seed too: `pnpm nx run grimoire:card-names`, then commit `apps/grimoire/public/data/card-names.json` in a PR. To publish from your machine instead of the workflow, run the same script with `BLOB_READ_WRITE_TOKEN` set: `node apps/grimoire/scripts/publishCardNames.mjs <previous-card-names.json>`.
 
 ## Commands
 
