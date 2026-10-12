@@ -22,20 +22,31 @@ export function slimOracleCards(cards, version) {
     const seen = new Set();
     const pairs = [];
     for (const card of cards) {
-        if (typeof card !== 'object' || card === null) continue;
-        if (EXCLUDED_LAYOUTS.has(card.layout)) continue;
-
-        // Reversible cards keep their oracle id on the faces, not the card.
-        const oracleId = card.oracle_id ?? card.card_faces?.[0]?.oracle_id;
-        const name = card.name;
-        if (typeof oracleId !== 'string' || typeof name !== 'string') continue;
-        if (seen.has(oracleId)) continue;
-
-        seen.add(oracleId);
-        pairs.push([oracleId, name]);
+        const pair = slimOracleCard(card);
+        if (!pair || seen.has(pair[0])) continue;
+        seen.add(pair[0]);
+        pairs.push(pair);
     }
     pairs.sort((a, b) => a[1].localeCompare(b[1], 'en'));
     return { version, count: pairs.length, cards: pairs };
+}
+
+/**
+ * One Scryfall card object as an [oracleId, name] pair, or null when it is not
+ * a collectible card (excluded layout) or lacks an id or name. The build and
+ * the app's live Scryfall lookup share this, so both apply the same rules.
+ * @param {unknown} card  A Scryfall card object.
+ * @returns {[string, string] | null}
+ */
+export function slimOracleCard(card) {
+    if (typeof card !== 'object' || card === null) return null;
+    if (EXCLUDED_LAYOUTS.has(card.layout)) return null;
+
+    // Reversible cards keep their oracle id on the faces, not the card.
+    const oracleId = card.oracle_id ?? card.card_faces?.[0]?.oracle_id;
+    const name = card.name;
+    if (typeof oracleId !== 'string' || typeof name !== 'string') return null;
+    return [oracleId, name];
 }
 
 // A real Oracle Cards file has tens of thousands of entries. Anything far
