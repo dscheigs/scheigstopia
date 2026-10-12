@@ -4,7 +4,9 @@ import {
     changedFraction,
     createDetector,
     toGray,
+    type ShapeCheck,
 } from '@/lib/autoCapture';
+import { NO_SHAPE, type ShapeResult } from '@/lib/cardShape';
 
 const {
     sampleWidth: W,
@@ -30,13 +32,17 @@ const CARD_A = frame({ value: 200 });
 const CARD_B = frame({ value: 30 });
 
 /** Feeds frames at the sampling rate and counts captures. */
-function run(detector = createDetector(), startMs = 0) {
+function run(
+    detector = createDetector(),
+    startMs = 0,
+    shapeCheck?: ShapeCheck
+) {
     let now = startMs;
     let captures = 0;
     return {
         feed(gray: Uint8Array, ms: number) {
             for (let t = 0; t < ms; t += STEP) {
-                if (detector.step(gray, now).capture) captures++;
+                if (detector.step(gray, now, shapeCheck).capture) captures++;
                 now += STEP;
             }
         },
@@ -179,5 +185,89 @@ describe('createDetector', () => {
             r.feed(EMPTY, 1200);
         }
         expect(r.captures).toBe(20);
+    });
+});
+
+describe('createDetector with a rectangle check', () => {
+    const FOUND: ShapeResult = { found: true, corners: [], aspect: 1.4 };
+
+    /** A fake shape module that answers as told and counts its calls. */
+    function fake(answer: () => ShapeResult | null) {
+        const check = { calls: 0 };
+        const shapeCheck: ShapeCheck = () => {
+            check.calls++;
+            return answer();
+        };
+        return { check, shapeCheck };
+    }
+
+    it('captures a still card the shape check accepts', () => {
+        const { shapeCheck } = fake(() => FOUND);
+        const r = run(createDetector(), 0, shapeCheck);
+        r.feed(EMPTY, 1000);
+        r.feed(CARD_A, 3000);
+        expect(r.captures).toBe(1);
+    });
+
+    it('does not capture a still shape that is not a card (a face, a hand)', () => {
+        const { shapeCheck } = fake(() => NO_SHAPE);
+        const r = run(createDetector(), 0, shapeCheck);
+        r.feed(EMPTY, 1000);
+        r.feed(CARD_A, 10_000);
+        expect(r.captures).toBe(0);
+    });
+
+    it('captures once the shape check starts to pass', () => {
+        let ok = false;
+        const { shapeCheck } = fake(() => (ok ? FOUND : NO_SHAPE));
+        const r = run(createDetector(), 0, shapeCheck);
+        r.feed(EMPTY, 1000);
+        r.feed(CARD_A, 3000);
+        expect(r.captures).toBe(0);
+        ok = true;
+        r.feed(CARD_A, 3000);
+        expect(r.captures).toBe(1);
+    });
+
+    it('behaves as without the check when it has no answer (loading, failed)', () => {
+        const { shapeCheck } = fake(() => null);
+        const r = run(createDetector(), 0, shapeCheck);
+        r.feed(EMPTY, 1000);
+        r.feed(CARD_A, 3000);
+        expect(r.captures).toBe(1);
+    });
+
+    it('does not run the check on an empty scene or a moving frame', () => {
+        const { check, shapeCheck } = fake(() => FOUND);
+        const r = run(createDetector(), 0, shapeCheck);
+        r.feed(EMPTY, 5000);
+        for (let i = 0; i < 60; i++) {
+            r.feed(frame({ value: 200, offset: i % 2 ? 8 : 0 }), STEP);
+        }
+        expect(check.calls).toBe(0);
+    });
+
+    it('runs the check at most once per shapeIntervalMs', () => {
+        const { check, shapeCheck } = fake(() => NO_SHAPE);
+        const r = run(createDetector(), 0, shapeCheck);
+        r.feed(EMPTY, 1000);
+        r.feed(CARD_A, 3000);
+        const expected = Math.ceil(3000 / AUTO_CAPTURE.shapeIntervalMs);
+        expect(check.calls).toBeLessThanOrEqual(expected + 1);
+        expect(check.calls).toBeGreaterThan(0);
+    });
+
+    it('reports the latest check, and nothing when the check is off', () => {
+        const { shapeCheck } = fake(() => FOUND);
+        const detector = createDetector();
+        let now = 0;
+        for (; now < 1000; now += STEP) detector.step(EMPTY, now, shapeCheck);
+        let reading = detector.step(CARD_A, now, shapeCheck);
+        for (now += STEP; now < 2000; now += STEP) {
+            reading = detector.step(CARD_A, now, shapeCheck);
+        }
+        expect(reading.shape).toEqual(FOUND);
+        reading = detector.step(CARD_A, now + STEP);
+        expect(reading.shape).toBeNull();
     });
 });

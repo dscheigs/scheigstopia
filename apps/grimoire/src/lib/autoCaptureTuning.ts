@@ -1,4 +1,5 @@
-// TEMPORARY: lets the four stillness values be tuned live from a phone.
+// TEMPORARY: lets the stillness values and the rectangle check be tuned live
+// from a phone.
 // Delete this file, TuningPanel.tsx and their use in useCardScanner/ScanCard
 // once the right values are baked into AUTO_CAPTURE.
 
@@ -8,9 +9,26 @@ export type TuningKey =
     | 'stillFraction'
     | 'pixelDelta'
     | 'stableMs'
-    | 'sampleIntervalMs';
+    | 'sampleIntervalMs'
+    | 'aspectTolerance';
 
-export type Tuning = Pick<AutoCaptureConfig, TuningKey>;
+export type Tuning = Pick<AutoCaptureConfig, TuningKey> & {
+    /** Require a card-shaped rectangle before capturing (loads OpenCV.js). */
+    shapeCheck: boolean;
+};
+
+/** The part of Tuning the detector reads from its config. */
+export function configValues(
+    tuning: Tuning
+): Pick<AutoCaptureConfig, TuningKey> {
+    return {
+        stillFraction: tuning.stillFraction,
+        pixelDelta: tuning.pixelDelta,
+        stableMs: tuning.stableMs,
+        sampleIntervalMs: tuning.sampleIntervalMs,
+        aspectTolerance: tuning.aspectTolerance,
+    };
+}
 
 export interface Tunable {
     key: TuningKey;
@@ -61,6 +79,15 @@ export const TUNABLES: Tunable[] = [
         format: (v) => `${v} ms`,
         help: 'How often the camera is checked. Shorter gaps make frame-to-frame changes smaller, so stillness is easier to hit, at a little more CPU.',
     },
+    {
+        key: 'aspectTolerance',
+        label: 'Card shape tolerance',
+        min: 0.02,
+        max: 0.4,
+        step: 0.01,
+        format: (v) => `${(v * 100).toFixed(0)}%`,
+        help: "Only used when the rectangle check is on. How far the rectangle's long-to-short ratio may be from a card's 63:88. Higher accepts cards held at an angle, but lets more non-card shapes through.",
+    },
 ];
 
 const STORAGE_KEY = 'grimoire.autoCaptureTuning';
@@ -71,6 +98,8 @@ export function defaultTuning(): Tuning {
         pixelDelta: AUTO_CAPTURE.pixelDelta,
         stableMs: AUTO_CAPTURE.stableMs,
         sampleIntervalMs: AUTO_CAPTURE.sampleIntervalMs,
+        aspectTolerance: AUTO_CAPTURE.aspectTolerance,
+        shapeCheck: false,
     };
 }
 
@@ -82,6 +111,14 @@ export function loadTuning(): Tuning {
             localStorage.getItem(STORAGE_KEY) ?? 'null'
         );
         if (saved && typeof saved === 'object') {
+            if (
+                typeof (saved as Record<string, unknown>).shapeCheck ===
+                'boolean'
+            ) {
+                tuning.shapeCheck = (
+                    saved as { shapeCheck: boolean }
+                ).shapeCheck;
+            }
             for (const { key, min, max } of TUNABLES) {
                 const value = (saved as Record<string, unknown>)[key];
                 if (typeof value === 'number' && Number.isFinite(value)) {

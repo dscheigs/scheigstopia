@@ -102,6 +102,12 @@ Tap _Start_ and the app watches the video; there is no Snap button and no per-ca
 
 Every threshold is in the `AUTO_CAPTURE` object at the top of that file. Turn on _Debug_ for a readout over the video (how much of the frame changed, how much is moving, how long it has been still) to tune them under your lighting. The numbers there are starting guesses, tested only against synthetic frames, so expect to adjust them with a real camera.
 
+### Rectangle check (optional)
+
+Pixel difference never looks at shape, so a face, a hand or an exposure shift can look like a card. _Tune_ has a _Rectangle check_ switch (Off by default). When On, a card that is present and still must also be a convex quadrilateral that covers a sensible share of a 320 x 240 view of the frame, with a long-to-short ratio near a card's 63:88 (within the _Card shape tolerance_ slider). The check runs only on frames that already look like a card, at most every 300 ms (`src/lib/cardShape.ts`, `src/lib/cardShapeOpenCv.ts`). _Debug_ then shows whether a rectangle was found and its measured aspect ratio.
+
+It uses OpenCV.js (`@techstark/opencv-js`, Apache-2.0, about 3.7 MB gzipped), imported lazily, so nothing is downloaded until the switch is On and the camera is live. If it cannot load, capture falls back to the pixel-only behavior and a note says so. `next.config.ts` aliases the Node built-ins OpenCV.js mentions (`fs`, `path`, `crypto`) to an empty module in the browser build.
+
 Nothing is added to the collection while scanning. Review the queue at `/add/queue` (`/queue` redirects there) and commit the cards you want. Captured items survive a refresh (they live in IndexedDB) and expire after 12 hours. _Debug_ and _Tune_ are temporary tools for setting the thresholds above.
 
 ### Worker lifetime and signed-out behavior

@@ -58,7 +58,9 @@ export default function ScanCard({
         reading,
         tuning,
         changeTuning,
+        setShapeCheck,
         resetTuning,
+        shapeStatus,
         items,
         workerOn,
         muted,
@@ -139,6 +141,20 @@ export default function ScanCard({
                         <div>
                             still: {reading.stillForMs}/{tuning.stableMs} ms
                         </div>
+                        {tuning.shapeCheck && (
+                            <div>
+                                rectangle:{' '}
+                                {shapeStatus !== 'ready'
+                                    ? shapeStatus
+                                    : reading.shape === null
+                                      ? 'not checked yet'
+                                      : reading.shape.found
+                                        ? 'found'
+                                        : 'not found'}
+                                {reading.shape?.aspect != null &&
+                                    ` (aspect ${reading.shape.aspect.toFixed(2)}, card 1.40)`}
+                            </div>
+                        )}
                         <div>
                             empty: {reading.emptyForMs}/{AUTO_CAPTURE.emptyMs}{' '}
                             ms
@@ -200,9 +216,18 @@ export default function ScanCard({
             {showControls && tuningOpen && (
                 <TuningPanel
                     tuning={tuning}
+                    shapeStatus={shapeStatus}
                     onChange={changeTuning}
+                    onShapeCheck={setShapeCheck}
                     onReset={resetTuning}
                 />
+            )}
+
+            {showControls && tuning.shapeCheck && shapeStatus === 'failed' && (
+                <p role="status" className="text-caption text-text-minimal">
+                    The rectangle check could not load, so cards are captured on
+                    motion alone.
+                </p>
             )}
 
             {showCamera && (
