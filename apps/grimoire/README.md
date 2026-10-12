@@ -73,6 +73,8 @@ When a new set is released:
 1. `pnpm nx run grimoire:card-names` (downloads about 150 MB from Scryfall and rewrites the list).
 2. Commit `apps/grimoire/public/data/card-names.json` and open a PR.
 
+A weekly _Refresh Grimoire card list_ workflow (also runnable by hand from the Actions tab) does this for you: it rebuilds the list, refuses to go on if the new one is empty, from the fixture, or more than 5% smaller, and opens a PR only if the file changed. It never merges. It needs _Allow GitHub Actions to create and approve pull requests_ turned on in the repo's Actions settings, and because the PR is opened with the default token, the `verify` check does not start by itself; close and reopen the PR from your own account to run it.
+
 ## Commands
 
 | Command                                 | What it does                                    |

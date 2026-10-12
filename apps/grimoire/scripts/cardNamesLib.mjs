@@ -70,6 +70,26 @@ export function assertDeployableCardList(list) {
     }
 }
 
+// A refresh may add cards or drop a few, but never lose this share of the list.
+export const MAX_REFRESH_SHRINK = 0.05;
+
+/**
+ * Throws if `next` should not replace `previous` in an automated refresh: it
+ * must be a deployable list and must not be much smaller than the old one.
+ * @param {{ count: number }} previous  The committed card list.
+ * @param {unknown} next  The freshly built card list.
+ */
+export function assertSaneRefresh(previous, next) {
+    assertDeployableCardList(next);
+    const floor = Math.floor(previous.count * (1 - MAX_REFRESH_SHRINK));
+    if (next.cards.length < floor) {
+        throw new Error(
+            `New card list has ${next.cards.length} cards, down from ` +
+                `${previous.count} (more than ${MAX_REFRESH_SHRINK * 100}% fewer)`
+        );
+    }
+}
+
 /**
  * Finds the Oracle Cards file in Scryfall's /bulk-data response. Matches on the
  * documented type, then falls back to the display name. Throws an error that

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
     MIN_REAL_CARD_COUNT,
     assertDeployableCardList,
+    assertSaneRefresh,
     pickOracleCardsEntry,
     slimOracleCards,
 } from './cardNamesLib.mjs';
@@ -154,5 +155,36 @@ describe('pickOracleCardsEntry', () => {
                 data: [{ ...oracle, download_uri: undefined }],
             })
         ).toThrow(/no download_uri/);
+    });
+});
+
+describe('assertSaneRefresh', () => {
+    const list = (count: number, version = 'v') => ({
+        version,
+        count,
+        cards: Array.from({ length: count }, (_, i) => [`id${i}`, `Card ${i}`]),
+    });
+    const previous = list(MIN_REAL_CARD_COUNT * 2);
+
+    it('accepts a list that grew or shrank slightly', () => {
+        expect(() =>
+            assertSaneRefresh(previous, list(previous.count + 100))
+        ).not.toThrow();
+        expect(() =>
+            assertSaneRefresh(previous, list(previous.count - 100))
+        ).not.toThrow();
+    });
+
+    it('rejects a list that shrank sharply', () => {
+        expect(() =>
+            assertSaneRefresh(previous, list(MIN_REAL_CARD_COUNT))
+        ).toThrow(/down from/);
+    });
+
+    it('rejects an empty or fixture list', () => {
+        expect(() => assertSaneRefresh(previous, list(0))).toThrow();
+        expect(() =>
+            assertSaneRefresh(previous, list(previous.count, 'fixture'))
+        ).toThrow(/fixture/);
     });
 });
