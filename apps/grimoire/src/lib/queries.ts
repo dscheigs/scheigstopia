@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/apiClient';
 import { loadCardNames } from '@/lib/cardNamesSource';
 import type { CardEntry } from '@/lib/cardSearch';
+import { normalize } from '@/lib/cardSearch';
+import { lookupScryfallCard } from '@/lib/scryfall';
 import type { CollectionItem } from '@/lib/collection';
 import type { IdentifyResult } from '@/lib/identify';
 import { withItem, withoutItem } from '@/lib/collectionCache';
@@ -12,6 +14,7 @@ import { withItem, withoutItem } from '@/lib/collectionCache';
 export const queryKeys = {
     collection: ['collection'] as const,
     cardNames: ['card-names'] as const,
+    scryfall: (name: string) => ['scryfall', normalize(name)] as const,
 };
 
 export function useCollection() {
@@ -116,5 +119,25 @@ export function identifyPhoto(photo: Blob) {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg' },
         body: photo,
+    });
+}
+
+/** Look a name up on Scryfall; null for no card or any failure. */
+export function lookupCardByName(name: string) {
+    return lookupScryfallCard(name);
+}
+
+/**
+ * Scryfall's match for a typed name the card list could not find. Runs only
+ * when `enabled`, once per distinct name, and is remembered for the session.
+ * A failed lookup is just "no match".
+ */
+export function useScryfallCard(name: string, enabled: boolean) {
+    return useQuery({
+        queryKey: queryKeys.scryfall(name),
+        queryFn: ({ signal }) => lookupScryfallCard(name, fetch, signal),
+        enabled: enabled && normalize(name).length >= 2,
+        staleTime: Infinity,
+        retry: false,
     });
 }

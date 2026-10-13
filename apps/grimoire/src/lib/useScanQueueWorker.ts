@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import { ApiError } from '@/lib/apiClient';
 import { buildIndex } from '@/lib/cardSearch';
-import { identifyPhoto, useCardNames } from '@/lib/queries';
+import { identifyPhoto, lookupCardByName, useCardNames } from '@/lib/queries';
 import { getBlobs } from '@/lib/scanQueueBlobs';
 import { getScanQueueStore } from '@/lib/scanQueueStore';
 import {
@@ -73,6 +73,7 @@ export function useScanQueueWorker(userId: string): {
             identify: identifyForQueue,
             getImage: async (id) => (await getBlobs(id))?.image,
             getIndex: () => indexRef.current,
+            lookupCard: lookupCardByName,
             isOnline: () => navigator.onLine,
             onAuthChange: setSessionExpired,
         });
