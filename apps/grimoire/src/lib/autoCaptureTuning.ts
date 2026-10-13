@@ -6,6 +6,7 @@
 import { AUTO_CAPTURE, type AutoCaptureConfig } from '@/lib/autoCapture';
 
 export type TuningKey =
+    | 'presentFraction'
     | 'stillFraction'
     | 'pixelDelta'
     | 'stableMs'
@@ -22,6 +23,7 @@ export function configValues(
     tuning: Tuning
 ): Pick<AutoCaptureConfig, TuningKey> {
     return {
+        presentFraction: tuning.presentFraction,
         stillFraction: tuning.stillFraction,
         pixelDelta: tuning.pixelDelta,
         stableMs: tuning.stableMs,
@@ -43,6 +45,15 @@ export interface Tunable {
 }
 
 export const TUNABLES: Tunable[] = [
+    {
+        key: 'presentFraction',
+        label: 'Card in frame',
+        min: 0.02,
+        max: 0.4,
+        step: 0.01,
+        format: (v) => `${(v * 100).toFixed(0)}%`,
+        help: 'Share of the frame that must differ from the empty background before a card counts as there. Lower catches dark cards on dark tables and cards that do not fill the frame, but may mistake shadows or a hand for a card.',
+    },
     {
         key: 'stillFraction',
         label: 'Motion allowed',
@@ -94,6 +105,7 @@ const STORAGE_KEY = 'grimoire.autoCaptureTuning';
 
 export function defaultTuning(): Tuning {
     return {
+        presentFraction: AUTO_CAPTURE.presentFraction,
         stillFraction: AUTO_CAPTURE.stillFraction,
         pixelDelta: AUTO_CAPTURE.pixelDelta,
         stableMs: AUTO_CAPTURE.stableMs,

@@ -45,7 +45,7 @@ export const AUTO_CAPTURE: AutoCaptureConfig = {
     sampleHeight: 48,
     sampleIntervalMs: 100,
     pixelDelta: 25,
-    presentFraction: 0.2,
+    presentFraction: 0.1,
     stillFraction: 0.05,
     stableMs: 500,
     emptyMs: 800,
@@ -174,7 +174,14 @@ export function createDetector(
             stillSince = null;
             shape = null;
             shapeAt = -Infinity;
-            if (still && now - backgroundAt >= config.backgroundRefreshMs) {
+            // Only learn the background from a frame that is clearly empty. A card
+            // that nearly registers (dark card on a dark table) must not be
+            // absorbed into the background, or it reads ~0% from then on.
+            if (
+                still &&
+                vsBackground < config.presentFraction / 2 &&
+                now - backgroundAt >= config.backgroundRefreshMs
+            ) {
                 background = gray;
                 backgroundAt = now;
             }

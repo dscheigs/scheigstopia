@@ -140,7 +140,7 @@ export default function ScanCard({
                         <div>
                             card in frame:{' '}
                             {(reading.vsBackground * 100).toFixed(0)}% (needs{' '}
-                            {(AUTO_CAPTURE.presentFraction * 100).toFixed(0)}%)
+                            {(tuning.presentFraction * 100).toFixed(0)}%)
                         </div>
                         <div>
                             motion: {(reading.vsPrevious * 100).toFixed(1)}%
