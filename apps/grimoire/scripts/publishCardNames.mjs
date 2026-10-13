@@ -50,9 +50,7 @@ try {
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
         throw new Error(
             'BLOB_READ_WRITE_TOKEN is not set, so the card list cannot be ' +
-                'uploaded. Create a public Vercel Blob store and add its ' +
-                'read-write token as the BLOB_READ_WRITE_TOKEN secret of the ' +
-                'card-names GitHub environment (see apps/grimoire/README.md, "Refreshing the card list").'
+                'uploaded. See apps/grimoire/README.md, "Refreshing the card list".'
         );
     }
     const fallbackFile = process.argv[2];
