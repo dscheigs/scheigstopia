@@ -4,8 +4,10 @@ name: Refresh Grimoire card list
 # uploads it to a public Vercel Blob. Grimoire reads it from there, so a refresh
 # needs no PR and no deploy. The job never touches main.
 #
-# Needs the BLOB_READ_WRITE_TOKEN repository secret (token of the public Blob
-# store). Optionally set the CARD_NAMES_URL repository variable to the list's
+# Needs the BLOB_READ_WRITE_TOKEN secret of the `card-names` environment (token
+# of the public Blob store). That environment allows only `main` and has no
+# required reviewers, so the weekly run is unattended but only merged code can
+# read the token. Optionally set the CARD_NAMES_URL repository variable to the list's
 # public URL so unchanged lists are detected and the sanity check compares with
 # what is live. See apps/grimoire/README.md, "Refreshing the card list".
 on:
@@ -26,6 +28,7 @@ env:
 jobs:
     refresh:
         runs-on: ubuntu-latest
+        environment: card-names
         steps:
             - uses: actions/checkout@v4
               with:
