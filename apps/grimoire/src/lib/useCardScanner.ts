@@ -10,8 +10,11 @@ import {
     type AutoCaptureConfig,
     type Detector,
     type Reading,
+    type ShapeCheck,
 } from '@/lib/autoCapture';
+import { judgeQuads, type CardShapeFinder } from '@/lib/cardShape';
 import {
+    configValues,
     defaultTuning,
     loadTuning,
     saveTuning,
@@ -33,6 +36,9 @@ import { useScanFeedback } from '@/lib/useScanFeedback';
 import { useScanQueue } from '@/lib/useScanQueue';
 
 export type Phase = 'idle' | 'starting' | 'live';
+
+/** The rectangle check: off, downloading OpenCV, ready, or failed to load. */
+export type ShapeStatus = 'off' | 'loading' | 'ready' | 'failed';
 
 function cameraProblem(error: unknown): string {
     const name = error instanceof DOMException ? error.name : '';
@@ -70,8 +76,26 @@ export function useCardScanner(userId: string, active = true) {
     const [tuning, setTuning] = useState<Tuning>(loadTuning);
     const configRef = useRef<AutoCaptureConfig>({
         ...AUTO_CAPTURE,
-        ...tuning,
+        ...configValues(tuning),
     });
+    // The rectangle check. OpenCV.js is imported only once the check is on and
+    // the camera is live; until then (or if it fails) the detector runs without it.
+    const [shapeReady, setShapeReady] = useState(false);
+    const [shapeFailed, setShapeFailed] = useState(false);
+    const shapeLoadingRef = useRef(false);
+    const shapeStatus: ShapeStatus = !tuning.shapeCheck
+        ? 'off'
+        : shapeFailed
+          ? 'failed'
+          : shapeReady
+            ? 'ready'
+            : 'loading';
+    const shapeFinderRef = useRef<CardShapeFinder | null>(null);
+    const shapeOnRef = useRef(tuning.shapeCheck);
+    const shapeSampleRef = useRef<{
+        canvas: HTMLCanvasElement;
+        context: CanvasRenderingContext2D;
+    } | null>(null);
     const detectorRef = useRef<Detector | null>(null);
     const sampleRef = useRef<{
         canvas: HTMLCanvasElement;
@@ -189,7 +213,8 @@ export function useCardScanner(userId: string, active = true) {
     }, [capture]);
 
     const applyTuning = useCallback((next: Tuning) => {
-        Object.assign(configRef.current, next);
+        Object.assign(configRef.current, configValues(next));
+        shapeOnRef.current = next.shapeCheck;
         setTuning(next);
         saveTuning(next);
     }, []);
@@ -197,6 +222,15 @@ export function useCardScanner(userId: string, active = true) {
     const changeTuning = useCallback(
         (key: TuningKey, value: number) =>
             applyTuning({ ...tuning, [key]: value }),
+        [applyTuning, tuning]
+    );
+
+    const setShapeCheck = useCallback(
+        (on: boolean) => {
+            // Switching it off and on again is the retry after a failed load.
+            if (!on) setShapeFailed(false);
+            applyTuning({ ...tuning, shapeCheck: on });
+        },
         [applyTuning, tuning]
     );
 
@@ -210,11 +244,86 @@ export function useCardScanner(userId: string, active = true) {
         setDebug((on) => !on);
     }, []);
 
+    // Download OpenCV.js the first time the check is on with the camera live.
+    // Failing to load leaves the detector on its pixel-only behavior.
+    useEffect(() => {
+        if (!tuning.shapeCheck || phase !== 'live') return;
+        if (shapeFinderRef.current || shapeLoadingRef.current || shapeFailed) {
+            return;
+        }
+        shapeLoadingRef.current = true;
+        import('@/lib/cardShapeOpenCv')
+            .then((module) => module.loadCardShapeFinder())
+            .then((finder) => {
+                shapeFinderRef.current = finder;
+                setShapeReady(true);
+            })
+            .catch((error) => {
+                console.error('Could not load OpenCV.js', error);
+                setShapeFailed(true);
+            })
+            .finally(() => {
+                shapeLoadingRef.current = false;
+            });
+    }, [tuning.shapeCheck, phase, shapeFailed]);
+
     // Pausing drops the detector, so it learns the empty background afresh when
     // the camera view comes back.
     useEffect(() => {
         if (!active) detectorRef.current = null;
     }, [active]);
+
+    // Builds the rectangle check for the current video frame. The detector calls
+    // it only for frames that already look like a card.
+    const shapeCheckFor = useCallback(
+        (video: HTMLVideoElement): ShapeCheck =>
+            () => {
+                const finder = shapeFinderRef.current;
+                if (!finder) return null;
+                try {
+                    // Keep the video's proportions: stretching it to a fixed
+                    // size would distort the card's aspect ratio.
+                    const { shapeWidth: longSide } = configRef.current;
+                    const scale =
+                        longSide /
+                        Math.max(video.videoWidth, video.videoHeight);
+                    const width = Math.round(video.videoWidth * scale);
+                    const height = Math.round(video.videoHeight * scale);
+                    if (!shapeSampleRef.current) {
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d', {
+                            willReadFrequently: true,
+                        });
+                        if (!context) return null;
+                        shapeSampleRef.current = { canvas, context };
+                    }
+                    const { canvas } = shapeSampleRef.current;
+                    if (canvas.width !== width || canvas.height !== height) {
+                        canvas.width = width;
+                        canvas.height = height;
+                    }
+                    const { context } = shapeSampleRef.current;
+                    context.drawImage(video, 0, 0, width, height);
+                    const { data } = context.getImageData(0, 0, width, height);
+                    return judgeQuads(
+                        finder.find({ data, width, height }),
+                        { width, height },
+                        {
+                            aspectTolerance: configRef.current.aspectTolerance,
+                            minAreaShare: configRef.current.shapeMinAreaShare,
+                            maxAreaShare: configRef.current.shapeMaxAreaShare,
+                        }
+                    );
+                } catch {
+                    // A broken finder must not stop scanning: drop back to pixels only.
+                    shapeFinderRef.current = null;
+                    setShapeReady(false);
+                    setShapeFailed(true);
+                    return null;
+                }
+            },
+        []
+    );
 
     // While the camera is live and in view, watch the video and capture when a
     // card settles.
@@ -244,12 +353,16 @@ export function useCardScanner(userId: string, active = true) {
                 canvas.width,
                 canvas.height
             );
-            const result = detector.step(toGray(data), performance.now());
+            const result = detector.step(
+                toGray(data),
+                performance.now(),
+                shapeOnRef.current ? shapeCheckFor(video) : undefined
+            );
             if (debug) setReading(result);
             if (result.capture) void captureRef.current();
         }, tuning.sampleIntervalMs);
         return () => clearInterval(timer);
-    }, [phase, active, debug, tuning.sampleIntervalMs]);
+    }, [phase, active, debug, tuning.sampleIntervalMs, shapeCheckFor]);
 
     // Play the attention tone once when an item becomes flagged or failed.
     const seenRef = useRef<ReadonlyMap<string, QueueItemStatus> | null>(null);
@@ -276,7 +389,9 @@ export function useCardScanner(userId: string, active = true) {
         reading,
         tuning,
         changeTuning,
+        setShapeCheck,
         resetTuning,
+        shapeStatus,
         items,
         workerOn,
         muted: feedback.muted,

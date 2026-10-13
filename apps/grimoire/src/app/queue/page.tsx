@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
-import { ADD_QUEUE_PATH } from '@/lib/addRoutes';
+import { ADD_QUEUE_URL } from '@/lib/addRoutes';
 
-/** The queue moved under Add Cards; keep old links working. */
+/** The queue lives inside Add Cards; keep old links working. */
 export default function LegacyQueuePage() {
-    redirect(ADD_QUEUE_PATH);
+    redirect(ADD_QUEUE_URL);
 }

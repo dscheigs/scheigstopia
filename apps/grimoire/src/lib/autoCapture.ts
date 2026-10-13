@@ -1,6 +1,10 @@
 // Decides when a card is in front of the camera, from tiny grayscale frames.
 // No DOM in here: the component samples the video and feeds frames in, so the
 // logic can be tested with synthetic frames. Every threshold is in AUTO_CAPTURE.
+// The optional rectangle check (cardShape.ts) is passed in as a function, so the
+// detector never touches OpenCV.
+
+import type { ShapeResult } from '@/lib/cardShape';
 
 export interface AutoCaptureConfig {
     /** Size of the downscaled frame the detector looks at. */
@@ -24,6 +28,16 @@ export interface AutoCaptureConfig {
     backgroundRefreshMs: number;
     /** Share of pixels that differ from the last captured card: a new card. */
     swapFraction: number;
+    /** Size of the larger frame the rectangle check looks at. */
+    shapeWidth: number;
+    shapeHeight: number;
+    /** Shortest gap between rectangle checks (they cost more than a pixel diff). */
+    shapeIntervalMs: number;
+    /** How far a card's aspect ratio may be from 63:88, as a share of it. */
+    aspectTolerance: number;
+    /** A card must cover at least / at most this share of the shape frame. */
+    shapeMinAreaShare: number;
+    shapeMaxAreaShare: number;
 }
 
 export const AUTO_CAPTURE: AutoCaptureConfig = {
@@ -38,6 +52,12 @@ export const AUTO_CAPTURE: AutoCaptureConfig = {
     minIntervalMs: 2000,
     backgroundRefreshMs: 1000,
     swapFraction: 0.25,
+    shapeWidth: 320,
+    shapeHeight: 240,
+    shapeIntervalMs: 300,
+    aspectTolerance: 0.15,
+    shapeMinAreaShare: 0.1,
+    shapeMaxAreaShare: 0.95,
 };
 
 /** Luma (0-255) of each pixel in RGBA data, one byte per pixel. */
@@ -82,10 +102,19 @@ export interface Reading {
     stillForMs: number;
     /** How long the frame has been empty, in ms (0 when not counting). */
     emptyForMs: number;
+    /** Latest rectangle check, or null when none ran (off, or no candidate yet). */
+    shape: ShapeResult | null;
 }
 
+/**
+ * Runs the rectangle check on the current frame. Returns null when it cannot
+ * (not loaded yet, or it failed), and the detector then ignores it.
+ */
+export type ShapeCheck = () => ShapeResult | null;
+
 export interface Detector {
-    step(gray: Uint8Array, nowMs: number): Reading;
+    /** `shapeCheck` is called only for frames that already look like a card. */
+    step(gray: Uint8Array, nowMs: number, shapeCheck?: ShapeCheck): Reading;
     /**
      * Stop capturing until the scene changes. Call when a capture is being
      * handled, so the card still sitting there is not captured again.
@@ -104,14 +133,26 @@ export function createDetector(
     let lastCaptureAt = -Infinity;
     let stillSince: number | null = null;
     let emptySince: number | null = null;
+    let shape: ShapeResult | null = null;
+    let shapeAt = -Infinity;
 
-    function step(gray: Uint8Array, now: number): Reading {
+    function step(
+        gray: Uint8Array,
+        now: number,
+        shapeCheck?: ShapeCheck
+    ): Reading {
         // The first frame is taken to be the empty background.
         if (!previous || !background) {
             previous = gray;
             background = gray;
             backgroundAt = now;
             return reading(0, 0, now, false);
+        }
+
+        // Switched off (or never on): forget any earlier answer.
+        if (!shapeCheck) {
+            shape = null;
+            shapeAt = -Infinity;
         }
 
         const vsPrevious = changedFraction(gray, previous, config.pixelDelta);
@@ -131,6 +172,8 @@ export function createDetector(
 
         if (!present) {
             stillSince = null;
+            shape = null;
+            shapeAt = -Infinity;
             if (still && now - backgroundAt >= config.backgroundRefreshMs) {
                 background = gray;
                 backgroundAt = now;
@@ -153,6 +196,8 @@ export function createDetector(
                         config.swapFraction);
             if (!isNew || !still) {
                 stillSince = null;
+            } else if (!shapeLooksLikeCard(shapeCheck, now)) {
+                stillSince = null;
             } else {
                 stillSince ??= now;
                 if (
@@ -171,6 +216,21 @@ export function createDetector(
         return reading(vsBackground, vsPrevious, now, capture);
     }
 
+    // Only reached for a present, still, new frame. Reuses a recent answer so the
+    // costly check runs at shapeIntervalMs, not at every sample.
+    function shapeLooksLikeCard(
+        shapeCheck: ShapeCheck | undefined,
+        now: number
+    ): boolean {
+        if (!shapeCheck) return true;
+        if (now - shapeAt >= config.shapeIntervalMs) {
+            shape = shapeCheck();
+            shapeAt = now;
+        }
+        // No answer (still loading, or failed): behave as if the check were off.
+        return shape === null || shape.found;
+    }
+
     function reading(
         vsBackground: number,
         vsPrevious: number,
@@ -184,6 +244,7 @@ export function createDetector(
             vsPrevious,
             stillForMs: stillSince === null ? 0 : now - stillSince,
             emptyForMs: emptySince === null ? 0 : now - emptySince,
+            shape,
         };
     }
 
@@ -192,6 +253,8 @@ export function createDetector(
         snapshot = null;
         stillSince = null;
         emptySince = null;
+        shape = null;
+        shapeAt = -Infinity;
     }
 
     return { step, hold };

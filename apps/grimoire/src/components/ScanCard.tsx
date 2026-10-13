@@ -58,7 +58,9 @@ export default function ScanCard({
         reading,
         tuning,
         changeTuning,
+        setShapeCheck,
         resetTuning,
+        shapeStatus,
         items,
         workerOn,
         muted,
@@ -105,6 +107,15 @@ export default function ScanCard({
                     aria-label="Camera view"
                     className="aspect-[4/3] w-full rounded-lg bg-neutral-950 object-cover"
                 />
+                {showControls && tuning.shapeCheck && (
+                    // The rectangle check needs all four card edges in view,
+                    // so show where to hold the card. A guide, not a hard fit.
+                    <div
+                        aria-hidden="true"
+                        data-testid="card-guide"
+                        className="pointer-events-none absolute left-1/2 top-1/2 aspect-[63/88] h-5/6 -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-dashed border-neutral-100/70"
+                    />
+                )}
                 {showControls && (
                     <button
                         type="button"
@@ -139,6 +150,20 @@ export default function ScanCard({
                         <div>
                             still: {reading.stillForMs}/{tuning.stableMs} ms
                         </div>
+                        {tuning.shapeCheck && (
+                            <div>
+                                rectangle:{' '}
+                                {shapeStatus !== 'ready'
+                                    ? shapeStatus
+                                    : reading.shape === null
+                                      ? 'not checked yet'
+                                      : reading.shape.found
+                                        ? 'found'
+                                        : 'not found'}
+                                {reading.shape?.aspect != null &&
+                                    ` (aspect ${reading.shape.aspect.toFixed(2)}, card 1.40)`}
+                            </div>
+                        )}
                         <div>
                             empty: {reading.emptyForMs}/{AUTO_CAPTURE.emptyMs}{' '}
                             ms
@@ -153,6 +178,8 @@ export default function ScanCard({
                     and filling the frame. A chime means it was captured; take
                     it away before the next one. A low double tone means a card
                     needs your attention.
+                    {tuning.shapeCheck &&
+                        ' With the rectangle check on, fit the whole card, all four edges, inside the dashed outline.'}
                 </p>
             )}
 
@@ -200,9 +227,18 @@ export default function ScanCard({
             {showControls && tuningOpen && (
                 <TuningPanel
                     tuning={tuning}
+                    shapeStatus={shapeStatus}
                     onChange={changeTuning}
+                    onShapeCheck={setShapeCheck}
                     onReset={resetTuning}
                 />
+            )}
+
+            {showControls && tuning.shapeCheck && shapeStatus === 'failed' && (
+                <p role="status" className="text-caption text-text-minimal">
+                    The rectangle check could not load, so cards are captured on
+                    motion alone.
+                </p>
             )}
 
             {showCamera && (
