@@ -1,14 +1,13 @@
 name: Refresh Grimoire card list
 
-# Rebuilds apps/grimoire/public/data/card-names.json from Scryfall and, if it
-# changed, opens a PR with the new file. It never merges: a person reviews and
-# merges the PR like any other change.
+# Rebuilds the card list from Scryfall, checks it is sane, and, if it changed,
+# uploads it to a public Vercel Blob. Grimoire reads it from there, so a refresh
+# needs no PR and no deploy. The job never touches main.
 #
-# Uses plain git and gh (no third-party action). Needs the repo setting
-# "Allow GitHub Actions to create and approve pull requests" turned on.
-# PRs opened with the default GITHUB_TOKEN do not start other workflows, so
-# the `verify` check will not run on its own; close and reopen the PR from your
-# own account to run it.
+# Needs the BLOB_READ_WRITE_TOKEN repository secret (token of the public Blob
+# store). Optionally set the CARD_NAMES_URL repository variable to the list's
+# public URL so unchanged lists are detected and the sanity check compares with
+# what is live. See apps/grimoire/README.md, "Refreshing the card list".
 on:
     schedule:
         - cron: '17 6 * * 1' # Mondays, 06:17 UTC
@@ -19,11 +18,9 @@ concurrency:
     cancel-in-progress: false
 
 permissions:
-    contents: write
-    pull-requests: write
+    contents: read
 
 env:
-    BRANCH: chore/refresh-card-names
     LIST: apps/grimoire/public/data/card-names.json
 
 jobs:
@@ -43,7 +40,7 @@ jobs:
 
             - run: pnpm install --frozen-lockfile
 
-            - name: Keep the committed list for comparison
+            - name: Keep the committed list as the fallback baseline
               run: cp "$LIST" "$RUNNER_TEMP/previous-card-names.json"
 
             - name: Rebuild the list from Scryfall
@@ -52,30 +49,8 @@ jobs:
             - name: Check the new list is sane
               run: node apps/grimoire/scripts/checkCardNameRefresh.mjs "$RUNNER_TEMP/previous-card-names.json"
 
-            - name: Open a PR if the list changed
+            - name: Upload the list to Vercel Blob
               env:
-                  GH_TOKEN: ${{ github.token }}
-              run: |
-                  if git diff --quiet -- "$LIST"; then
-                      echo "Card list is up to date."
-                      exit 0
-                  fi
-
-                  open=$(gh pr list --head "$BRANCH" --state open --json number --jq length)
-                  if [ "$open" != "0" ]; then
-                      echo "A refresh PR is already open; leaving it for review."
-                      exit 0
-                  fi
-
-                  git config user.name "github-actions[bot]"
-                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-                  git checkout -B "$BRANCH"
-                  git add "$LIST"
-                  git commit -m "chore: refresh Grimoire card list"
-                  git push --force-with-lease origin "$BRANCH"
-
-                  gh pr create \
-                      --base main \
-                      --head "$BRANCH" \
-                      --title "chore: refresh Grimoire card list" \
-                      --body "Automated refresh of \`$LIST\` from Scryfall Oracle Cards. Review the diff and merge by hand; this workflow never merges."
+                  BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+                  CARD_NAMES_URL: ${{ vars.CARD_NAMES_URL }}
+              run: node apps/grimoire/scripts/publishCardNames.mjs "$RUNNER_TEMP/previous-card-names.json"
