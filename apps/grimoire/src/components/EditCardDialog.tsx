@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import ScryfallFallback from '@/components/ScryfallFallback';
 import { inputClasses, secondaryButtonClasses } from '@/components/styles';
 import { searchCards, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import { useModalDialog } from '@/lib/useModalDialog';
@@ -102,6 +103,14 @@ export default function EditCardDialog({
                                 </li>
                             ))}
                         </ul>
+                    )}
+                    {index && (
+                        <ScryfallFallback
+                            query={query}
+                            listEmpty={results.length === 0}
+                            action="Use"
+                            onPick={onPick}
+                        />
                     )}
                 </div>
             </div>

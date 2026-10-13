@@ -51,6 +51,11 @@ export interface WorkerDeps {
     getImage: (id: string) => Promise<Blob | undefined>;
     /** The card index, or null while the card list is still loading. */
     getIndex: () => CardIndex | null;
+    /**
+     * Look a name up outside the card list (Scryfall) when the list has no
+     * match. Resolves null for no card or any failure; it must not throw.
+     */
+    lookupCard?: (name: string) => Promise<MatchedCard | null>;
     /** Whether the browser thinks it is online. */
     isOnline?: () => boolean;
     now?: () => number;
@@ -114,6 +119,34 @@ export function classifyRead(
         };
     }
     return { ...outcome, modelConfidence };
+}
+
+/**
+ * A read the card list could not match, resolved by a live lookup instead. It
+ * is judged like a list match: an exact name is identified, anything else is
+ * flagged for the user to confirm. A low-confidence read always needs a look.
+ */
+export function classifyLookup(
+    outcome: Outcome,
+    found: MatchedCard,
+    readName: string
+): Outcome {
+    const wanted = normalize(readName);
+    const exact =
+        normalize(found.name) === wanted ||
+        normalize(found.name.split(' // ')[0]) === wanted;
+    const unsure = outcome.modelConfidence === 'low';
+    return {
+        ...outcome,
+        status: exact && !unsure ? 'identified' : 'flagged',
+        flagReason: exact
+            ? unsure
+                ? 'low-confidence'
+                : 'none'
+            : 'fuzzy-match',
+        matchedCard: found,
+        candidates: [found],
+    };
 }
 
 function classifyName(
@@ -251,6 +284,15 @@ export function createScanQueueWorker(deps: WorkerDeps): ScanQueueWorker {
         });
     }
 
+    async function lookupSafely(name: string): Promise<MatchedCard | null> {
+        if (!deps.lookupCard) return null;
+        try {
+            return await deps.lookupCard(name);
+        } catch {
+            return null;
+        }
+    }
+
     async function send(id: string) {
         inFlight.add(id);
         store.getState().update(id, { status: 'sending', nextAttemptAt: null });
@@ -271,7 +313,14 @@ export function createScanQueueWorker(deps: WorkerDeps): ScanQueueWorker {
                 return;
             }
             setAuthPaused(false);
-            store.getState().update(id, classifyRead(index, result));
+            let outcome = classifyRead(index, result);
+            if (outcome.flagReason === 'no-match' && outcome.readName) {
+                const found = await lookupSafely(outcome.readName);
+                if (found) {
+                    outcome = classifyLookup(outcome, found, outcome.readName);
+                }
+            }
+            store.getState().update(id, outcome);
             softRetries.delete(id);
         } catch (error) {
             handleFailure(id, error);
