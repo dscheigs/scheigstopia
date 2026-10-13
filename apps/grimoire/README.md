@@ -75,7 +75,7 @@ The weekly _Refresh Grimoire card list_ workflow (also runnable by hand from the
 ### One-time setup (owner)
 
 1. In Vercel, create a **public** Blob store (Storage -> Blob). The access mode cannot be changed later.
-2. Add its read-write token to the GitHub repo as the `BLOB_READ_WRITE_TOKEN` secret. The workflow runs outside Vercel, so it needs the long-lived token. Without it the upload step fails with a clear message.
+2. In GitHub (Settings -> Environments) create a `card-names` environment with a deployment branch policy of `main` only and **no** required reviewers (the weekly run is unattended), and add the Blob's read-write token to it as the `BLOB_READ_WRITE_TOKEN` secret. The workflow runs outside Vercel, so it needs the long-lived token, and keeping it in this environment means only code merged to `main` can read it. A run from another branch is refused, so test changes to the upload step by merging, then running the workflow by hand on `main`. Without the secret the upload step fails with a clear message.
 3. Set `NEXT_PUBLIC_CARD_NAMES_URL` in the Vercel `grimoire` project to the list's public URL (`https://<store-id>.public.blob.vercel-storage.com/card-names.json`; shown after the first upload) and redeploy once, since `NEXT_PUBLIC_` values are inlined at build time.
 4. Optional: set the same URL as the `CARD_NAMES_URL` repository variable, so the workflow compares against what is live and skips unchanged uploads.
 5. Run the workflow once by hand from the Actions tab to publish the first list. The first run needs no `CARD_NAMES_URL`; it compares with the committed file.
