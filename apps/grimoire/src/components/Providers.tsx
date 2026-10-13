@@ -8,6 +8,8 @@ import {
 } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ApiError, isUnauthorized } from '@/lib/apiClient';
+import { withBasePath } from '@/lib/basePath';
+import { SIGN_IN_PATH } from '@/lib/sessionNotice';
 
 /** A lapsed session on any request sends you back to sign in. */
 function redirectIfSignedOut(error: unknown) {
@@ -15,7 +17,7 @@ function redirectIfSignedOut(error: unknown) {
     // A hard navigation on purpose: it drops the query cache, and this runs in
     // the QueryClient, outside React, where useRouter is not available.
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.href = '/signin';
+    window.location.href = withBasePath(SIGN_IN_PATH);
 }
 
 function makeQueryClient() {

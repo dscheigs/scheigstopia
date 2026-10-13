@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
+import { withBasePath } from '@/lib/basePath';
 import { getUserId } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -37,7 +38,7 @@ export default async function SignInPage({
             <form
                 action={async () => {
                     'use server';
-                    await signIn('github', { redirectTo: '/' });
+                    await signIn('github', { redirectTo: withBasePath('/') });
                 }}
             >
                 <button

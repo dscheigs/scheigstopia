@@ -7,6 +7,7 @@ import {
     inputClasses,
     secondaryButtonClasses,
 } from '@/components/styles';
+import { withBasePath } from '@/lib/basePath';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
 import { useCardNames, useCollection, useSetQuantity } from '@/lib/queries';
@@ -92,7 +93,7 @@ export default function CollectionView() {
                             Add Cards
                         </button>
                         <a
-                            href="/api/export"
+                            href={withBasePath('/api/export')}
                             download="grimoire-collection.txt"
                             className={buttonClasses}
                         >

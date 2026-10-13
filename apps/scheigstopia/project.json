@@ -6,6 +6,11 @@
     "tags": ["scope:scheigstopia", "type:app"],
     "implicitDependencies": ["sylva"],
     "targets": {
+        "test": {
+            "command": "vitest run --root apps/scheigstopia",
+            "cache": true,
+            "inputs": ["default", "^default"]
+        },
         "typecheck": {
             "command": "tsc --noEmit -p apps/scheigstopia/tsconfig.json",
             "cache": true,
