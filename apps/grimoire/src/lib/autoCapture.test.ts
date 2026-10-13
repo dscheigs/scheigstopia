@@ -174,6 +174,34 @@ describe('createDetector', () => {
         expect(r.captures).toBe(0);
     });
 
+    /** A card-like block covering `share` of the frame (full height, partial width). */
+    function partial(share: number): Uint8Array {
+        const gray = new Uint8Array(W * H).fill(BACKGROUND);
+        const cols = Math.round(share * W);
+        for (let y = 0; y < H; y++) {
+            for (let x = 10; x < 10 + cols; x++) gray[y * W + x] = 200;
+        }
+        return gray;
+    }
+
+    it('captures a low-contrast card that covers 15% of the frame', () => {
+        const r = run();
+        r.feed(EMPTY, 1000);
+        r.feed(partial(0.15), 3000);
+        expect(r.captures).toBe(1);
+    });
+
+    it('does not absorb a card that nearly registers into the background', () => {
+        const r = run();
+        r.feed(EMPTY, 1000);
+        // ~7%: under presentFraction (10%) but over half of it, so not "empty".
+        const faint = partial(0.07);
+        r.feed(faint, 5000);
+        const reading = r.detector.step(faint, 100_000);
+        expect(reading.vsBackground).toBeGreaterThan(0.05);
+        expect(r.captures).toBe(0);
+    });
+
     it('turns about 20 cards at a normal pace into about 20 captures', () => {
         const r = run();
         r.feed(EMPTY, 1000);
