@@ -12,6 +12,8 @@ const inter = Inter({
 export const metadata: Metadata = {
     title: 'Grimoire',
     description: 'Your Magic: The Gathering collection, always with you.',
+    // Private app: keep it out of search results, standalone or mounted.
+    robots: { index: false, follow: false },
 };
 
 export default function RootLayout({

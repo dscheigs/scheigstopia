@@ -1,3 +1,5 @@
+import { withBasePath } from '@/lib/basePath';
+
 /** A request that came back non-2xx. `message` is safe to show to the user. */
 export class ApiError extends Error {
     constructor(
@@ -45,7 +47,7 @@ export async function apiFetch<T>(
     input: string,
     { json, headers, body, ...init }: ApiInit = {}
 ): Promise<T> {
-    const response = await fetch(input, {
+    const response = await fetch(withBasePath(input), {
         ...init,
         headers:
             json === undefined
