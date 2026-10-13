@@ -1,4 +1,4 @@
-/** The camera itself lives in the layout so it survives navigation. */
+/** The camera and queue live in the layout so they survive switching views. */
 export default function AddPage() {
     return null;
 }

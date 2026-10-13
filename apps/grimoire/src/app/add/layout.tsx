@@ -6,14 +6,12 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Owns the camera, audio/wake-lock session and background worker, so they
- * stay alive while moving between the camera and the queue.
+ * stay alive while switching between the camera and the queue.
  */
-export default async function AddLayout({
-    children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default async function AddLayout() {
     const userId = await getUserId();
     if (!userId) {
         redirect('/signin');
     }
-    return <AddCardsShell userId={userId}>{children}</AddCardsShell>;
+    return <AddCardsShell userId={userId} />;
 }

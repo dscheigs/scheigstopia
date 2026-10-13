@@ -117,11 +117,11 @@ Pixel difference never looks at shape, so a face, a hand or an exposure shift ca
 
 It uses OpenCV.js (`@techstark/opencv-js`, Apache-2.0, about 3.7 MB gzipped), imported lazily, so nothing is downloaded until the switch is On and the camera is live. If it cannot load, capture falls back to the pixel-only behavior and a note says so. `next.config.ts` aliases the Node built-ins OpenCV.js mentions (`fs`, `path`, `crypto`) to an empty module in the browser build.
 
-Nothing is added to the collection while scanning. Review the queue at `/add/queue` (`/queue` redirects there) and commit the cards you want. Captured items survive a refresh (they live in IndexedDB) and expire after 12 hours. _Debug_ and _Tune_ are temporary tools for setting the thresholds above.
+Nothing is added to the collection while scanning. Review the queue with the _Queue_ switch on `/add` (`/queue` redirects to `/add?view=queue`; the switch changes state, not the route) and commit the cards you want. Captured items survive a refresh (they live in IndexedDB) and expire after 12 hours. _Debug_ and _Tune_ are temporary tools for setting the thresholds above.
 
 ### Worker lifetime and signed-out behavior
 
-The background worker starts on the first _Start_ and runs while the Add Cards layout (`/add` and `/add/queue`) is mounted. Leaving `/add` stops it; queued photos stay in IndexedDB and are picked up when you come back and press _Start_. A 401 from `/api/identify` pauses the worker: scans stay queued, no attempt is counted, and the Add Cards screens show "Your session expired. Sign in again to keep scanning." with a link to `/signin`. A paused worker tries one photo a minute, so it resumes by itself if you sign in elsewhere, and a fresh start after signing in resumes at once.
+The background worker starts on the first _Start_ and runs while the Add Cards layout (`/add`) is mounted. Leaving `/add` stops it; queued photos stay in IndexedDB and are picked up when you come back and press _Start_. A 401 from `/api/identify` pauses the worker: scans stay queued, no attempt is counted, and the Add Cards screens show "Your session expired. Sign in again to keep scanning." with a link to `/signin`. A paused worker tries one photo a minute, so it resumes by itself if you sign in elsewhere, and a fresh start after signing in resumes at once.
 
 ## Not yet done
 

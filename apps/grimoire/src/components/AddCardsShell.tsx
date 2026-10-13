@@ -1,21 +1,21 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import QueueView from '@/components/QueueView';
 import ScanCard from '@/components/ScanCard';
-import { ADD_PATH, ADD_QUEUE_PATH, isQueueRoute } from '@/lib/addRoutes';
+import { initialAddView } from '@/lib/addRoutes';
 import { queueCounts } from '@/lib/queueReview';
 import { useScanQueue } from '@/lib/useScanQueue';
 
-/** Keeps the scanner mounted; the active child route renders beneath it. */
-export default function AddCardsShell({
-    userId,
-    children,
-}: {
-    userId: string;
-    children: React.ReactNode;
-}) {
-    const onQueue = isQueueRoute(usePathname());
+/**
+ * Keeps the scanner mounted and switches between the camera and the queue as
+ * state, not a route, so no page transition plays when you flip between them.
+ */
+export default function AddCardsShell({ userId }: { userId: string }) {
+    const params = useSearchParams();
+    const [view, setView] = useState(() => initialAddView(params.get('view')));
+    const onQueue = view === 'queue';
     const { items } = useScanQueue(userId);
     const { total, review } = queueCounts(items);
     const segment =
@@ -30,16 +30,18 @@ export default function AddCardsShell({
         <>
             <nav aria-label="Add cards" className="mx-auto max-w-2xl px-4 pt-4">
                 <div className="flex w-full gap-1 rounded-lg border border-border-minimal bg-surface-minimal p-1">
-                    <Link
-                        href={ADD_PATH}
-                        aria-current={onQueue ? undefined : 'page'}
+                    <button
+                        type="button"
+                        onClick={() => setView('camera')}
+                        aria-pressed={!onQueue}
                         className={`${segment} ${onQueue ? off : on}`}
                     >
                         Camera
-                    </Link>
-                    <Link
-                        href={ADD_QUEUE_PATH}
-                        aria-current={onQueue ? 'page' : undefined}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setView('queue')}
+                        aria-pressed={onQueue}
                         aria-label={queueLabel}
                         className={`${segment} ${onQueue ? on : off}`}
                     >
@@ -53,11 +55,11 @@ export default function AddCardsShell({
                                 ({review} to review)
                             </span>
                         )}
-                    </Link>
+                    </button>
                 </div>
             </nav>
             <ScanCard userId={userId} showCamera={!onQueue} />
-            {children}
+            {onQueue && <QueueView userId={userId} />}
         </>
     );
 }

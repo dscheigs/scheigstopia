@@ -1,10 +1,13 @@
 export const COLLECTION_PATH = '/';
 export const ADD_PATH = '/add';
-export const ADD_QUEUE_PATH = '/add/queue';
+/** Opens Add Cards on the queue: `/add?view=queue`. */
+export const ADD_QUEUE_URL = `${ADD_PATH}?view=queue`;
 
-/** True when `pathname` is the queue review screen under Add Cards. */
-export function isQueueRoute(pathname: string | null): boolean {
-    return pathname === ADD_QUEUE_PATH || pathname === `${ADD_QUEUE_PATH}/`;
+export type AddView = 'camera' | 'queue';
+
+/** Which Add Cards view to open on, from the `view` query value. */
+export function initialAddView(value: string | null): AddView {
+    return value === 'queue' ? 'queue' : 'camera';
 }
 
 /** True when `pathname` is Add Cards or anything beneath it. */
