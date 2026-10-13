@@ -582,3 +582,90 @@ describe('resume after reload', () => {
         worker.stop();
     });
 });
+
+describe('Scryfall fallback', () => {
+    const unknown = async () => ({
+        name: 'Brand New Card',
+        confidence: 'high' as const,
+    });
+
+    it('identifies a card the list lacks when Scryfall has it exactly', async () => {
+        const lookupCard = vi.fn(async () => ({
+            oracleId: 'new',
+            name: 'Brand New Card',
+        }));
+        const { store, worker } = setup(unknown, { lookupCard });
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(lookupCard).toHaveBeenCalledTimes(1);
+        expect(lookupCard).toHaveBeenCalledWith('Brand New Card');
+        expect(only(store)).toMatchObject({
+            status: 'identified',
+            matchedCard: { oracleId: 'new', name: 'Brand New Card' },
+        });
+        worker.stop();
+    });
+
+    it('flags a different Scryfall name for the user to confirm', async () => {
+        const { store, worker } = setup(unknown, {
+            lookupCard: async () => ({
+                oracleId: 'new',
+                name: 'Brand New Card Deluxe',
+            }),
+        });
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store)).toMatchObject({
+            status: 'flagged',
+            flagReason: 'fuzzy-match',
+            matchedCard: { oracleId: 'new' },
+        });
+        worker.stop();
+    });
+
+    it('stays no-match when Scryfall has nothing', async () => {
+        const { store, worker } = setup(unknown, {
+            lookupCard: async () => null,
+        });
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store)).toMatchObject({
+            status: 'flagged',
+            flagReason: 'no-match',
+            matchedCard: null,
+        });
+        worker.stop();
+    });
+
+    it('stays no-match when the lookup throws', async () => {
+        const { store, worker } = setup(unknown, {
+            lookupCard: async () => {
+                throw new Error('offline');
+            },
+        });
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(only(store).flagReason).toBe('no-match');
+        worker.stop();
+    });
+
+    it('does not look up names the list matches', async () => {
+        const lookupCard = vi.fn(async () => null);
+        const { store, worker } = setup(
+            async () => ({
+                name: 'Lightning Bolt',
+                confidence: 'high' as const,
+            }),
+            { lookupCard }
+        );
+        store.getState().add();
+        worker.start();
+        await settle();
+        expect(lookupCard).not.toHaveBeenCalled();
+        worker.stop();
+    });
+});

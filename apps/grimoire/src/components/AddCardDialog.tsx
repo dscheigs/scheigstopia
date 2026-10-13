@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { X } from 'lucide-react';
+import ScryfallFallback from '@/components/ScryfallFallback';
 import { inputClasses, secondaryButtonClasses } from '@/components/styles';
 import { searchCards, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import { useAddCard } from '@/lib/queries';
@@ -126,13 +127,17 @@ export default function AddCardDialog({
                             ))}
                         </ul>
                     )}
-                    {index &&
-                        debouncedQuery.trim().length >= 2 &&
-                        results.length === 0 && (
-                            <p className="text-caption text-text-minimal">
-                                No matching cards.
-                            </p>
-                        )}
+                    {index && (
+                        <ScryfallFallback
+                            query={query}
+                            listEmpty={
+                                results.length === 0 && debouncedQuery === query
+                            }
+                            action="Add"
+                            busy={addCard.isPending}
+                            onPick={add}
+                        />
+                    )}
                 </div>
 
                 <p role="status" className="text-caption text-text-minimal">

@@ -61,7 +61,17 @@ vi.mock('@/lib/useScanQueue', () => ({
     }),
 }));
 
+const scryfallCards: Record<string, { oracleId: string; name: string }> = {
+    'brand new card': { oracleId: 'o-new', name: 'Brand New Card' },
+};
+
 vi.mock('@/lib/queries', () => ({
+    useScryfallCard: (name: string, enabled: boolean) => ({
+        data: enabled
+            ? (scryfallCards[name.trim().toLowerCase()] ?? null)
+            : undefined,
+        isFetching: false,
+    }),
     useCardNames: () => ({
         data: {
             version: 'test',
@@ -342,6 +352,56 @@ describe('QueueView', () => {
             expect(rowsIn(/ready to add/i)[0]).toHaveTextContent(
                 'Grizzly Bears'
             );
+        });
+
+        it('offers a Scryfall card the list lacks, and renames on tap', async () => {
+            const user = userEvent.setup();
+            renderQueue([
+                makeItem({
+                    status: 'flagged',
+                    flagReason: 'no-match',
+                    readName: 'Mystery',
+                }),
+            ]);
+            await user.click(
+                screen.getByRole('button', { name: 'Edit Mystery' })
+            );
+            await user.type(
+                screen.getByLabelText('Card name'),
+                'brand new card'
+            );
+            await user.click(
+                await screen.findByRole(
+                    'button',
+                    { name: /Brand New Card/ },
+                    { timeout: 3000 }
+                )
+            );
+            expect(rowsIn(/ready to add/i)[0]).toHaveTextContent(
+                'Brand New Card'
+            );
+        });
+
+        it('shows no match when Scryfall has nothing either', async () => {
+            const user = userEvent.setup();
+            renderQueue([
+                makeItem({
+                    status: 'flagged',
+                    flagReason: 'no-match',
+                    readName: 'Mystery',
+                }),
+            ]);
+            await user.click(
+                screen.getByRole('button', { name: 'Edit Mystery' })
+            );
+            await user.type(screen.getByLabelText('Card name'), 'zzzzqqq');
+            expect(
+                await screen.findByText(
+                    'No matching cards.',
+                    {},
+                    { timeout: 3000 }
+                )
+            ).toBeInTheDocument();
         });
 
         it('closes without changing the item', async () => {
