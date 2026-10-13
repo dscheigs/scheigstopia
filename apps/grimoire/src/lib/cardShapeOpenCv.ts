@@ -8,9 +8,8 @@ type OpenCv = typeof import('@techstark/opencv-js');
 
 /** Wait for the wasm runtime; the package exports a module, a promise or a bare cv. */
 async function loadOpenCv(): Promise<OpenCv> {
-    const imported = (await import('@techstark/opencv-js')) as unknown as {
-        default?: unknown;
-    };
+    const { opencvRuntime } = await import('@/lib/opencvRuntime');
+    const imported = opencvRuntime.opencv as { default?: unknown };
     let cv = (imported.default ?? imported) as OpenCv | Promise<OpenCv>;
     if (cv instanceof Promise) cv = await cv;
     if (!cv.Mat) {
@@ -22,8 +21,14 @@ async function loadOpenCv(): Promise<OpenCv> {
     return cv;
 }
 
-/** Corner polygons tighter than this (share of the perimeter) count as straight. */
-const APPROX_EPSILON = 0.02;
+/**
+ * How loosely a contour may be simplified (share of the perimeter) to reach four
+ * corners, tried tightest first. A card's rounded corners and a thumb over an
+ * edge leave extra vertices at the tightest setting.
+ */
+const APPROX_EPSILONS = [0.02, 0.035, 0.05, 0.07];
+/** Contours smaller than this share of the frame cannot be a card. */
+const MIN_CONTOUR_SHARE = 0.02;
 const CANNY_LOW = 50;
 const CANNY_HIGH = 150;
 
@@ -31,7 +36,7 @@ export async function loadCardShapeFinder(): Promise<CardShapeFinder> {
     const cv = await loadOpenCv();
 
     return {
-        find(frame: ShapeFrame): Point[] | null {
+        find(frame: ShapeFrame): Point[][] {
             // Everything OpenCV allocates lives in wasm memory and must be freed.
             const owned: { delete(): void }[] = [];
             const keep = <T extends { delete(): void }>(mat: T): T => {
@@ -68,35 +73,47 @@ export async function loadCardShapeFinder(): Promise<CardShapeFinder> {
                     cv.CHAIN_APPROX_SIMPLE
                 );
 
-                let best: Point[] | null = null;
-                let bestArea = 0;
+                const found: { area: number; quad: Point[] }[] = [];
                 for (let i = 0; i < contours.size(); i++) {
                     const contour = contours.get(i);
+                    const hull = new cv.Mat();
                     const approx = new cv.Mat();
                     try {
-                        const perimeter = cv.arcLength(contour, true);
-                        cv.approxPolyDP(
-                            contour,
-                            approx,
-                            APPROX_EPSILON * perimeter,
-                            true
-                        );
-                        if (approx.rows !== 4 || !cv.isContourConvex(approx)) {
+                        if (
+                            cv.contourArea(contour) <
+                            MIN_CONTOUR_SHARE * frame.width * frame.height
+                        ) {
                             continue;
                         }
-                        const area = cv.contourArea(approx);
-                        if (area <= bestArea) continue;
-                        bestArea = area;
-                        best = [0, 1, 2, 3].map((n) => ({
-                            x: approx.data32S[n * 2],
-                            y: approx.data32S[n * 2 + 1],
-                        }));
+                        // The hull closes dents from a finger or glare.
+                        cv.convexHull(contour, hull);
+                        const perimeter = cv.arcLength(hull, true);
+                        const simplified = APPROX_EPSILONS.some((epsilon) => {
+                            cv.approxPolyDP(
+                                hull,
+                                approx,
+                                epsilon * perimeter,
+                                true
+                            );
+                            return approx.rows === 4;
+                        });
+                        if (!simplified || !cv.isContourConvex(approx)) {
+                            continue;
+                        }
+                        found.push({
+                            area: cv.contourArea(approx),
+                            quad: [0, 1, 2, 3].map((n) => ({
+                                x: approx.data32S[n * 2],
+                                y: approx.data32S[n * 2 + 1],
+                            })),
+                        });
                     } finally {
                         contour.delete();
+                        hull.delete();
                         approx.delete();
                     }
                 }
-                return best;
+                return found.sort((a, b) => b.area - a.area).map((f) => f.quad);
             } finally {
                 owned.forEach((mat) => mat.delete());
             }

@@ -12,7 +12,7 @@ import {
     type Reading,
     type ShapeCheck,
 } from '@/lib/autoCapture';
-import { judgeQuad, NO_SHAPE, type CardShapeFinder } from '@/lib/cardShape';
+import { judgeQuads, type CardShapeFinder } from '@/lib/cardShape';
 import {
     configValues,
     defaultTuning,
@@ -258,7 +258,10 @@ export function useCardScanner(userId: string, active = true) {
                 shapeFinderRef.current = finder;
                 setShapeReady(true);
             })
-            .catch(() => setShapeFailed(true))
+            .catch((error) => {
+                console.error('Could not load OpenCV.js', error);
+                setShapeFailed(true);
+            })
             .finally(() => {
                 shapeLoadingRef.current = false;
             });
@@ -278,36 +281,39 @@ export function useCardScanner(userId: string, active = true) {
                 const finder = shapeFinderRef.current;
                 if (!finder) return null;
                 try {
-                    const { shapeWidth: width, shapeHeight: height } =
-                        configRef.current;
+                    // Keep the video's proportions: stretching it to a fixed
+                    // size would distort the card's aspect ratio.
+                    const { shapeWidth: longSide } = configRef.current;
+                    const scale =
+                        longSide /
+                        Math.max(video.videoWidth, video.videoHeight);
+                    const width = Math.round(video.videoWidth * scale);
+                    const height = Math.round(video.videoHeight * scale);
                     if (!shapeSampleRef.current) {
                         const canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
                         const context = canvas.getContext('2d', {
                             willReadFrequently: true,
                         });
                         if (!context) return null;
                         shapeSampleRef.current = { canvas, context };
                     }
+                    const { canvas } = shapeSampleRef.current;
+                    if (canvas.width !== width || canvas.height !== height) {
+                        canvas.width = width;
+                        canvas.height = height;
+                    }
                     const { context } = shapeSampleRef.current;
                     context.drawImage(video, 0, 0, width, height);
                     const { data } = context.getImageData(0, 0, width, height);
-                    const corners = finder.find({ data, width, height });
-                    return corners
-                        ? judgeQuad(
-                              corners,
-                              { width, height },
-                              {
-                                  aspectTolerance:
-                                      configRef.current.aspectTolerance,
-                                  minAreaShare:
-                                      configRef.current.shapeMinAreaShare,
-                                  maxAreaShare:
-                                      configRef.current.shapeMaxAreaShare,
-                              }
-                          )
-                        : NO_SHAPE;
+                    return judgeQuads(
+                        finder.find({ data, width, height }),
+                        { width, height },
+                        {
+                            aspectTolerance: configRef.current.aspectTolerance,
+                            minAreaShare: configRef.current.shapeMinAreaShare,
+                            maxAreaShare: configRef.current.shapeMaxAreaShare,
+                        }
+                    );
                 } catch {
                     // A broken finder must not stop scanning: drop back to pixels only.
                     shapeFinderRef.current = null;

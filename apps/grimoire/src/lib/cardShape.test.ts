@@ -3,6 +3,7 @@ import {
     CARD_ASPECT,
     isConvex,
     judgeQuad,
+    judgeQuads,
     polygonArea,
     quadAspect,
     type Point,
@@ -113,5 +114,27 @@ describe('judgeQuad', () => {
         const result = judgeQuad(quad, FRAME, RULES);
         expect(result.corners).toBe(quad);
         expect(result.aspect).toBeCloseTo(176 / 126);
+    });
+});
+
+describe('judgeQuads', () => {
+    it('finds the card even when a frame-sized quad is larger', () => {
+        const result = judgeQuads(
+            [rect(0, 0, 320, 240), rect(80, 20, 126, 176)],
+            FRAME,
+            RULES
+        );
+        expect(result.found).toBe(true);
+    });
+
+    it('reports a near miss of plausible size, or nothing', () => {
+        const result = judgeQuads(
+            [rect(0, 0, 320, 240), rect(60, 20, 160, 160)],
+            FRAME,
+            RULES
+        );
+        expect(result.found).toBe(false);
+        expect(result.aspect).toBeCloseTo(1, 1);
+        expect(judgeQuads([], FRAME, RULES).found).toBe(false);
     });
 });

@@ -34,8 +34,8 @@ export interface ShapeRules {
 
 /** What a finder offers. Tests inject a fake; the real one wraps OpenCV. */
 export interface CardShapeFinder {
-    /** Look for the largest convex quadrilateral in the frame. */
-    find(frame: ShapeFrame): Point[] | null;
+    /** Every convex quadrilateral in the frame, largest first. */
+    find(frame: ShapeFrame): Point[][];
 }
 
 /** A trading card is 63 mm by 88 mm. */
@@ -105,4 +105,31 @@ export function judgeQuad(
         share <= rules.maxAreaShare &&
         Math.abs(aspect - CARD_ASPECT) <= CARD_ASPECT * rules.aspectTolerance;
     return { found, corners, aspect };
+}
+
+/**
+ * Judge every candidate and report the first that passes. The largest quad is
+ * often the frame edge or the table, so the card must not have to be it. With
+ * no winner, report the near miss: of the quads of plausible size, the one
+ * closest to a card's proportions (edge loops give plenty of thin slivers).
+ */
+export function judgeQuads(
+    candidates: Point[][],
+    frame: { width: number; height: number },
+    rules: ShapeRules
+): ShapeResult {
+    const results = candidates.map((quad) => judgeQuad(quad, frame, rules));
+    const winner = results.find((result) => result.found);
+    if (winner) return winner;
+    const area = frame.width * frame.height;
+    const plausible = results.filter((result) => {
+        const share = polygonArea(result.corners ?? []) / area;
+        return share >= rules.minAreaShare && share <= rules.maxAreaShare;
+    });
+    plausible.sort(
+        (a, b) =>
+            Math.abs((a.aspect ?? Infinity) - CARD_ASPECT) -
+            Math.abs((b.aspect ?? Infinity) - CARD_ASPECT)
+    );
+    return plausible[0] ?? NO_SHAPE;
 }
