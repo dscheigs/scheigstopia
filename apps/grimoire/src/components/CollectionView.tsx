@@ -71,7 +71,7 @@ export default function CollectionView() {
     };
 
     return (
-        <div className="mx-auto max-w-2xl space-y-10 px-4 py-6">
+        <div className="mx-auto max-w-5xl space-y-10 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
             <section aria-labelledby="collection-heading" className="space-y-3">
                 <div className="flex items-end justify-between gap-3">
                     <div>

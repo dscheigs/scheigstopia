@@ -19,7 +19,7 @@ const TEST_FILE = /\.test\.tsx?$/;
 /** Files that define values, or are exempt until the color audit retires them. */
 const exemptFiles: Record<string, string> = {
     // Brand pixel art; moves with the logo work (#13).
-    'apps/scheigstopia/src/components/icons/GnomeIcon.tsx': 'brand logo (#13)',
+    'packages/sylva-ui/src/components/GnomeIcon.tsx': 'brand logo (#13)',
     // The type scale is defined here, so it is where the raw sizes live.
     'packages/sylva-ui/src/styles/typography.css': 'type scale',
 };

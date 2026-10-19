@@ -1,5 +1,5 @@
 import Card from '@/components/ui/Card';
-import GnomeIcon from '@/components/icons/GnomeIcon';
+import { GnomeIcon } from '@scheigs/sylva-ui';
 import { apps } from '@/data/apps';
 
 export default function Home() {

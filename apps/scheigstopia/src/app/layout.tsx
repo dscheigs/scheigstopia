@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { ViewTransition } from 'react';
 import { Inter } from 'next/font/google';
 import '../styles/globals.css';
-import Header from '@/components/layout/Header';
+import { SiteHeader } from '@scheigs/sylva-ui';
+import { apps } from '@/data/apps';
 import { createPageMetadata } from '@/utils/metadata';
 
 const inter = Inter({
@@ -13,6 +14,12 @@ export const metadata: Metadata = createPageMetadata({
     title: 'Scheigstopia',
     description: 'The apps and tools I build.',
 });
+
+// Apps are other zones, so they stay plain anchors; site pages use <Link>.
+const nav = [
+    ...apps.map(({ name, href }) => ({ name, href })),
+    { name: 'About Me', href: '/about', sameApp: true },
+];
 
 export default function RootLayout({
     children,
@@ -30,7 +37,7 @@ export default function RootLayout({
                 >
                     Skip to main content
                 </a>
-                <Header />
+                <SiteHeader nav={nav} />
                 <main id="main-content" className="flex-1">
                     <ViewTransition default="page-fade">
                         {children}
