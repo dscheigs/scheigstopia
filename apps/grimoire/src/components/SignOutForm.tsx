@@ -1,5 +1,6 @@
 'use client';
 
+import { LogOut } from '@scheigs/sylva-ui';
 import { clearQueueForUser } from '@/lib/scanQueueStore';
 
 /**
@@ -26,9 +27,11 @@ export default function SignOutForm({
         >
             <button
                 type="submit"
-                className="min-h-11 rounded-md px-3 text-body font-medium transition-colors hover:bg-surface-hover"
+                aria-label="Sign out"
+                title="Sign out"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-surface-hover"
             >
-                Sign out
+                <LogOut aria-hidden="true" />
             </button>
         </form>
     );
