@@ -1,7 +1,6 @@
 @import 'tailwindcss';
-@import './colors.css';
+@import '@scheigs/sylva-ui/css';
 @import '@scheigs/sylva/motion';
-@import './typography.css';
 
 body {
     background: var(--background);

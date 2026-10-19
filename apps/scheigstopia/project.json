@@ -4,7 +4,7 @@
     "projectType": "application",
     "sourceRoot": "apps/scheigstopia/src",
     "tags": ["scope:scheigstopia", "type:app"],
-    "implicitDependencies": ["sylva"],
+    "implicitDependencies": ["sylva", "sylva-ui"],
     "targets": {
         "test": {
             "command": "vitest run --root apps/scheigstopia",

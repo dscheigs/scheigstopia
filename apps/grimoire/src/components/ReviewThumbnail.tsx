@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
-import { secondaryButtonClasses } from '@/components/styles';
+import { secondaryButtonClasses, X } from '@scheigs/sylva-ui';
 import { getBlobs, pickReviewBlob } from '@/lib/scanQueueBlobs';
 import { useModalDialog } from '@/lib/useModalDialog';
 

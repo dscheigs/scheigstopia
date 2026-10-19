@@ -2,8 +2,12 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { Volume2, VolumeOff } from 'lucide-react';
-import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
+import {
+    buttonClasses,
+    secondaryButtonClasses,
+    Volume2,
+    VolumeOff,
+} from '@scheigs/sylva-ui';
 import TuningPanel from '@/components/TuningPanel';
 import { videoPlacement } from '@/lib/addRoutes';
 import { AUTO_CAPTURE } from '@/lib/autoCapture';

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { AnimatedNav } from '@scheigs/sylva-ui';
 import HomeLink from '@/components/ui/HomeLink';
 import { apps } from '@/data/apps';
 
@@ -30,61 +31,8 @@ export default function Header() {
         { name: 'About Me', href: '/about', isApp: false },
     ];
 
-    // One anchor per nav item for the sliding underline.
-    const anchorCss = navigation
-        .map(
-            (_, i) => `
-                .nav-link:nth-child(${i + 1}) {
-                    --anchor: --item-${i + 1};
-                }
-                .nav-links:has(.nav-link:nth-child(${i + 1}) a:is(:hover, :focus-visible)) {
-                    --target: --item-${i + 1};
-                }`
-        )
-        .join('');
-
     return (
         <>
-            {/* Fun little bit of css I stole from 
-        https://developer.chrome.com/blog/new-in-web-ui-io-2024#anchor_positioning
-        */}
-            <style>{
-                /*css*/ `
-                .nav-links::before {
-                    content: '';
-                    position: absolute;
-                    left:   anchor(var(--target) left);
-                    right:  anchor(var(--target) right);
-                    bottom: anchor(var(--target) bottom);
-                    transition: all 0.3s;
-                    border-bottom: 0.2rem solid var(--foreground);
-                    pointer-events: none;
-                }
-
-                .nav-links:not(:has(a:hover, a:focus-visible))::before {
-                    visibility: hidden;
-                    opacity: 0;
-                    transition: all 0.3s;
-                }
-                .nav-link a {
-                    anchor-name: var(--anchor);
-                    font-size: 1rem;
-                    font-weight: 500;
-                    padding: 1rem;
-                    text-decoration: none;
-                }
-                ${anchorCss}
-                .nav-link a:focus-visible {
-                    outline: none;
-                }
-                .nav-links {
-                    display: flex;
-                    justify-content: end;
-                    position: relative;
-                }
-                    
-            `
-            }</style>
             <header className="sticky top-0 z-50 bg-surface">
                 <nav
                     className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
@@ -97,20 +45,13 @@ export default function Header() {
 
                         {/* Desktop navigation */}
                         <div className="hidden md:block">
-                            <ul className="nav-links flex items-baseline">
-                                {navigation.map((item) => (
-                                    <li key={item.name} className="nav-link">
-                                        <NavLink
-                                            key={item.name}
-                                            isApp={item.isApp}
-                                            href={item.href}
-                                            className="text-body font-medium transition-colors"
-                                        >
-                                            {item.name}
-                                        </NavLink>
-                                    </li>
-                                ))}
-                            </ul>
+                            <AnimatedNav
+                                items={navigation.map((item) => ({
+                                    name: item.name,
+                                    href: item.href,
+                                    plain: item.isApp,
+                                }))}
+                            />
                         </div>
 
                         {/* Mobile menu button */}
