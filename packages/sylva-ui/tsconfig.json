@@ -4,6 +4,6 @@
         "noEmit": true,
         "jsx": "preserve"
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "vitest.setup.dom.ts"],
     "exclude": ["node_modules"]
 }

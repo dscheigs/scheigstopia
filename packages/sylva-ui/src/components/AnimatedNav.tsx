@@ -1,17 +1,5 @@
-import Link from 'next/link';
-
-export type AnimatedNavItem = {
-    name: string;
-    href: string;
-    /** Marks the item for the page the user is on (`aria-current="page"`). */
-    current?: boolean;
-    /**
-     * Render a plain <a> instead of <Link>. Needed for links into another app
-     * mounted under the site (multi-zones): a client-side navigation would wait
-     * on a page payload from the wrong build and hang.
-     */
-    plain?: boolean;
-};
+import type { NavItem } from '../navItems';
+import NavAnchor from './NavAnchor';
 
 const linkClasses = 'block px-4 py-4 text-body font-medium transition-colors';
 
@@ -31,29 +19,23 @@ function anchorCss(count: number) {
 }
 
 /** A row of header links with a sliding underline. Wrap it in a <nav>. */
-export default function AnimatedNav({ items }: { items: AnimatedNavItem[] }) {
+export default function AnimatedNav({ items }: { items: NavItem[] }) {
     return (
         <>
             <style>{anchorCss(items.length)}</style>
             <ul className="nav-links items-baseline">
-                {items.map((item) => {
-                    const props = {
-                        href: item.href,
-                        className: linkClasses,
-                        'aria-current': item.current
-                            ? ('page' as const)
-                            : undefined,
-                    };
-                    return (
-                        <li key={item.name} className="nav-link">
-                            {item.plain ? (
-                                <a {...props}>{item.name}</a>
-                            ) : (
-                                <Link {...props}>{item.name}</Link>
-                            )}
-                        </li>
-                    );
-                })}
+                {items.map((item) => (
+                    <li key={item.name} className="nav-link">
+                        <NavAnchor
+                            href={item.href}
+                            sameApp={item.sameApp}
+                            className={linkClasses}
+                            aria-current={item.current ? 'page' : undefined}
+                        >
+                            {item.name}
+                        </NavAnchor>
+                    </li>
+                ))}
             </ul>
         </>
     );

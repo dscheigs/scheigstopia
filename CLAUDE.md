@@ -90,9 +90,14 @@ Sylva color system, the typography classes and the minimal-color philosophy.
 
 Shared UI lives in `packages/sylva-ui` (`@scheigs/sylva-ui`). Apps import the shared
 color mapping, typography CSS, class strings (`buttonClasses`, `inputClasses`), icons
-(`Check`, `Pencil`, `X`, ...) and `AnimatedNav` from it, never from `lucide-react`
+(`Check`, `Pencil`, `X`, ...) and `GnomeIcon` from it, never from `lucide-react`
 directly. Add a component there when a second app needs it, not before. Only apps may
 import it, and it may only import Sylva (`@nx/enforce-module-boundaries`).
+
+Both apps render `SiteHeader`: the gnome (always a plain `<a>` to `/`), the app name,
+and the app's own nav items, passed in as props. A nav item is a plain `<a>` unless it
+sets `sameApp`; cross-zone links must never be `next/link` (client navigation hangs
+between zones).
 
 **Hard rule: never hard-code a design value in app code.** No hex/rgb/hsl colors, no
 Tailwind arbitrary colors or sizes (`bg-[#1b5e20]`, `text-[13px]`), no raw font sizes.
