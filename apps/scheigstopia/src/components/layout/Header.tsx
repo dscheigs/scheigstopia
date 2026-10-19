@@ -5,12 +5,29 @@ import { useState } from 'react';
 import HomeLink from '@/components/ui/HomeLink';
 import { apps } from '@/data/apps';
 
+/**
+ * Apps are separate deployments mounted under this site (multi-zones), so
+ * they need a full page load: a client-side <Link> navigation would wait on a
+ * page payload from the wrong build and hang. Site pages keep <Link>.
+ */
+function NavLink({
+    isApp,
+    ...props
+}: { isApp: boolean } & React.ComponentProps<typeof Link>) {
+    if (isApp) {
+        const { href, prefetch, ...rest } = props;
+        void prefetch;
+        return <a href={String(href)} {...rest} />;
+    }
+    return <Link {...props} />;
+}
+
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const navigation = [
-        ...apps.map(({ name, href }) => ({ name, href })),
-        { name: 'About Me', href: '/about' },
+        ...apps.map(({ name, href }) => ({ name, href, isApp: true })),
+        { name: 'About Me', href: '/about', isApp: false },
     ];
 
     // One anchor per nav item for the sliding underline.
@@ -83,13 +100,14 @@ export default function Header() {
                             <ul className="nav-links flex items-baseline">
                                 {navigation.map((item) => (
                                     <li key={item.name} className="nav-link">
-                                        <Link
+                                        <NavLink
                                             key={item.name}
+                                            isApp={item.isApp}
                                             href={item.href}
                                             className="text-body font-medium transition-colors"
                                         >
                                             {item.name}
-                                        </Link>
+                                        </NavLink>
                                     </li>
                                 ))}
                             </ul>
@@ -155,7 +173,8 @@ export default function Header() {
                         <ul className="space-y-1 px-2 pb-3 pt-2">
                             {navigation.map((item, index) => (
                                 <li key={item.name}>
-                                    <Link
+                                    <NavLink
+                                        isApp={item.isApp}
                                         href={item.href}
                                         className={`hover:text-foreground block px-3 py-2 transition-all duration-500 ${
                                             isMenuOpen
@@ -170,7 +189,7 @@ export default function Header() {
                                         onClick={() => setIsMenuOpen(false)}
                                     >
                                         {item.name}
-                                    </Link>
+                                    </NavLink>
                                 </li>
                             ))}
                         </ul>

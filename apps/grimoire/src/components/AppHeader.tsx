@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { auth, signOut } from '@/auth';
+import { withBasePath } from '@/lib/basePath';
+import { SIGN_IN_PATH } from '@/lib/sessionNotice';
 import NavLinks from '@/components/NavLinks';
 import SignOutForm from '@/components/SignOutForm';
 
@@ -20,7 +22,9 @@ export default async function AppHeader() {
                             userId={userId}
                             signOutAction={async () => {
                                 'use server';
-                                await signOut({ redirectTo: '/signin' });
+                                await signOut({
+                                    redirectTo: withBasePath(SIGN_IN_PATH),
+                                });
                             }}
                         />
                     </div>

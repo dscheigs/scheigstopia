@@ -49,6 +49,16 @@ Settings, all on the server and never sent to the browser:
 
 To try it locally, put a key in `apps/grimoire/.env.local` and run `pnpm dev:grimoire`. A phone can reach your computer's dev server over HTTPS only (for example through a tunnel), because browsers block camera access on plain HTTP.
 
+## Mounting under the main site
+
+Grimoire stays its own Vercel project and URL, and can also be served at `/grimoire` on the main site (Next.js multi-zones).
+
+- **Grimoire**: set `NEXT_PUBLIC_BASE_PATH=/grimoire` for the mounted build; leave it unset for a standalone one. It is read at build time, so a build is one or the other. Pages and assets are then served under `/grimoire`.
+- **Site**: set `GRIMOIRE_URL` (the Grimoire deployment's origin, no path) on the site's Vercel project. The site proxies `/grimoire` and `/grimoire/*` to it. Unset, no rewrite is added. Use the matching preview URL for preview builds, or previews will proxy to production.
+- **GitHub OAuth**: the mounted callback is `https://<site-domain>/grimoire/api/auth/callback/github`. Register the mounted callback alongside the standalone one: a GitHub App takes up to 10 callback URLs (a classic OAuth App takes one, so use a second app there). Callbacks match exactly, so use `http://` for localhost and `https://` for deployed domains. Set `AUTH_URL` to the public origin plus base path (`https://<site-domain>/grimoire/api/auth`) where Auth.js cannot infer it, and `AUTH_TRUST_HOST=true` when testing behind the proxy.
+- **Sessions**: cookies are per deployment and not shared with the site.
+- Moving between the site and Grimoire is a full page load.
+
 ## Deploying to Vercel
 
 Merging to `main` does **not** deploy Grimoire (`vercel.json` turns Vercel's Git deploys off). Deploys are manual, through the **Deploy to production** workflow in GitHub Actions:
