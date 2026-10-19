@@ -25,7 +25,11 @@ describe('SiteHeader', () => {
 
     it('shows the app name after the gnome only inside an app', () => {
         const { rerender } = render(<SiteHeader nav={nav} />);
-        expect(screen.queryByText('›')).not.toBeInTheDocument();
+        expect(
+            screen
+                .queryAllByRole('link', { name: 'Grimoire' })
+                .filter((link) => link.classList.contains('text-subheading'))
+        ).toHaveLength(0);
 
         rerender(
             <SiteHeader nav={nav} app={{ name: 'Grimoire', href: '/' }} />

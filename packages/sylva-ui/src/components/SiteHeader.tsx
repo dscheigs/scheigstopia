@@ -6,11 +6,6 @@ import AnimatedNav from './AnimatedNav';
 import GnomeIcon from './GnomeIcon';
 import NavAnchor from './NavAnchor';
 
-const widths = {
-    wide: 'max-w-7xl',
-    narrow: 'max-w-2xl',
-} as const;
-
 export type SiteHeaderProps = {
     /** The app the user is in. Leave it off on the site itself. */
     app?: HeaderApp;
@@ -18,8 +13,6 @@ export type SiteHeaderProps = {
     nav: NavItem[];
     /** Extra controls after the links, such as sign-out. Shown in the mobile menu too. */
     actions?: ReactNode;
-    /** Match the width of the page content. */
-    width?: keyof typeof widths;
 };
 
 /**
@@ -27,18 +20,13 @@ export type SiteHeaderProps = {
  * always goes to the site root, then the current app's name. Right, the
  * contextual layer: the current app's navigation.
  */
-export default function SiteHeader({
-    app,
-    nav,
-    actions,
-    width = 'wide',
-}: SiteHeaderProps) {
+export default function SiteHeader({ app, nav, actions }: SiteHeaderProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const hasMenu = nav.length > 0 || Boolean(actions);
 
     return (
         <header className="sticky top-0 z-50 bg-surface">
-            <div className={`mx-auto px-4 sm:px-6 lg:px-8 ${widths[width]}`}>
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center gap-3">
                         {/* Always a plain anchor: the site root is another zone from inside an app. */}
@@ -51,18 +39,13 @@ export default function SiteHeader({
                             <GnomeIcon size={26} className="flex-shrink-0" />
                         </a>
                         {app ? (
-                            <>
-                                <span aria-hidden="true" className="text-muted">
-                                    ›
-                                </span>
-                                <NavAnchor
-                                    sameApp
-                                    href={app.href}
-                                    className="text-subheading"
-                                >
-                                    {app.name}
-                                </NavAnchor>
-                            </>
+                            <NavAnchor
+                                sameApp
+                                href={app.href}
+                                className="text-subheading"
+                            >
+                                {app.name}
+                            </NavAnchor>
                         ) : null}
                     </div>
 
