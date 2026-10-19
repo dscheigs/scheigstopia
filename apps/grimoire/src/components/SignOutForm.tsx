@@ -29,9 +29,9 @@ export default function SignOutForm({
                 type="submit"
                 aria-label="Sign out"
                 title="Sign out"
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-surface-hover"
+                className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md transition-colors hover:bg-surface-hover"
             >
-                <LogOut aria-hidden="true" />
+                <LogOut aria-hidden="true" className="h-5 w-5" />
             </button>
         </form>
     );
