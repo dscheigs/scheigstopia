@@ -15,6 +15,9 @@
         },
         "nx-release-publish": {
             "dependsOn": ["build"]
+        },
+        "dev-mounted": {
+            "dependsOn": ["^build"]
         }
     },
     "release": {

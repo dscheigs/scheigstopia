@@ -32,7 +32,8 @@ so Nx builds the package first (CSS imports are invisible to Nx's import scan).
 
 Run from the repo root. Root scripts wrap Nx; you can also call Nx directly.
 
-- `pnpm dev` → `nx dev scheigstopia` - dev server (Turbopack) on :3000
+- `pnpm dev` → runs both apps mounted: the site on :3000 and Grimoire on :3001, reached at http://localhost:3000/grimoire (sets `GRIMOIRE_URL`, `NEXT_PUBLIC_BASE_PATH`, `AUTH_URL`, `AUTH_TRUST_HOST`; Grimoire still needs `apps/grimoire/.env.local`)
+- `pnpm dev:site` → `nx dev scheigstopia` - the site alone on :3000
 - `pnpm dev:grimoire` → `nx dev grimoire` - Grimoire dev server (needs `apps/grimoire/.env.local`)
 - `nx test grimoire` - Grimoire's Vitest suite (database tests run on in-process Postgres); `*.test.tsx` component tests run in jsdom, all others in node
 - `pnpm build` → `nx build scheigstopia` - production build

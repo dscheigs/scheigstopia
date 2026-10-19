@@ -14,8 +14,9 @@ An Nx monorepo (pnpm workspaces).
 
 ```bash
 pnpm install
-pnpm dev            # runs apps/scheigstopia on http://localhost:3000
-pnpm dev:grimoire   # runs apps/grimoire (needs apps/grimoire/.env.local)
+pnpm dev            # site on http://localhost:3000 and Grimoire on :3001, mounted at /grimoire
+pnpm dev:site       # the site alone on http://localhost:3000
+pnpm dev:grimoire   # Grimoire alone, standalone (needs apps/grimoire/.env.local)
 ```
 
 Grimoire needs a database and GitHub OAuth credentials before it will run; the setup steps are in its [README](apps/grimoire/README.md).

@@ -59,6 +59,8 @@ Grimoire stays its own Vercel project and URL, and can also be served at `/grimo
 - **Sessions**: cookies are per deployment and not shared with the site.
 - Moving between the site and Grimoire is a full page load.
 
+For local work, `pnpm dev` starts the site on :3000 and Grimoire on :3001 together and sets the mounted-mode variables for you. Open http://localhost:3000/grimoire, and register `http://localhost:3000/grimoire/api/auth/callback/github` on your GitHub app. `pnpm dev:grimoire` still runs Grimoire alone at the root of :3000.
+
 ## Deploying to Vercel
 
 Merging to `main` does **not** deploy Grimoire (`vercel.json` turns Vercel's Git deploys off). Deploys are manual, through the **Deploy to production** workflow in GitHub Actions:
@@ -96,14 +98,15 @@ Now and then, refresh the committed seed too: `pnpm nx run grimoire:card-names`,
 
 ## Commands
 
-| Command                                 | What it does                                    |
-| --------------------------------------- | ----------------------------------------------- |
-| `pnpm dev:grimoire`                     | Dev server on :3000                             |
-| `pnpm nx build grimoire`                | Production build                                |
-| `pnpm nx test grimoire`                 | Unit, database and component tests (about 10 s) |
-| `pnpm nx run grimoire:migrate`          | Apply `db/migrations/*.sql`                     |
-| `pnpm nx run grimoire:card-names`       | Rebuild the card list from Scryfall             |
-| `pnpm nx run grimoire:check-card-names` | Check the card list is deployable               |
+| Command                                 | What it does                                       |
+| --------------------------------------- | -------------------------------------------------- |
+| `pnpm dev`                              | Site on :3000 and Grimoire on :3001 at `/grimoire` |
+| `pnpm dev:grimoire`                     | Standalone dev server on :3000                     |
+| `pnpm nx build grimoire`                | Production build                                   |
+| `pnpm nx test grimoire`                 | Unit, database and component tests (about 10 s)    |
+| `pnpm nx run grimoire:migrate`          | Apply `db/migrations/*.sql`                        |
+| `pnpm nx run grimoire:card-names`       | Rebuild the card list from Scryfall                |
+| `pnpm nx run grimoire:check-card-names` | Check the card list is deployable                  |
 
 ## Tests
 
