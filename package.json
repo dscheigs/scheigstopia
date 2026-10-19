@@ -3,7 +3,8 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "dev": "nx dev scheigstopia",
+        "dev": "nx run-many -t dev-mounted -p scheigstopia grimoire --parallel=2",
+        "dev:site": "nx dev scheigstopia",
         "dev:grimoire": "nx dev grimoire",
         "build": "nx build scheigstopia",
         "start": "nx start scheigstopia",

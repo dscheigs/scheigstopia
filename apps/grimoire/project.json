@@ -27,6 +27,19 @@
         "check-card-names": {
             "command": "node apps/grimoire/scripts/checkCardNames.mjs",
             "cache": false
+        },
+        "dev-mounted": {
+            "command": "next dev --port 3001",
+            "options": {
+                "cwd": "apps/grimoire",
+                "env": {
+                    "NEXT_PUBLIC_BASE_PATH": "/grimoire",
+                    "AUTH_URL": "http://localhost:3000/grimoire/api/auth",
+                    "AUTH_TRUST_HOST": "true"
+                }
+            },
+            "continuous": true,
+            "cache": false
         }
     }
 }

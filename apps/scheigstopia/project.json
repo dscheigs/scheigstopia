@@ -15,6 +15,17 @@
             "command": "tsc --noEmit -p apps/scheigstopia/tsconfig.json",
             "cache": true,
             "inputs": ["default", "^default"]
+        },
+        "dev-mounted": {
+            "command": "next dev --port 3000",
+            "options": {
+                "cwd": "apps/scheigstopia",
+                "env": {
+                    "GRIMOIRE_URL": "http://localhost:3001"
+                }
+            },
+            "continuous": true,
+            "cache": false
         }
     }
 }
