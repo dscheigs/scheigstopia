@@ -8,6 +8,8 @@ const basePath = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH);
 
 const nextConfig: NextConfig = {
     basePath,
+    // sylva-ui ships as source, so Next compiles it.
+    transpilePackages: ['@scheigs/sylva-ui'],
     // Trace workspace-root dependencies correctly from inside the monorepo.
     outputFileTracingRoot: path.join(__dirname, '../../'),
     turbopack: {

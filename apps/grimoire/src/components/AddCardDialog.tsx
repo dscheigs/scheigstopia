@@ -1,9 +1,8 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { inputClasses, secondaryButtonClasses, X } from '@scheigs/sylva-ui';
 import ScryfallFallback from '@/components/ScryfallFallback';
-import { inputClasses, secondaryButtonClasses } from '@/components/styles';
 import { searchCards, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import { useAddCard } from '@/lib/queries';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';

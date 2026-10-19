@@ -4,7 +4,7 @@
     "projectType": "application",
     "sourceRoot": "apps/grimoire/src",
     "tags": ["scope:grimoire", "type:app"],
-    "implicitDependencies": ["sylva"],
+    "implicitDependencies": ["sylva", "sylva-ui"],
     "targets": {
         "typecheck": {
             "command": "tsc --noEmit -p apps/grimoire/tsconfig.json",

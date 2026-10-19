@@ -1,11 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Pencil, X } from 'lucide-react';
+import {
+    buttonClasses,
+    Check,
+    Pencil,
+    secondaryButtonClasses,
+    X,
+} from '@scheigs/sylva-ui';
 import CardSuggestions from '@/components/CardSuggestions';
 import EditCardDialog from '@/components/EditCardDialog';
 import ReviewThumbnail from '@/components/ReviewThumbnail';
-import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
 import { buildIndex, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import {
     describeProblem,

@@ -6,7 +6,7 @@ import {
     buttonClasses,
     inputClasses,
     secondaryButtonClasses,
-} from '@/components/styles';
+} from '@scheigs/sylva-ui';
 import { withBasePath } from '@/lib/basePath';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';

@@ -115,6 +115,9 @@ importers:
       '@scheigs/sylva':
         specifier: workspace:*
         version: link:packages/sylva
+      '@scheigs/sylva-ui':
+        specifier: workspace:*
+        version: link:packages/sylva-ui
       '@tanstack/react-query':
         specifier: ^5.104.1
         version: 5.104.1(react@19.3.0)
@@ -155,6 +158,9 @@ importers:
       '@nx/eslint':
         specifier: 23.2.0
         version: 23.2.0(@babel/traverse@7.29.8(supports-color@7.2.0))(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23))(@zkochan/js-yaml@0.0.7)(eslint@9.39.5(jiti@2.4.2)(supports-color@7.2.0))(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23)))(supports-color@7.2.0)
+      '@nx/eslint-plugin':
+        specifier: 23.2.0
+        version: 23.2.0(@babel/traverse@7.29.8(supports-color@7.2.0))(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23))(@typescript-eslint/parser@8.71.1(eslint@9.39.5(jiti@2.4.2)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.8.3))(eslint@9.39.5(jiti@2.4.2)(supports-color@7.2.0))(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23)))(supports-color@7.2.0)(typescript@5.8.3)
       '@nx/js':
         specifier: 23.2.0
         version: 23.2.0(@babel/traverse@7.29.8(supports-color@7.2.0))(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23))(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23)))(supports-color@7.2.0)
@@ -239,6 +245,8 @@ importers:
   apps/scheigstopia: {}
 
   packages/sylva: {}
+
+  packages/sylva-ui: {}
 
 packages:
 
@@ -1787,6 +1795,17 @@ packages:
     resolution: {integrity: sha512-srj04UsYqq2nG7Z9DxM00D8XpSpmSM7XQafCkD4FIOE2NPMCu0QvypJLe8S7a1/YAW9rqlnYrdadaQte687eAw==}
     peerDependencies:
       nx: '>= 22 <= 24 || ^23.0.0-0'
+
+  '@nx/eslint-plugin@23.2.0':
+    resolution: {integrity: sha512-A1TrFTXdGPHU9SmIcLnZPdL5m5vk34edXqhu8aqNPUF1jxnhXk0FURljbIkRdFwBMBDYRrJ3j9dGjXSNWUbitg==}
+    peerDependencies:
+      '@typescript-eslint/parser': ^8.0.0
+      eslint-config-prettier: ^10.0.0
+    peerDependenciesMeta:
+      '@typescript-eslint/parser':
+        optional: true
+      eslint-config-prettier:
+        optional: true
 
   '@nx/eslint@23.2.0':
     resolution: {integrity: sha512-ecVhJ4eU9wHw9xo9e8FKBzme8NjM4X3YQdeU0boOXJczqV7yoArAQbMfCwd9O64Ez/emaTWZKQ5sMeUCdKEyTw==}
@@ -3714,6 +3733,9 @@ packages:
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
+  confusing-browser-globals@1.0.11:
+    resolution: {integrity: sha512-JsPKdmh8ZkmnHxDk55FZ1TqVLvEQTvoByJZRN9jzI0UjxK/QgAmsphz7PGtqgPieQZ/CQcHWXCR7ATDNhGe+YA==}
+
   consola@3.4.2:
     resolution: {integrity: sha512-5IKcdX0nnYavi6G7TtOhwkYzyjfJlatbjMjuLSfE2kYT5pMDOilZ4OvMhi637CcDICTmz3wARPoyhqyX1Y+XvA==}
     engines: {node: ^14.18.0 || >=16.10.0}
@@ -4109,6 +4131,10 @@ packages:
     resolution: {integrity: sha512-j6PAQ2uUr79PZhBjP5C5fhl8e39FmRnOjsD5lGnWrFU8i2G776tBK7+nP8KuQUTTyAZUwfQqXAgrVH5MbH9CYQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  espree@9.6.1:
+    resolution: {integrity: sha512-oruZaFkjorTpF32kDSI5/75ViwGeZginGGy2NoOSg3Q9bnwlnmDm4HLnkl0RE3n+njDXR037aY1+x58Z/zFdwQ==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+
   esquery@1.6.0:
     resolution: {integrity: sha512-ca9pw9fomFcKPvFLXhBKUK90ZvGibiGOvRJNbjljY7s7uq/5YO4BOzcYtJqExdx99rF6aAcnRxHmcUHcz6sQsg==}
     engines: {node: '>=0.10'}
@@ -4370,6 +4396,10 @@ packages:
 
   globals@16.4.0:
     resolution: {integrity: sha512-ob/2LcVVaVGCYN+r14cnwnoDPUufjiYgSqRhiFD0Q1iI4Odora5RE8Iv1D24hAz5oMophRGkGz+yuvQmmUMnMw==}
+    engines: {node: '>=18'}
+
+  globals@17.13.0:
+    resolution: {integrity: sha512-RwMTC61u7hrG3ZJMkZQOK4JLJrKS8QtoTii63EmWvFXHqycY9FObBJQCbsLxSO8kjKhWE5kV1GC+Vb1g3RI0Zg==}
     engines: {node: '>=18'}
 
   globalthis@1.0.4:
@@ -4772,6 +4802,10 @@ packages:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
     hasBin: true
+
+  jsonc-eslint-parser@2.4.2:
+    resolution: {integrity: sha512-1e4qoRgnn448pRuMvKGsFFymUCquZV0mpGgOyIKNgD3JVDTsVJyRBGH/Fm0tBb8WsWGgmB1mDe6/yJMQM37DUA==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   jsonc-parser@3.3.1:
     resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
@@ -8146,6 +8180,32 @@ snapshots:
       tslib: 2.8.1
       yargs-parser: 21.1.1
 
+  '@nx/eslint-plugin@23.2.0(@babel/traverse@7.29.8(supports-color@7.2.0))(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23))(@typescript-eslint/parser@8.71.1(eslint@9.39.5(jiti@2.4.2)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.8.3))(eslint@9.39.5(jiti@2.4.2)(supports-color@7.2.0))(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23)))(supports-color@7.2.0)(typescript@5.8.3)':
+    dependencies:
+      '@nx/devkit': 23.2.0(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23)))
+      '@nx/js': 23.2.0(@babel/traverse@7.29.8(supports-color@7.2.0))(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23))(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23)))(supports-color@7.2.0)
+      '@phenomnomnominal/tsquery': 6.2.0(typescript@5.8.3)
+      '@typescript-eslint/type-utils': 8.71.1(eslint@9.39.5(jiti@2.4.2)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.8.3)
+      '@typescript-eslint/utils': 8.71.1(eslint@9.39.5(jiti@2.4.2)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.8.3)
+      confusing-browser-globals: 1.0.11
+      globals: 17.13.0
+      jsonc-eslint-parser: 2.4.2
+      picocolors: 1.1.1
+      semver: 7.8.5
+      tslib: 2.8.1
+    optionalDependencies:
+      '@typescript-eslint/parser': 8.71.1(eslint@9.39.5(jiti@2.4.2)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.8.3)
+    transitivePeerDependencies:
+      - '@babel/traverse'
+      - '@swc-node/register'
+      - '@swc/cli'
+      - '@swc/core'
+      - eslint
+      - nx
+      - supports-color
+      - typescript
+      - verdaccio
+
   '@nx/eslint@23.2.0(@babel/traverse@7.29.8(supports-color@7.2.0))(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23))(@zkochan/js-yaml@0.0.7)(eslint@9.39.5(jiti@2.4.2)(supports-color@7.2.0))(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23)))(supports-color@7.2.0)':
     dependencies:
       '@nx/devkit': 23.2.0(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.8.3))(@swc/core@1.16.2(@swc/helpers@0.5.23)))
@@ -9660,6 +9720,10 @@ snapshots:
     dependencies:
       acorn: 8.15.0
 
+  acorn-jsx@5.3.2(acorn@8.18.0):
+    dependencies:
+      acorn: 8.18.0
+
   acorn@8.15.0: {}
 
   acorn@8.18.0: {}
@@ -10075,6 +10139,8 @@ snapshots:
   component-emitter@2.0.0: {}
 
   concat-map@0.0.1: {}
+
+  confusing-browser-globals@1.0.11: {}
 
   consola@3.4.2: {}
 
@@ -10623,6 +10689,12 @@ snapshots:
       acorn-jsx: 5.3.2(acorn@8.15.0)
       eslint-visitor-keys: 4.2.1
 
+  espree@9.6.1:
+    dependencies:
+      acorn: 8.18.0
+      acorn-jsx: 5.3.2(acorn@8.18.0)
+      eslint-visitor-keys: 3.4.3
+
   esquery@1.6.0:
     dependencies:
       estraverse: 5.3.0
@@ -10883,6 +10955,8 @@ snapshots:
   globals@14.0.0: {}
 
   globals@16.4.0: {}
+
+  globals@17.13.0: {}
 
   globalthis@1.0.4:
     dependencies:
@@ -11278,6 +11352,13 @@ snapshots:
       minimist: 1.2.8
 
   json5@2.2.3: {}
+
+  jsonc-eslint-parser@2.4.2:
+    dependencies:
+      acorn: 8.18.0
+      eslint-visitor-keys: 3.4.3
+      espree: 9.6.1
+      semver: 7.8.5
 
   jsonc-parser@3.3.1: {}
 

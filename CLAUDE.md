@@ -17,6 +17,7 @@ apps/
   grimoire/              Next.js 16 collection tracker (Auth.js, Neon Postgres). See its README.
 packages/
   sylva/                 Sylva color system (W3C design tokens -> CSS/JS). `nx build sylva` generates dist/ (git-ignored).
+  sylva-ui/              Private, unpublished, consumed as source: shared components, the Tailwind color mapping and the typography CSS.
 tsconfig.base.json       Compiler options every project's tsconfig extends.
 eslint.config.mjs        Flat ESLint base; project configs import and extend it.
 nx.json                  Nx plugins (@nx/next, @nx/eslint) + target defaults.
@@ -80,12 +81,18 @@ changes is a near-instant cache hit.
 - **Scanning**: `POST /api/identify` (`src/lib/identify.ts`) sends a phone photo to Claude vision and returns the card name; the client matches it to the card list and the user confirms. Off unless `ANTHROPIC_API_KEY` is set. Every scan costs money: before enabling it in production use a dedicated key with a workspace spend limit. The app-side cap and rate limits (#43) are needed before auto-capture.
 - **Multi-zones**: Grimoire also mounts under the site at `/grimoire`. The site proxies it (`apps/scheigstopia/src/zones.ts`, destination from `GRIMOIRE_URL`); Grimoire reads `NEXT_PUBLIC_BASE_PATH` (`/grimoire` when mounted, empty standalone). `fetch`, plain `<a href>`, `window.location` and Auth.js redirects must go through `withBasePath` (`src/lib/basePath.ts`); `<Link>` and `redirect()` get the base path from Next.
 - **Deploys**: manual, via the _Deploy to production_ workflow (pick an app or `all`). Each app has a `production-<app>` GitHub environment holding its Vercel secrets.
-- **Styling**: same Tailwind setup and typography/color rules as the site. Its `colors.css` imports Sylva like the site's (`nx dev` and `nx build` build Sylva first); `typography.css` is a copy.
+- **Styling**: same Tailwind setup and typography/color rules as the site. `globals.css` imports `@scheigs/sylva-ui/css` (`nx dev` and `nx build` build Sylva first). Buttons, inputs, icons and the header links come from `@scheigs/sylva-ui`.
 
 ## Design (colors and typography)
 
 Read [`docs/design.md`](docs/design.md) before touching styles or UI. It covers the
 Sylva color system, the typography classes and the minimal-color philosophy.
+
+Shared UI lives in `packages/sylva-ui` (`@scheigs/sylva-ui`). Apps import the shared
+color mapping, typography CSS, class strings (`buttonClasses`, `inputClasses`), icons
+(`Check`, `Pencil`, `X`, ...) and `AnimatedNav` from it, never from `lucide-react`
+directly. Add a component there when a second app needs it, not before. Only apps may
+import it, and it may only import Sylva (`@nx/enforce-module-boundaries`).
 
 **Hard rule: never hard-code a design value in app code.** No hex/rgb/hsl colors, no
 Tailwind arbitrary colors or sizes (`bg-[#1b5e20]`, `text-[13px]`), no raw font sizes.

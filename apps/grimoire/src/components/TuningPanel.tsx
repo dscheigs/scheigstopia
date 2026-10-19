@@ -5,7 +5,7 @@
 // Remove with lib/autoCaptureTuning.ts once the values are settled.
 
 import { useState } from 'react';
-import { buttonClasses, secondaryButtonClasses } from '@/components/styles';
+import { buttonClasses, secondaryButtonClasses } from '@scheigs/sylva-ui';
 import { TUNABLES, type Tuning, type TuningKey } from '@/lib/autoCaptureTuning';
 import type { ShapeStatus } from '@/lib/useCardScanner';
 

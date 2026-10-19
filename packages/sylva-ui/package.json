@@ -1,0 +1,15 @@
+{
+    "name": "@scheigs/sylva-ui",
+    "version": "0.0.0",
+    "description": "Sylva UI — shared components and the CSS that wires Sylva tokens into Tailwind. Private; consumed as source.",
+    "private": true,
+    "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
+    "exports": {
+        ".": "./src/index.ts",
+        "./css": "./src/styles/index.css",
+        "./package.json": "./package.json"
+    }
+}

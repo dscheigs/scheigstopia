@@ -14,9 +14,10 @@ System). Type comes from the typography classes below. If the value you need doe
 exist, add the token or class first and say so in the PR; don't hard-code around it.
 
 Exception, until the color audit retires it: the six site-only colors in
-`apps/scheigstopia/src/styles/colors.css` (listed under Color System), which Grimoire's
-`colors.css` repeats. Sylva's token files are where values are defined. This file states the rule; a CI check to enforce it is planned (#49), and
-until then it is enforced in review.
+`packages/sylva-ui/src/styles/colors.css` (listed under Color System), and the type
+scale in `typography.css`. Sylva's token files are where values are defined. CI
+enforces the rule with `packages/sylva-ui/src/noStrayValues.test.ts`, which scans app
+and sylva-ui source (the brand logo `GnomeIcon.tsx` is exempt until #13).
 
 ## Typography System
 
@@ -40,15 +41,15 @@ The project uses custom typography classes with responsive clamp() sizing. **ALW
 
 ### CSS Organization
 
-- `apps/scheigstopia/src/styles/globals.css` - Main imports and body styles
-- `apps/scheigstopia/src/styles/colors.css` - Color system and variables
-- `apps/scheigstopia/src/styles/typography.css` - Font system and typography classes
+- `apps/<app>/src/styles/globals.css` - Main imports and body styles
+- `packages/sylva-ui/src/styles/colors.css` - Color system and variables (shared by both apps)
+- `packages/sylva-ui/src/styles/typography.css` - Font system and typography classes (shared)
 
 ## Color System & Design Philosophy
 
 ### Where the values come from
 
-Each app's `colors.css` imports Sylva (`@scheigs/sylva/css`) and points its variable
+The shared `colors.css` imports Sylva (`@scheigs/sylva/css`) and points its variable
 names at Sylva tokens wherever the colors match exactly: background, foreground,
 the primary/accent greens, the neutral scale, the minimal surface colors and
 success/warning/error. These are still literal values, because Sylva has no
