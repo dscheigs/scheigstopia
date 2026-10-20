@@ -3,6 +3,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/apiClient';
+import { indexedDbCardNames, loadCardNamesCached } from '@/lib/cardNamesCache';
 import { loadCardNames } from '@/lib/cardNamesSource';
 import type { CardEntry } from '@/lib/cardSearch';
 import { normalize } from '@/lib/cardSearch';
@@ -28,15 +29,20 @@ export function useCollection() {
 
 /**
  * The card list: the published Blob when NEXT_PUBLIC_CARD_NAMES_URL is set,
- * else (or on any failure) the committed file. Fetched once per page load.
+ * else (or on any failure) the committed file. Fetched once per page load and
+ * remembered in IndexedDB, which is what is used when the fetch fails offline.
  */
 export function useCardNames() {
     return useQuery({
         queryKey: queryKeys.cardNames,
         queryFn: () =>
-            loadCardNames(
-                (url) => apiFetch<unknown>(url),
-                process.env.NEXT_PUBLIC_CARD_NAMES_URL
+            loadCardNamesCached(
+                () =>
+                    loadCardNames(
+                        (url) => apiFetch<unknown>(url),
+                        process.env.NEXT_PUBLIC_CARD_NAMES_URL
+                    ),
+                indexedDbCardNames
             ),
         staleTime: Infinity,
         retry: false,
