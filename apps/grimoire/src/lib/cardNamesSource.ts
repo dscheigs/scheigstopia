@@ -3,7 +3,6 @@
 // it. The list committed with the app is the fallback: it is used when the URL
 // is unset, the fetch fails, or the response is not a card list.
 
-import { withBasePath } from '@/lib/basePath';
 import type { CardNameFile } from '@/lib/cardSearch';
 
 export const COMMITTED_CARD_NAMES_PATH = '/data/card-names.json';
@@ -43,7 +42,7 @@ export async function loadCardNames(
             // Fall through to the committed list.
         }
     }
-    const committed = await fetchJson(withBasePath(COMMITTED_CARD_NAMES_PATH));
+    const committed = await fetchJson(COMMITTED_CARD_NAMES_PATH);
     if (!isCardNameFile(committed)) {
         throw new Error('The card list is not valid.');
     }

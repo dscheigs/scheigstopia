@@ -16,7 +16,7 @@
             "cache": true,
             "inputs": ["default", "^default"]
         },
-        "dev-mounted": {
+        "dev-pair": {
             "command": "next dev --port 3000",
             "options": {
                 "cwd": "apps/scheigstopia",

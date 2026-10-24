@@ -1,5 +1,4 @@
 import { auth, signOut } from '@/auth';
-import { withBasePath } from '@/lib/basePath';
 import { SIGN_IN_PATH } from '@/lib/sessionNotice';
 import GrimoireHeader from '@/components/GrimoireHeader';
 import SignOutForm from '@/components/SignOutForm';
@@ -18,7 +17,7 @@ export default async function AppHeader() {
                         signOutAction={async () => {
                             'use server';
                             await signOut({
-                                redirectTo: withBasePath(SIGN_IN_PATH),
+                                redirectTo: SIGN_IN_PATH,
                             });
                         }}
                     />

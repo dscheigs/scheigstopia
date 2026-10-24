@@ -33,7 +33,7 @@ so Nx builds the package first (CSS imports are invisible to Nx's import scan).
 
 Run from the repo root. Root scripts wrap Nx; you can also call Nx directly.
 
-- `pnpm dev` → runs both apps mounted: the site on :3000 and Grimoire on :3001, reached at http://localhost:3000/grimoire (sets `GRIMOIRE_URL`, `NEXT_PUBLIC_BASE_PATH`, `AUTH_URL`, `AUTH_TRUST_HOST`; Grimoire still needs `apps/grimoire/.env.local`)
+- `pnpm dev` → runs both apps side by side as separate origins: the site on :3000 and Grimoire on :3001 (the site gets `GRIMOIRE_URL=http://localhost:3001`; Grimoire still needs `apps/grimoire/.env.local`)
 - `pnpm dev:site` → `nx dev scheigstopia` - the site alone on :3000
 - `pnpm dev:grimoire` → `nx dev grimoire` - Grimoire dev server (needs `apps/grimoire/.env.local`)
 - `nx test grimoire` - Grimoire's Vitest suite (database tests run on in-process Postgres); `*.test.tsx` component tests run in jsdom, all others in node
@@ -79,7 +79,7 @@ changes is a near-instant cache hit.
 - **Client data**: TanStack Query. Components never call `fetch`; they use the hooks in `src/lib/queries.ts`, which go through `apiFetch` (`src/lib/apiClient.ts`). A 401 on any request redirects to `/signin` from the `QueryClient` in `Providers.tsx`.
 - **Card list**: `apps/grimoire/public/data/card-names.json` is committed (built from Scryfall by `nx run grimoire:card-names`, refreshed by hand). The build fails if it is missing or not a real build. It is the seed and fallback: the weekly workflow publishes the live list to a public Vercel Blob (`publishCardNames.mjs`), and the app reads it from `NEXT_PUBLIC_CARD_NAMES_URL` when set.
 - **Scanning**: `POST /api/identify` (`src/lib/identify.ts`) sends a phone photo to Claude vision and returns the card name; the client matches it to the card list and the user confirms. Off unless `ANTHROPIC_API_KEY` is set. Every scan costs money: before enabling it in production use a dedicated key with a workspace spend limit. The app-side cap and rate limits (#43) are needed before auto-capture.
-- **Multi-zones**: Grimoire also mounts under the site at `/grimoire`. The site proxies it (`apps/scheigstopia/src/zones.ts`, destination from `GRIMOIRE_URL`); Grimoire reads `NEXT_PUBLIC_BASE_PATH` (`/grimoire` when mounted, empty standalone). `fetch`, plain `<a href>`, `window.location` and Auth.js redirects must go through `withBasePath` (`src/lib/basePath.ts`); `<Link>` and `redirect()` get the base path from Next.
+- **Separate origins**: Grimoire is its own Vercel project on its own subdomain; there is no shared path, proxy or base path. The site reads `GRIMOIRE_URL` (Grimoire's origin) to link to it and to redirect the old `/grimoire` path there (`apps/scheigstopia/src/grimoire.ts`); unset, it does neither. Sessions and storage are per origin, so Grimoire's Auth.js callback and PWA are registered on its own domain.
 - **Deploys**: manual, via the _Deploy to production_ workflow (pick an app or `all`). Each app has a `production-<app>` GitHub environment holding its Vercel secrets.
 - **Styling**: same Tailwind setup and typography/color rules as the site. `globals.css` imports `@scheigs/sylva-ui/css` (`nx dev` and `nx build` build Sylva first). Buttons, inputs, icons and the header links come from `@scheigs/sylva-ui`.
 
@@ -96,8 +96,8 @@ import it, and it may only import Sylva (`@nx/enforce-module-boundaries`).
 
 Both apps render `SiteHeader`: the gnome (always a plain `<a>` to `/`), the app name,
 and the app's own nav items, passed in as props. A nav item is a plain `<a>` unless it
-sets `sameApp`; cross-zone links must never be `next/link` (client navigation hangs
-between zones).
+sets `sameApp`; links to another app must never be `next/link` (client navigation hangs
+between apps).
 
 **Hard rule: never hard-code a design value in app code.** No hex/rgb/hsl colors, no
 Tailwind arbitrary colors or sizes (`bg-[#1b5e20]`, `text-[13px]`), no raw font sizes.
