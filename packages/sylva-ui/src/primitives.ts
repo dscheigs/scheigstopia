@@ -18,4 +18,4 @@ export const navLinkClasses =
  * menus: a mobile menu entry, and from md up a header link like the others.
  */
 export const navActionClasses =
-    'block w-full px-3 py-2 text-left text-body transition-colors hover:text-foreground md:w-auto md:px-4 md:py-4 md:font-medium';
+    'block w-full cursor-pointer px-3 py-2 text-left text-body transition-colors hover:text-foreground md:w-auto md:px-4 md:py-4 md:font-medium';
