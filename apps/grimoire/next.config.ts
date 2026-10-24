@@ -8,6 +8,22 @@ const basePath = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH);
 
 const nextConfig: NextConfig = {
     basePath,
+    async headers() {
+        return [
+            {
+                // Next adds the base path to this source. The app's home is
+                // `/grimoire`, which is outside the `/grimoire/` folder the
+                // worker file sits in, so the worker needs this to control it.
+                source: '/sw.js',
+                headers: [
+                    {
+                        key: 'Service-Worker-Allowed',
+                        value: basePath || '/',
+                    },
+                ],
+            },
+        ];
+    },
     // sylva-ui ships as source, so Next compiles it.
     transpilePackages: ['@scheigs/sylva-ui'],
     // Trace workspace-root dependencies correctly from inside the monorepo.
