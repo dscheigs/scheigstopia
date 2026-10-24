@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import SocialLinks from './SocialLinks';
-import Download from './Download';
 
 export default function HeroSection() {
     return (
@@ -39,15 +38,9 @@ export default function HeroSection() {
                         you want to say hi!
                     </p>
 
-                    {/* Social Links and Nav Buttons */}
-                    <div className="flex flex-col sm:flex-row items-center gap-12 justify-center lg:justify-start">
+                    {/* Social Links */}
+                    <div className="flex items-center justify-center lg:justify-start">
                         <SocialLinks />
-                        <Download
-                            title="Resume"
-                            variant="outline"
-                            content={'TODO: resume download'}
-                            filename={`Daniel-Scheigert-Resume.pdf`}
-                        />
                     </div>
                 </div>
             </div>
