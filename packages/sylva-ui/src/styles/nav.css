@@ -21,17 +21,17 @@
     pointer-events: none;
 }
 
-.nav-links:not(:has(a:hover, a:focus-visible))::before {
+.nav-links:not(:has(:is(a, button):is(:hover, :focus-visible)))::before {
     visibility: hidden;
     opacity: 0;
     transition: all 0.3s;
 }
 
-.nav-link a {
+.nav-link :is(a, button) {
     anchor-name: var(--anchor);
     text-decoration: none;
 }
 
-.nav-link a:focus-visible {
+.nav-link :is(a, button):focus-visible {
     outline: none;
 }

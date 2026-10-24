@@ -66,6 +66,33 @@ describe('SiteHeader', () => {
         ).toHaveLength(2);
     });
 
+    it('puts the action in the same row as the desktop links, as one more entry', () => {
+        render(<SiteHeader nav={nav} actions={<button>Sign out</button>} />);
+        const main = screen.getByRole('navigation', { name: 'Main' });
+        const entries = within(main).getAllByRole('listitem');
+        expect(entries).toHaveLength(nav.length + 1);
+        const last = entries[entries.length - 1];
+        expect(last).toHaveClass('nav-link');
+        expect(
+            within(last).getByRole('button', { name: 'Sign out' })
+        ).toBeInTheDocument();
+    });
+
+    it('lists the action as the last entry of the mobile menu', () => {
+        render(<SiteHeader nav={nav} actions={<button>Sign out</button>} />);
+        const menu = document.getElementById('mobile-menu') as HTMLElement;
+        const entries = within(menu).getAllByRole('listitem', {
+            hidden: true,
+        });
+        expect(entries).toHaveLength(nav.length + 1);
+        expect(
+            within(entries[entries.length - 1]).getByRole('button', {
+                name: 'Sign out',
+                hidden: true,
+            })
+        ).toBeInTheDocument();
+    });
+
     it('opens and closes the mobile menu', async () => {
         const user = userEvent.setup();
         render(<SiteHeader nav={nav} />);

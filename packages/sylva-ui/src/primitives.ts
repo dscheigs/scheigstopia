@@ -8,3 +8,14 @@ export const secondaryButtonClasses =
 
 export const inputClasses =
     'w-full rounded-lg border border-border-minimal bg-surface-minimal px-4 py-3 text-body placeholder:text-text-minimal';
+
+/** A header link. Shared by the desktop nav links and any button that sits among them. */
+export const navLinkClasses =
+    'block px-4 py-4 text-body font-medium transition-colors';
+
+/**
+ * A button among the header links, such as sign-out. One element serves both
+ * menus: a mobile menu entry, and from md up a header link like the others.
+ */
+export const navActionClasses =
+    'block w-full px-3 py-2 text-left text-body transition-colors hover:text-foreground md:w-auto md:px-4 md:py-4 md:font-medium';
