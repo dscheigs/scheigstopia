@@ -99,6 +99,13 @@ export default function CollectionView() {
                         >
                             Export
                         </a>
+                        <a
+                            href={withBasePath('/api/export?format=csv')}
+                            download="grimoire-collection.csv"
+                            className={secondaryButtonClasses}
+                        >
+                            Export CSV
+                        </a>
                     </div>
                 </div>
 

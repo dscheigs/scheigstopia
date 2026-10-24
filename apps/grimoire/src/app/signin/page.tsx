@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
+import ClearOfflineCache from '@/components/ClearOfflineCache';
 import { withBasePath } from '@/lib/basePath';
 import { getUserId } from '@/lib/session';
 
@@ -26,6 +27,7 @@ export default async function SignInPage({
 
     return (
         <div className="mx-auto max-w-md space-y-6 px-4 py-16">
+            <ClearOfflineCache />
             <h1 className="text-page-title">Grimoire</h1>
             <p className="text-lead text-text-minimal">
                 Sign in to see your collection.
