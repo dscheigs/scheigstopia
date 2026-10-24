@@ -5,7 +5,6 @@ import '../styles/globals.css';
 import AppHeader from '@/components/AppHeader';
 import Providers from '@/components/Providers';
 import PwaSetup from '@/components/PwaSetup';
-import { withBasePath } from '@/lib/basePath';
 
 const inter = Inter({
     subsets: ['latin'],
@@ -17,7 +16,7 @@ export const metadata: Metadata = {
     // Private app: keep it out of search results, standalone or mounted.
     robots: { index: false, follow: false },
     // iPhone home screen: Safari ignores the manifest icons, so name them here.
-    icons: { apple: withBasePath('/icons/apple-touch-icon.png') },
+    icons: { apple: '/icons/apple-touch-icon.png' },
     appleWebApp: { capable: true, title: 'Grimoire' },
 };
 

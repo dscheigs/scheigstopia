@@ -14,7 +14,7 @@ An Nx monorepo (pnpm workspaces).
 
 ```bash
 pnpm install
-pnpm dev            # site on http://localhost:3000 and Grimoire on :3001, mounted at /grimoire
+pnpm dev            # site on http://localhost:3000 and Grimoire on http://localhost:3001
 pnpm dev:site       # the site alone on http://localhost:3000
 pnpm dev:grimoire   # Grimoire alone, standalone (needs apps/grimoire/.env.local)
 ```

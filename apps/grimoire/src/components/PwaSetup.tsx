@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { BASE_PATH, withBasePath } from '@/lib/basePath';
 import { registerServiceWorker } from '@/lib/offlineCache';
 import { requestPersistentStorage } from '@/lib/persistentStorage';
 
@@ -12,8 +11,8 @@ import { requestPersistentStorage } from '@/lib/persistentStorage';
 export default function PwaSetup() {
     useEffect(() => {
         void registerServiceWorker(
-            withBasePath('/sw.js'),
-            BASE_PATH || '/',
+            '/sw.js',
+            '/',
             'serviceWorker' in navigator ? navigator.serviceWorker : undefined
         );
         void requestPersistentStorage(navigator.storage);

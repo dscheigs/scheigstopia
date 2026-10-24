@@ -49,17 +49,16 @@ Settings, all on the server and never sent to the browser:
 
 To try it locally, put a key in `apps/grimoire/.env.local` and run `pnpm dev:grimoire`. A phone can reach your computer's dev server over HTTPS only (for example through a tunnel), because browsers block camera access on plain HTTP.
 
-## Mounting under the main site
+## Relationship to the main site
 
-Grimoire stays its own Vercel project and URL, and can also be served at `/grimoire` on the main site (Next.js multi-zones).
+Grimoire is its own Vercel project and runs at the root of its own origin, normally a subdomain of the main site (for example `grimoire.<site-domain>`). It has no base path.
 
-- **Grimoire**: set `NEXT_PUBLIC_BASE_PATH=/grimoire` for the mounted build; leave it unset for a standalone one. It is read at build time, so a build is one or the other. Pages and assets are then served under `/grimoire`.
-- **Site**: set `GRIMOIRE_URL` (the Grimoire deployment's origin, no path) on the site's Vercel project. The site proxies `/grimoire` and `/grimoire/*` to it. Unset, no rewrite is added. Use the matching preview URL for preview builds, or previews will proxy to production.
-- **GitHub OAuth**: the mounted callback is `https://<site-domain>/grimoire/api/auth/callback/github`. Register the mounted callback alongside the standalone one: a GitHub App takes up to 10 callback URLs (a classic OAuth App takes one, so use a second app there). Callbacks match exactly, so use `http://` for localhost and `https://` for deployed domains. Set `AUTH_URL` to the public origin plus base path (`https://<site-domain>/grimoire/api/auth`) where Auth.js cannot infer it, and `AUTH_TRUST_HOST=true` when testing behind the proxy.
-- **Sessions**: cookies are per deployment and not shared with the site.
+- **Site**: set `GRIMOIRE_URL` (Grimoire's origin, no path; `https://grimoire.scheigs.com` in production) on the site's Vercel project. The site links to it and redirects the old `/grimoire` and `/grimoire/*` paths there. Unset, the site shows no link and adds no redirect. Use the matching preview URL for preview builds, or previews will point at production.
+- **GitHub OAuth**: the callback is `https://grimoire.scheigs.com/api/auth/callback/github` in production. Callbacks match exactly, so use `http://` for localhost and `https://` for deployed domains. Register `http://localhost:3000/api/auth/callback/github` for `pnpm dev:grimoire` and `http://localhost:3001/api/auth/callback/github` for `pnpm dev`. Auth.js trusts the host on Vercel; where it cannot infer the public origin, set `AUTH_URL` to it.
+- **Sessions and storage**: cookies, local storage and the installed app are per origin and not shared with the site.
 - Moving between the site and Grimoire is a full page load.
 
-For local work, `pnpm dev` starts the site on :3000 and Grimoire on :3001 together and sets the mounted-mode variables for you. Open http://localhost:3000/grimoire, and register `http://localhost:3000/grimoire/api/auth/callback/github` on your GitHub app. `pnpm dev:grimoire` still runs Grimoire alone at the root of :3000.
+For local work, `pnpm dev` starts the site on :3000 and Grimoire on :3001 together. Open http://localhost:3001 for Grimoire; http://localhost:3000/grimoire redirects there. `pnpm dev:grimoire` runs Grimoire alone on :3000.
 
 ## Deploying to Vercel
 
@@ -70,7 +69,7 @@ Merging to `main` does **not** deploy Grimoire (`vercel.json` turns Vercel's Git
 
 One-time setup:
 
-- Create a separate Vercel project with **Root Directory** set to `apps/grimoire`, and set `DATABASE_URL`, `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` and `ALLOWED_GITHUB_ID` on it.
+- Create a separate Vercel project with **Root Directory** set to `apps/grimoire`, assign its domain (for example `grimoire.<site-domain>`) and add the DNS record Vercel asks for, and set `DATABASE_URL`, `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` and `ALLOWED_GITHUB_ID` on it.
 - Create a GitHub environment named `production-grimoire` that only allows deployments from `main` and requires you as reviewer. Add the secrets `VERCEL_TOKEN`, `VERCEL_PROJECT_ID` and `VERCEL_ORG_ID` to it.
 - Auth.js trusts the host automatically on Vercel. On any other host, set `AUTH_TRUST_HOST=true`.
 - GitHub sign-in only works on URLs registered as an OAuth callback. Vercel preview URLs change on every deploy, so sign in on the production URL.

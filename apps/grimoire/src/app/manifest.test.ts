@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import manifest from '@/app/manifest';
 
 describe('manifest', () => {
@@ -16,21 +16,11 @@ describe('manifest', () => {
         expect(m.theme_color).toBe(m.background_color);
     });
 
-    describe('mounted under a base path', () => {
-        afterEach(() => {
-            vi.unstubAllEnvs();
-            vi.resetModules();
-        });
-
-        it('starts at the base path itself, which Next serves without a redirect', async () => {
-            vi.stubEnv('NEXT_PUBLIC_BASE_PATH', '/grimoire');
-            vi.resetModules();
-            const { default: mounted } = await import('@/app/manifest');
-            const m = mounted();
-            expect(m.start_url).toBe('/grimoire');
-            expect(m.scope).toBe('/grimoire');
-            expect(m.id).toBe('/grimoire');
-            expect(m.icons?.[0].src).toBe('/grimoire/icons/icon-192.png');
-        });
+    it('starts at and covers the origin root', () => {
+        const m = manifest();
+        expect(m.start_url).toBe('/');
+        expect(m.scope).toBe('/');
+        expect(m.id).toBe('/');
+        expect(m.icons?.[0].src).toBe('/icons/icon-192.png');
     });
 });
