@@ -29,7 +29,7 @@ export default function SiteHeader({ app, nav, actions }: SiteHeaderProps) {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center gap-3">
-                        {/* Always a plain anchor: the site root is another zone from inside an app. */}
+                        {/* Always a plain anchor: the site root is another origin from inside an app. */}
                         <a
                             title="(It's pronounced Shy-gert)"
                             aria-label="Scheigstopia - Home"

@@ -5,13 +5,12 @@ export type NavItem = {
     current?: boolean;
     /**
      * The link stays inside the current app, so a client-side <Link> is safe
-     * and `href` is relative to the app (Next adds the base path).
+     * and `href` is relative to the app.
      *
-     * Leave it off for anything that may leave the app, such as another app
-     * mounted under the site (multi-zones). Those render as plain <a> anchors,
-     * because a client-side navigation would wait on a page payload from the
-     * wrong build and hang. A plain anchor does not get the base path from
-     * Next, so `href` must be the real URL.
+     * Leave it off for anything that may leave the app, such as another app on
+     * its own origin. Those render as plain <a> anchors, because a client-side
+     * navigation would wait on a page payload from the wrong build and hang.
+     * `href` must be the real URL.
      */
     sameApp?: boolean;
 };

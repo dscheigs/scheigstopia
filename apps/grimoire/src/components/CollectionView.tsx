@@ -7,7 +7,6 @@ import {
     inputClasses,
     secondaryButtonClasses,
 } from '@scheigs/sylva-ui';
-import { withBasePath } from '@/lib/basePath';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
 import { useCardNames, useCollection, useSetQuantity } from '@/lib/queries';
@@ -93,14 +92,14 @@ export default function CollectionView() {
                             Add Cards
                         </button>
                         <a
-                            href={withBasePath('/api/export')}
+                            href="/api/export"
                             download="grimoire-collection.txt"
                             className={buttonClasses}
                         >
                             Export
                         </a>
                         <a
-                            href={withBasePath('/api/export?format=csv')}
+                            href="/api/export?format=csv"
                             download="grimoire-collection.csv"
                             className={secondaryButtonClasses}
                         >

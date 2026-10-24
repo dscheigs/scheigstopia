@@ -15,7 +15,7 @@ export const metadata: Metadata = createPageMetadata({
     description: 'The apps and tools I build.',
 });
 
-// Apps are other zones, so they stay plain anchors; site pages use <Link>.
+// Apps are other origins, so they stay plain anchors; site pages use <Link>.
 const nav = [
     ...apps.map(({ name, href }) => ({ name, href })),
     { name: 'About Me', href: '/about', sameApp: true },
