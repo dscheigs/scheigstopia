@@ -13,7 +13,7 @@ export default function PwaSetup() {
     useEffect(() => {
         void registerServiceWorker(
             withBasePath('/sw.js'),
-            `${BASE_PATH}/`,
+            BASE_PATH || '/',
             'serviceWorker' in navigator ? navigator.serviceWorker : undefined
         );
         void requestPersistentStorage(navigator.storage);

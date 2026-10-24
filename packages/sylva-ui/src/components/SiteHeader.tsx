@@ -11,7 +11,10 @@ export type SiteHeaderProps = {
     app?: HeaderApp;
     /** The app's own navigation. The header does not infer it from the URL. */
     nav: NavItem[];
-    /** Extra controls after the links, such as sign-out. Shown in the mobile menu too. */
+    /**
+     * One extra control after the links, such as sign-out. Shown in the mobile
+     * menu too, so style it with `navActionClasses` to look like the links.
+     */
     actions?: ReactNode;
 };
 
@@ -23,6 +26,17 @@ export type SiteHeaderProps = {
 export default function SiteHeader({ app, nav, actions }: SiteHeaderProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const hasMenu = nav.length > 0 || Boolean(actions);
+    const entryCount = nav.length + (actions ? 1 : 0);
+    const entryMotion = (index: number) => ({
+        className: isMenuOpen
+            ? 'translate-y-0 opacity-100'
+            : '-translate-y-6 opacity-0',
+        style: {
+            transitionDelay: isMenuOpen
+                ? `${index * 50}ms`
+                : `${(entryCount - 1 - index) * 50}ms`,
+        },
+    });
 
     return (
         <header className="sticky top-0 z-50 bg-surface">
@@ -54,8 +68,7 @@ export default function SiteHeader({ app, nav, actions }: SiteHeaderProps) {
                         aria-label="Main"
                         className="hidden items-center gap-1 md:flex"
                     >
-                        <AnimatedNav items={nav} />
-                        {actions}
+                        <AnimatedNav items={nav} trailing={actions} />
                     </nav>
 
                     {/* Mobile menu button */}
@@ -115,15 +128,9 @@ export default function SiteHeader({ app, nav, actions }: SiteHeaderProps) {
                                             item.current ? 'page' : undefined
                                         }
                                         className={`hover:text-foreground block px-3 py-2 transition-all duration-500 ${
-                                            isMenuOpen
-                                                ? 'translate-y-0 opacity-100'
-                                                : '-translate-y-6 opacity-0'
+                                            entryMotion(index).className
                                         }`}
-                                        style={{
-                                            transitionDelay: isMenuOpen
-                                                ? `${index * 50}ms`
-                                                : `${(nav.length - 1 - index) * 50}ms`,
-                                        }}
+                                        style={entryMotion(index).style}
                                         onClick={() => setIsMenuOpen(false)}
                                     >
                                         {item.name}
@@ -131,7 +138,14 @@ export default function SiteHeader({ app, nav, actions }: SiteHeaderProps) {
                                 </li>
                             ))}
                             {actions ? (
-                                <li className="px-3">{actions}</li>
+                                <li
+                                    className={`transition-all duration-500 ${
+                                        entryMotion(nav.length).className
+                                    }`}
+                                    style={entryMotion(nav.length).style}
+                                >
+                                    {actions}
+                                </li>
                             ) : null}
                         </ul>
                     </nav>
