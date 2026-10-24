@@ -1,6 +1,6 @@
 // Grimoire is its own deployment on its own subdomain. The site links to it
 // and sends the old `/grimoire` path there. Both are driven by GRIMOIRE_URL
-// (the deployment's origin, e.g. `https://grimoire.example.com`); unset, as in
+// (the deployment's origin, e.g. `https://grimoire.scheigs.com`); unset, as in
 // a plain `nx dev scheigstopia`, there is no link and no redirect.
 
 export type Redirect = {
