@@ -36,7 +36,7 @@ Run from the repo root. Root scripts wrap Nx; you can also call Nx directly.
 - `pnpm dev` → runs both apps side by side as separate origins: the site on :3000 and Grimoire on :3001 (the site gets `GRIMOIRE_URL=http://localhost:3001`; Grimoire still needs `apps/grimoire/.env.local`)
 - `pnpm dev:site` → `nx dev scheigstopia` - the site alone on :3000
 - `pnpm dev:grimoire` → `nx dev grimoire` - Grimoire dev server (needs `apps/grimoire/.env.local`)
-- `nx test grimoire` - Grimoire's Vitest suite (database tests run on in-process Postgres); `*.test.tsx` component tests run in jsdom, all others in node
+- `nx test <project>` - Vitest for `grimoire`, `scheigstopia` and `sylva-ui` (there is no root `pnpm test`). Grimoire's database tests run on in-process Postgres; its `*.test.tsx` component tests run in jsdom, all others in node
 - `pnpm build` → `nx build scheigstopia` - production build
 - `pnpm start` → `nx start scheigstopia` - serve the production build
 - `pnpm lint` → `nx run-many -t lint` - ESLint across all projects
@@ -48,6 +48,10 @@ Run from the repo root. Root scripts wrap Nx; you can also call Nx directly.
 
 Nx caches `build`, `lint`, `typecheck` locally — a repeat run with no relevant
 changes is a near-instant cache hit.
+
+This Next.js version has breaking changes. Each app's `AGENTS.md` (written by
+`next dev`) says to read the bundled docs in `node_modules/next/dist/docs/` before
+writing Next code; do that rather than relying on memory of older versions.
 
 ## Code Quality & Git Workflow
 
@@ -64,6 +68,13 @@ changes is a near-instant cache hit.
 - **Commit messages**: conventional commit format enforced by `.husky/commit-msg` —
   `<type>: <description>`, type ∈ feat, fix, docs, style, refactor, test, chore,
   perf, ci, build, revert.
+- **CI**: `.github/workflows/ci.yml` runs on every PR and push to `main`:
+  `nx affected -t lint typecheck build test`, then `pnpm format:check`. Node comes
+  from `.nvmrc`. Run the same targets locally before opening a PR.
+- **Versions**: a PR that changes an app bumps that app's `package.json` version in
+  its own `chore(release): bump <app> to X.Y.Z` commit (patch for `fix`, `refactor`
+  and `perf`, minor for `feat`). `docs`, `chore`, `ci`, `test` and `style` changes
+  do not bump.
 
 ## Architecture (apps/scheigstopia)
 
@@ -78,7 +89,9 @@ changes is a near-instant cache hit.
 - **Data**: Neon Postgres via `@neondatabase/serverless`. Query code takes a `Sql` function so tests can run it against PGlite. Schema changes are new files in `apps/grimoire/db/migrations/`.
 - **Client data**: TanStack Query. Components never call `fetch`; they use the hooks in `src/lib/queries.ts`, which go through `apiFetch` (`src/lib/apiClient.ts`). A 401 on any request redirects to `/signin` from the `QueryClient` in `Providers.tsx`.
 - **Card list**: `apps/grimoire/public/data/card-names.json` is committed (built from Scryfall by `nx run grimoire:card-names`, refreshed by hand). The build fails if it is missing or not a real build. It is the seed and fallback: the weekly workflow publishes the live list to a public Vercel Blob (`publishCardNames.mjs`), and the app reads it from `NEXT_PUBLIC_CARD_NAMES_URL` when set.
-- **Scanning**: `POST /api/identify` (`src/lib/identify.ts`) sends a phone photo to Claude vision and returns the card name; the client matches it to the card list and the user confirms. Off unless `ANTHROPIC_API_KEY` is set. Every scan costs money: before enabling it in production use a dedicated key with a workspace spend limit. The app-side cap and rate limits (#43) are needed before auto-capture.
+- **Scanning**: `POST /api/identify` (`src/lib/identify.ts`) sends a phone photo to Claude vision and returns the card name; the client matches it to the card list and the user confirms. It returns the name plus the model's own `high`/`low` confidence. Off unless `ANTHROPIC_API_KEY` is set. Every scan costs money: use a dedicated key with a workspace spend limit (the provider-side cap, still open in #43). The route also enforces per-user caps per minute, day and month (`src/lib/identifyLimits.ts`, counted in the `identify_log` table, overridable with `IDENTIFY_LIMIT_PER_MINUTE|DAY|MONTH`) and answers 429 past them.
+- **Capture and scan queue**: the camera auto-captures when a card sits still in front of it (`autoCapture.ts`, thresholds in one `AUTO_CAPTURE` config, tuned with `TuningPanel.tsx`), with an optional OpenCV rectangle check (`cardShape.ts` holds the geometry, `cardShapeOpenCv.ts` the wasm finder, loaded lazily). Captures go into a client-side queue (`scanQueueStore.ts`: Zustand persisted to IndexedDB, one per user). `scanQueueWorker.ts` sends queued photos to `/api/identify` in the background, matches the name to the card list, and retries network failures and 429s with backoff instead of recording a no-match. Flagged items wait in the review list (`QueueView`, `queueReview.ts`) until the user confirms or renames them.
+- **Offline and install**: Grimoire is an installable PWA. `public/sw.js` (registered by `PwaSetup` through `offlineCache.ts`) caches the app shell and the collection list, the manifest is at `src/app/manifest.ts`, and `persistentStorage.ts` asks the browser not to evict the scan queue and card list. In the installed iPhone app a download link opens a preview with no way back, so exports go through the system share sheet (`shareExport.ts`, `ExportLink`).
 - **Separate origins**: Grimoire is its own Vercel project on its own subdomain; there is no shared path, proxy or base path. The site reads `GRIMOIRE_URL` (Grimoire's origin) to link to it and to redirect the old `/grimoire` path there (`apps/scheigstopia/src/grimoire.ts`); unset, it does neither. Sessions and storage are per origin, so Grimoire's Auth.js callback and PWA are registered on its own domain.
 - **Deploys**: manual, via the _Deploy to production_ workflow (pick an app or `all`). Each app has a `production-<app>` GitHub environment holding its Vercel secrets.
 - **Styling**: same Tailwind setup and typography/color rules as the site. `globals.css` imports `@scheigs/sylva-ui/css` (`nx dev` and `nx build` build Sylva first). Buttons, inputs, icons and the header links come from `@scheigs/sylva-ui`.
