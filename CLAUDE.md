@@ -80,6 +80,7 @@ writing Next code; do that rather than relying on memory of older versions.
 
 - **App Router**: layouts and pages in `apps/scheigstopia/src/app/`
 - **Styling**: Tailwind CSS with CSS custom properties for theming (Inter & JetBrains Mono). Colors come from Sylva (see `docs/design.md`); `nx dev` and `nx build` build Sylva first.
+- **Analytics**: Vercel Web Analytics and Speed Insights (`<Analytics />` and `<SpeedInsights />` in the root layout). They only collect once switched on for the project in the Vercel dashboard, and only on Vercel deployments. Grimoire has none: it is private and signed-in only.
 - **TypeScript**: strict mode; path alias `@/*` → `apps/scheigstopia/src/*`
 - **Import aliases**: use `@/` for imports within the app's src
 
