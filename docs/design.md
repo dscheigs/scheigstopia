@@ -19,6 +19,16 @@ scale in `typography.css`. Sylva's token files are where values are defined. CI
 enforces the rule with `packages/sylva-ui/src/noStrayValues.test.ts`, which scans app
 and sylva-ui source (the brand logo `GnomeIcon.tsx` is exempt until #13).
 
+## Browsing the system (Storybook)
+
+`pnpm nx storybook sylva-ui` serves a Storybook for `packages/sylva-ui` on :6006: the
+shared components, the class-string primitives, the icons, and Colors and Typography
+pages that render every mapped color class and `text-*` class. Use the toolbar's Theme
+control to flip light and dark. Stories live next to what they show (`*.stories.tsx`),
+follow the no-stray-values rule above, and import only from the package and Sylva.
+Storybook's config is in `packages/sylva-ui/.storybook`; it loads the same CSS as the
+apps, so a missing class or token shows up there first.
+
 ## Typography System
 
 The project uses custom typography classes with responsive clamp() sizing. **ALWAYS use these classes instead of Tailwind's default text sizing:**

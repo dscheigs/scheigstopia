@@ -4,6 +4,12 @@
         "noEmit": true,
         "jsx": "preserve"
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "vitest.setup.dom.ts"],
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        ".storybook/**/*.ts",
+        ".storybook/**/*.tsx",
+        "vitest.setup.dom.ts"
+    ],
     "exclude": ["node_modules"]
 }

@@ -37,13 +37,14 @@ Run from the repo root. Root scripts wrap Nx; you can also call Nx directly.
 - `pnpm dev:site` → `nx dev scheigstopia` - the site alone on :3000
 - `pnpm dev:grimoire` → `nx dev grimoire` - Grimoire dev server (needs `apps/grimoire/.env.local`)
 - `nx test <project>` - Vitest for `grimoire`, `scheigstopia` and `sylva-ui` (there is no root `pnpm test`). Grimoire's database tests run on in-process Postgres; its `*.test.tsx` component tests run in jsdom, all others in node
+- `nx storybook sylva-ui` - Storybook for `sylva-ui` on :6006 (components, class-string primitives, icons, the Colors and Typography pages; a toolbar toggle switches light and dark). `nx build-storybook sylva-ui` writes the static site to `packages/sylva-ui/storybook-static` (git-ignored)
 - `pnpm build` → `nx build scheigstopia` - production build
 - `pnpm start` → `nx start scheigstopia` - serve the production build
 - `pnpm lint` → `nx run-many -t lint` - ESLint across all projects
 - `pnpm type-check` → `nx run-many -t typecheck` - `tsc --noEmit` across all projects
 - `pnpm format` / `pnpm format:check` - Prettier
 - `pnpm graph` - open the Nx project graph
-- `nx affected -t build lint typecheck test` - only what the current changes touch
+- `nx affected -t build build-storybook lint typecheck test` - only what the current changes touch
 - `nx <target> <project>` - a single target for one project
 
 Nx caches `build`, `lint`, `typecheck` locally — a repeat run with no relevant
@@ -69,7 +70,7 @@ writing Next code; do that rather than relying on memory of older versions.
   `<type>: <description>`, type ∈ feat, fix, docs, style, refactor, test, chore,
   perf, ci, build, revert.
 - **CI**: `.github/workflows/ci.yml` runs on every PR and push to `main`:
-  `nx affected -t lint typecheck build test`, then `pnpm format:check`. Node comes
+  `nx affected -t lint typecheck build build-storybook test`, then `pnpm format:check`. Node comes
   from `.nvmrc`. Run the same targets locally before opening a PR.
 - **Versions**: a PR that changes an app bumps that app's `package.json` version in
   its own `chore(release): bump <app> to X.Y.Z` commit (patch for `fix`, `refactor`
