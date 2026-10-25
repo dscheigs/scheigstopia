@@ -120,7 +120,7 @@ export default function ScanCard({
                         onClick={() => setMuted(!muted)}
                         aria-pressed={muted}
                         aria-label="Mute sounds"
-                        className="absolute right-2 top-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control bg-neutral-950/80 text-neutral-100 transition-colors hover:bg-neutral-950"
+                        className="absolute right-2 top-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-button bg-neutral-950/80 text-neutral-100 transition-colors hover:bg-neutral-950"
                     >
                         {muted ? (
                             <VolumeOff aria-hidden="true" />

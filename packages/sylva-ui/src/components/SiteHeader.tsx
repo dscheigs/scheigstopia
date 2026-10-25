@@ -76,7 +76,7 @@ export default function SiteHeader({ app, nav, actions }: SiteHeaderProps) {
                         <div className="md:hidden">
                             <button
                                 type="button"
-                                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control p-2 text-muted hover:bg-surface-hover hover:text-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+                                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-button p-2 text-muted hover:bg-surface-hover hover:text-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
                                 aria-controls="mobile-menu"
                                 aria-expanded={isMenuOpen}
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}

@@ -73,7 +73,7 @@ export default function AddCardDialog({
                         onClick={onClose}
                         aria-label="Close"
                         variant="secondary"
-                        className="min-w-11 px-0"
+                        size="icon"
                     >
                         <X aria-hidden="true" />
                     </Button>

@@ -45,7 +45,8 @@ function CardPreview({
                 onClick={onClose}
                 aria-label="Close preview"
                 variant="secondary"
-                className="absolute right-4 top-4 min-w-11 bg-surface-minimal px-0"
+                size="icon"
+                className="absolute right-4 top-4 bg-surface-minimal"
             >
                 <X aria-hidden="true" />
             </Button>

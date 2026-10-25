@@ -1,41 +1,42 @@
 import type { ComponentProps } from 'react';
 import {
-    brandButtonClasses,
-    buttonClasses,
-    secondaryButtonClasses,
+    buttonBaseClasses,
+    buttonSizeClasses,
+    buttonVariantClasses,
 } from '../primitives';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'brand';
+export type ButtonVariant = keyof typeof buttonVariantClasses;
+export type ButtonSize = keyof typeof buttonSizeClasses;
 
 export type ButtonProps = ComponentProps<'button'> & {
-    /** `primary` is the filled button; `secondary` is the outlined one;
-     * `brand` is the green call to action. */
+    /**
+     * `primary` is the filled button; `secondary` is the outlined one; `brand`
+     * is the green call to action.
+     */
     variant?: ButtonVariant;
-};
-
-const variantClasses: Record<ButtonVariant, string> = {
-    primary: buttonClasses,
-    secondary: secondaryButtonClasses,
-    brand: brandButtonClasses,
+    /** `icon` makes a square (a circle, with the button radius) for one icon. */
+    size?: ButtonSize;
 };
 
 /**
- * The shared button. Its cursor is the same everywhere: a pointer when it can
- * be pressed, and nothing special when it is disabled.
+ * The shared button. Every button is a pill (a circle when `size="icon"`), and
+ * its cursor is the same everywhere: a pointer when it can be pressed, and
+ * nothing special when it is disabled.
  *
  * `type` defaults to `button`, so a button inside a form does not submit it by
- * accident; pass `type="submit"` where it should. Extra classes go in
- * `className`, for example `min-w-11 px-0` for an icon-only button. For a link
- * that should look like a button, use `buttonClasses`,
- * `secondaryButtonClasses` or `brandButtonClasses` on the anchor.
+ * accident; pass `type="submit"` where it should. For an icon-only button use
+ * `size="icon"` and an `aria-label`. Extra classes go in `className`, for
+ * example to position it. For a link that should look like a button, use
+ * `buttonClasses`, `secondaryButtonClasses` or `brandButtonClasses` on the anchor.
  */
 export default function Button({
     variant = 'primary',
+    size = 'default',
     type = 'button',
     className,
     ...rest
 }: ButtonProps) {
-    const classes = variantClasses[variant];
+    const classes = `${buttonBaseClasses} ${buttonSizeClasses[size]} ${buttonVariantClasses[variant]}`;
     return (
         <button
             type={type}

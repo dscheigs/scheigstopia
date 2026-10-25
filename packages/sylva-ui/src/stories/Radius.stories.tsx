@@ -13,9 +13,14 @@ type Story = StoryObj<typeof meta>;
 // Written out in full so Tailwind sees each class.
 const scale = [
     {
+        name: 'rounded-button',
+        className: 'rounded-button',
+        use: 'Every button, icon-only ones included: a pill, and a circle when square.',
+    },
+    {
         name: 'rounded-control',
         className: 'rounded-control',
-        use: 'Buttons, inputs, segments: things you press or type into.',
+        use: 'Inputs: things you type into.',
     },
     {
         name: 'rounded-surface',

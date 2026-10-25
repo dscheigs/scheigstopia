@@ -37,8 +37,9 @@ Architecture), and each PR gets a preview URL from the Vercel bot.
 Use `Button` from `@scheigs/sylva-ui` with `variant="primary"` (filled, the main action),
 `variant="secondary"` (outlined) or `variant="brand"` (the green call to action, such as
 sign-in; one per screen). Its `type` defaults to `button`, so pass
-`type="submit"` in a form. Extra classes go in `className`, for example `min-w-11 px-0`
-for an icon-only button. A link that should look like a button uses `buttonClasses` or
+`type="submit"` in a form. Use `size="icon"` (with an `aria-label`) for an
+icon-only button: a square, so a circle with the button radius. Extra classes go in
+`className`, for example to position it. A link that should look like a button uses `buttonClasses` or
 `secondaryButtonClasses` or `brandButtonClasses` on the anchor.
 
 Every enabled button shows a pointer. A disabled button has no cursor rule of its own,
@@ -49,8 +50,8 @@ class strings say `enabled:cursor-pointer`, and `styles/base.css` gives any bare
 
 ## Border radius
 
-Three radii, defined once in `packages/sylva-ui/src/styles/radius.css`: `rounded-control`
-(buttons, inputs, segments), `rounded-surface` (cards, dialogs, panels, lists, images)
+Four radii, defined once in `packages/sylva-ui/src/styles/radius.css`: `rounded-button`
+(every button, icon-only included: a pill, a circle when square), `rounded-control` (inputs), `rounded-surface` (cards, dialogs, panels, lists, images)
 and `rounded-thumb` (small thumbnails). `rounded-full` is for circles and pills. Do not
 use `rounded-sm`, `-md` or `-lg` in app code; `noStrayValues.test.ts` fails on them. To
 change the look, change the numbers in `radius.css`; the Foundations/Radius story shows

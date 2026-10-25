@@ -52,10 +52,33 @@ describe('Button', () => {
     });
 
     it('adds className after the variant classes', () => {
-        render(<Button className="min-w-11 px-0">Go</Button>);
+        render(<Button className="absolute top-2">Go</Button>);
         const button = screen.getByRole('button');
         expect(button.className.startsWith(buttonClasses)).toBe(true);
-        expect(button.className.endsWith('min-w-11 px-0')).toBe(true);
+        expect(button.className.endsWith('absolute top-2')).toBe(true);
+    });
+
+    it('makes a square, unpadded button for size icon', () => {
+        render(
+            <Button size="icon" aria-label="Close">
+                x
+            </Button>
+        );
+        const classes = screen.getByRole('button').className.split(' ');
+        expect(classes).toContain('size-11');
+        expect(classes).toContain('p-0');
+        expect(classes).not.toContain('px-3');
+        expect(classes).toContain('rounded-button');
+    });
+
+    it('gives every variant the button radius', () => {
+        for (const variant of ['primary', 'secondary', 'brand'] as const) {
+            const { unmount } = render(<Button variant={variant}>Go</Button>);
+            expect(screen.getByRole('button').className).toContain(
+                'rounded-button'
+            );
+            unmount();
+        }
     });
 
     it('lets a button opt in to submitting a form', async () => {

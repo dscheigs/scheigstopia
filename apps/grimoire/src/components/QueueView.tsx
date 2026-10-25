@@ -57,7 +57,7 @@ function ItemRow({ item, onEdit, onConfirm, onRemove, onRetry }: ItemRowProps) {
                         onClick={onConfirm}
                         aria-label={`Confirm ${label}`}
                         variant="secondary"
-                        className="min-w-11 px-0"
+                        size="icon"
                     >
                         <Check aria-hidden="true" />
                     </Button>
@@ -66,7 +66,7 @@ function ItemRow({ item, onEdit, onConfirm, onRemove, onRetry }: ItemRowProps) {
                     onClick={onEdit}
                     aria-label={`Edit ${label}`}
                     variant="secondary"
-                    className="min-w-11 px-0"
+                    size="icon"
                 >
                     <Pencil aria-hidden="true" />
                 </Button>
@@ -74,7 +74,7 @@ function ItemRow({ item, onEdit, onConfirm, onRemove, onRetry }: ItemRowProps) {
                     onClick={onRemove}
                     aria-label={`Remove ${label}`}
                     variant="secondary"
-                    className="min-w-11 px-0"
+                    size="icon"
                 >
                     <X aria-hidden="true" />
                 </Button>

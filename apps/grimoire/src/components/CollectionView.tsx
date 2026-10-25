@@ -187,7 +187,7 @@ export default function CollectionView() {
                                             aria-label={`Remove ${item.name} from collection`}
                                             disabled={busy}
                                             onClick={() => removeCard(item)}
-                                            className="inline-flex min-h-11 items-center justify-center rounded-control border border-border-minimal px-3 text-caption transition-colors hover:bg-surface-minimal-hover disabled:opacity-50"
+                                            className="inline-flex min-h-11 items-center justify-center rounded-button border border-border-minimal px-3 text-caption transition-colors hover:bg-surface-minimal-hover disabled:opacity-50"
                                         >
                                             Remove
                                         </button>

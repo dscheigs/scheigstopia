@@ -59,22 +59,14 @@ export const AllStates: Story = {
     ),
 };
 
-/** Icon-only: a label for screen readers, and `min-w-11 px-0` for the square. */
+/** Icon-only: `size="icon"` makes a circle; add an `aria-label` for screen readers. */
 export const IconOnly: Story = {
     render: () => (
         <div className="flex gap-3">
-            <Button
-                variant="secondary"
-                aria-label="Confirm"
-                className="min-w-11 px-0"
-            >
+            <Button variant="secondary" aria-label="Confirm" size="icon">
                 <Check aria-hidden="true" />
             </Button>
-            <Button
-                variant="secondary"
-                aria-label="Remove"
-                className="min-w-11 px-0"
-            >
+            <Button variant="secondary" aria-label="Remove" size="icon">
                 <X aria-hidden="true" />
             </Button>
         </div>
@@ -103,19 +95,19 @@ export const Submit: Story = {
 export const NativeButtons: Story = {
     render: () => (
         <div className="flex flex-wrap gap-3">
-            <button type="button" className="rounded-control border px-3 py-2">
+            <button type="button" className="rounded-button border px-3 py-2">
                 Bare button
             </button>
             <button
                 type="button"
                 disabled
-                className="rounded-control border px-3 py-2"
+                className="rounded-button border px-3 py-2"
             >
                 Bare disabled
             </button>
             <button
                 type="button"
-                className="cursor-zoom-in rounded-control border px-3 py-2"
+                className="cursor-zoom-in rounded-button border px-3 py-2"
             >
                 cursor-zoom-in
             </button>

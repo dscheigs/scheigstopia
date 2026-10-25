@@ -50,7 +50,7 @@ const rules: { name: string; pattern: RegExp }[] = [
         pattern: /\btext-\[/,
     },
     {
-        name: 'raw border radius (use rounded-control, -surface, -thumb or -full)',
+        name: 'raw border radius (use rounded-button, -control, -surface, -thumb or -full)',
         pattern:
             /\brounded(?:-[trblse]{1,2})?-(?:xs|sm|md|lg|xl|2xl|3xl)\b|\brounded-\[/,
     },
