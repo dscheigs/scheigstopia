@@ -8,6 +8,7 @@ An Nx monorepo (pnpm workspaces).
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `apps/scheigstopia` | Personal site — Next.js 16, App Router, TypeScript, Tailwind.                                                               |
 | `apps/grimoire`     | Grimoire — private card collection tracker (Next.js 16, Auth.js, Neon Postgres). See its [README](apps/grimoire/README.md). |
+| `packages/sylva-ui` | Sylva UI — private shared components and CSS, with a Storybook (`nx storybook sylva-ui`).                                   |
 | `packages/sylva`    | Sylva — color system as W3C design tokens, built to CSS/JS. See its [README](packages/sylva/README.md).                     |
 
 ## Getting started

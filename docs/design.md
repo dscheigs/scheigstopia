@@ -29,6 +29,9 @@ follow the no-stray-values rule above, and import only from the package and Sylv
 Storybook's config is in `packages/sylva-ui/.storybook`; it loads the same CSS as the
 apps, so a missing class or token shows up there first.
 
+A hosted copy is deployed to Vercel from `main` (see `CLAUDE.md`, Storybook under
+Architecture), and each PR gets a preview URL from the Vercel bot.
+
 ## Typography System
 
 The project uses custom typography classes with responsive clamp() sizing. **ALWAYS use these classes instead of Tailwind's default text sizing:**
