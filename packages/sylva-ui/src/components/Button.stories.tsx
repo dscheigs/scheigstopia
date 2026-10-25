@@ -1,0 +1,116 @@
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Check, X } from '../icons';
+import Button from './Button';
+
+const meta = {
+    title: 'Components/Button',
+    component: Button,
+    args: { children: 'Button' },
+    argTypes: {
+        variant: {
+            control: 'inline-radio',
+            options: ['primary', 'secondary', 'brand'],
+        },
+        disabled: { control: 'boolean' },
+    },
+} satisfies Meta<typeof Button>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+/** The filled button, for the main action. */
+export const Primary: Story = { args: { variant: 'primary' } };
+
+/** The outlined button, for everything else. */
+export const Secondary: Story = { args: { variant: 'secondary' } };
+
+/** The green call to action, for the one thing you most want pressed (sign in). */
+export const Brand: Story = { args: { variant: 'brand' } };
+
+/** Hover the buttons: enabled ones show a pointer, disabled ones the default arrow. */
+export const Disabled: Story = {
+    args: { disabled: true },
+    render: (args) => (
+        <div className="flex gap-3">
+            <Button {...args} variant="primary" />
+            <Button {...args} variant="secondary" />
+            <Button {...args} variant="brand" />
+        </div>
+    ),
+};
+
+/** Side by side, enabled and disabled, to check the cursor and states. */
+export const AllStates: Story = {
+    render: () => (
+        <div className="grid max-w-md grid-cols-2 gap-4">
+            <Button variant="primary">Primary</Button>
+            <Button variant="primary" disabled>
+                Primary disabled
+            </Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="secondary" disabled>
+                Secondary disabled
+            </Button>
+            <Button variant="brand">Brand</Button>
+            <Button variant="brand" disabled>
+                Brand disabled
+            </Button>
+        </div>
+    ),
+};
+
+/** Icon-only: `size="icon"` makes a circle; add an `aria-label` for screen readers. */
+export const IconOnly: Story = {
+    render: () => (
+        <div className="flex gap-3">
+            <Button variant="secondary" aria-label="Confirm" size="icon">
+                <Check aria-hidden="true" />
+            </Button>
+            <Button variant="secondary" aria-label="Remove" size="icon">
+                <X aria-hidden="true" />
+            </Button>
+        </div>
+    ),
+};
+
+/** The default `type` is `button`; use `type="submit"` inside a form. */
+export const Submit: Story = {
+    args: { type: 'submit', children: 'Submit' },
+    render: (args) => (
+        <form
+            onSubmit={(event) => {
+                event.preventDefault();
+            }}
+        >
+            <Button {...args} />
+        </form>
+    ),
+};
+
+/**
+ * A bare `<button>` gets the same cursor from the base styles, so buttons that
+ * are not `Button` (list rows, segments, thumbnails) stay consistent. A utility
+ * such as `cursor-zoom-in` still wins.
+ */
+export const NativeButtons: Story = {
+    render: () => (
+        <div className="flex flex-wrap gap-3">
+            <button type="button" className="rounded-button border px-3 py-2">
+                Bare button
+            </button>
+            <button
+                type="button"
+                disabled
+                className="rounded-button border px-3 py-2"
+            >
+                Bare disabled
+            </button>
+            <button
+                type="button"
+                className="cursor-zoom-in rounded-button border px-3 py-2"
+            >
+                cursor-zoom-in
+            </button>
+        </div>
+    ),
+};

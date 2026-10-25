@@ -24,7 +24,7 @@ export default function CardSuggestions({
             >
                 Or one of these
             </h3>
-            <ul className="divide-y divide-border-minimal overflow-hidden rounded-lg border border-border-minimal">
+            <ul className="divide-y divide-border-minimal overflow-hidden rounded-surface border border-border-minimal">
                 {suggestions.map((card) => (
                     <li key={card.oracleId}>
                         <button

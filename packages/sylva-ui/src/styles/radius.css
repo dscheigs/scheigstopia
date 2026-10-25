@@ -1,0 +1,19 @@
+/*
+ * Border radius scale. These four values are the only place a corner radius is
+ * defined; the classes are `rounded-button`, `rounded-control`,
+ * `rounded-surface` and `rounded-thumb`. `rounded-full` is for circles and pills. The raw Tailwind sizes (small, medium, large)
+ * are not used in app code (noStrayValues.test.ts).
+ *
+ *   button   - every button, icon-only ones included (a pill; a circle when square)
+ *   control  - things you type into: inputs
+ *   surface  - things that hold content: cards, dialogs, panels, lists, images
+ *   thumb    - small thumbnails, where a larger radius would swallow the image
+ *
+ * To change the look, change the numbers here; the Radius story shows them.
+ */
+@theme {
+    --radius-button: 9999px;
+    --radius-control: 0.625rem;
+    --radius-surface: 0.875rem;
+    --radius-thumb: 0.25rem;
+}

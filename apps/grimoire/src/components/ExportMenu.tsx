@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import ExportLink from '@/components/ExportLink';
-import { buttonClasses } from '@scheigs/sylva-ui';
+import { Button } from '@scheigs/sylva-ui';
 
 const FORMATS = [
     {
@@ -44,19 +44,17 @@ export default function ExportMenu() {
 
     return (
         <div ref={rootRef} className="relative">
-            <button
-                type="button"
+            <Button
                 aria-expanded={open}
                 aria-controls="export-menu"
                 onClick={() => setOpen((value) => !value)}
-                className={buttonClasses}
             >
                 Export
-            </button>
+            </Button>
             {open && (
                 <div
                     id="export-menu"
-                    className="absolute right-0 z-10 mt-2 w-56 overflow-hidden rounded-lg border border-border-minimal bg-surface-minimal"
+                    className="absolute right-0 z-10 mt-2 w-56 overflow-hidden rounded-surface border border-border-minimal bg-surface-minimal"
                 >
                     <ul className="divide-y divide-border-minimal">
                         {FORMATS.map((format) => (

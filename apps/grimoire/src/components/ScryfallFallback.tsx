@@ -49,7 +49,7 @@ export default function ScryfallFallback({
             <p className="text-caption text-text-minimal">
                 Not in the card list yet. Is this the card?
             </p>
-            <ul className="divide-y divide-border-minimal overflow-hidden rounded-lg border border-border-minimal">
+            <ul className="divide-y divide-border-minimal overflow-hidden rounded-surface border border-border-minimal">
                 <li>
                     <button
                         type="button"
