@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { inputClasses, secondaryButtonClasses, X } from '@scheigs/sylva-ui';
+import { Button, inputClasses, X } from '@scheigs/sylva-ui';
 import ScryfallFallback from '@/components/ScryfallFallback';
 import { searchCards, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import { useModalDialog } from '@/lib/useModalDialog';
@@ -57,14 +57,14 @@ export default function EditCardDialog({
                             Now: {label}
                         </p>
                     </div>
-                    <button
-                        type="button"
+                    <Button
                         onClick={onClose}
                         aria-label="Close"
-                        className={`${secondaryButtonClasses} min-w-11 px-0`}
+                        variant="secondary"
+                        className="min-w-11 px-0"
                     >
                         <X aria-hidden="true" />
-                    </button>
+                    </Button>
                 </div>
 
                 {children}

@@ -5,6 +5,7 @@ import AddCardDialog from '@/components/AddCardDialog';
 import CardThumbnail from '@/components/CardThumbnail';
 import ExportLink from '@/components/ExportLink';
 import {
+    Button,
     buttonClasses,
     inputClasses,
     secondaryButtonClasses,
@@ -96,13 +97,12 @@ export default function CollectionView() {
                         )}
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            type="button"
+                        <Button
                             onClick={() => setAdding(true)}
-                            className={secondaryButtonClasses}
+                            variant="secondary"
                         >
                             Add Cards
-                        </button>
+                        </Button>
                         <ExportLink
                             href="/api/export"
                             filename="grimoire-collection.txt"
@@ -168,8 +168,7 @@ export default function CollectionView() {
                                         {item.name}
                                     </span>
                                     <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
+                                        <Button
                                             aria-label={`Remove one ${item.name}`}
                                             disabled={
                                                 busy || item.quantity <= 1
@@ -180,18 +179,17 @@ export default function CollectionView() {
                                                     item.quantity - 1
                                                 )
                                             }
-                                            className={buttonClasses}
+                                            variant="primary"
                                         >
                                             −
-                                        </button>
+                                        </Button>
                                         <span
                                             className="min-w-8 text-center text-body font-medium"
                                             aria-label={`${item.quantity} owned`}
                                         >
                                             {item.quantity}
                                         </span>
-                                        <button
-                                            type="button"
+                                        <Button
                                             aria-label={`Add one ${item.name}`}
                                             disabled={busy}
                                             onClick={() =>
@@ -200,10 +198,10 @@ export default function CollectionView() {
                                                     item.quantity + 1
                                                 )
                                             }
-                                            className={buttonClasses}
+                                            variant="primary"
                                         >
                                             +
-                                        </button>
+                                        </Button>
                                         <button
                                             type="button"
                                             aria-label={`Remove ${item.name} from collection`}

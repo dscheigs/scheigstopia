@@ -1,13 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import {
-    buttonClasses,
-    Check,
-    Pencil,
-    secondaryButtonClasses,
-    X,
-} from '@scheigs/sylva-ui';
+import { Button, Check, Pencil, X } from '@scheigs/sylva-ui';
 import CardSuggestions from '@/components/CardSuggestions';
 import EditCardDialog from '@/components/EditCardDialog';
 import ReviewThumbnail from '@/components/ReviewThumbnail';
@@ -23,8 +17,6 @@ import { discardCopy } from '@/lib/discardMessage';
 import { useCardNames, useCommitQueue } from '@/lib/queries';
 import type { QueueItem } from '@/lib/scanQueueTypes';
 import { useScanQueue } from '@/lib/useScanQueue';
-
-const iconButtonClasses = `${secondaryButtonClasses} min-w-11 px-0`;
 
 interface ItemRowProps {
     item: QueueItem;
@@ -52,41 +44,40 @@ function ItemRow({ item, onEdit, onConfirm, onRemove, onRetry }: ItemRowProps) {
             </div>
             <div className="flex items-center gap-2">
                 {item.status === 'failed' && (
-                    <button
-                        type="button"
+                    <Button
                         onClick={onRetry}
                         aria-label={`Retry ${label}`}
-                        className={secondaryButtonClasses}
+                        variant="secondary"
                     >
                         Retry
-                    </button>
+                    </Button>
                 )}
                 {actions.confirm && (
-                    <button
-                        type="button"
+                    <Button
                         onClick={onConfirm}
                         aria-label={`Confirm ${label}`}
-                        className={iconButtonClasses}
+                        variant="secondary"
+                        className="min-w-11 px-0"
                     >
                         <Check aria-hidden="true" />
-                    </button>
+                    </Button>
                 )}
-                <button
-                    type="button"
+                <Button
                     onClick={onEdit}
                     aria-label={`Edit ${label}`}
-                    className={iconButtonClasses}
+                    variant="secondary"
+                    className="min-w-11 px-0"
                 >
                     <Pencil aria-hidden="true" />
-                </button>
-                <button
-                    type="button"
+                </Button>
+                <Button
                     onClick={onRemove}
                     aria-label={`Remove ${label}`}
-                    className={iconButtonClasses}
+                    variant="secondary"
+                    className="min-w-11 px-0"
                 >
                     <X aria-hidden="true" />
-                </button>
+                </Button>
             </div>
         </li>
     );
@@ -207,26 +198,24 @@ export default function QueueView({ userId }: { userId: string }) {
 
             {items.length > 0 && (
                 <div className="flex flex-wrap items-center gap-3">
-                    <button
-                        type="button"
+                    <Button
                         onClick={commitAll}
                         disabled={plan.count === 0 || commit.isPending}
-                        className={buttonClasses}
+                        variant="primary"
                     >
                         {commit.isPending
                             ? 'Committing...'
                             : `Commit ${plan.count} ${
                                   plan.count === 1 ? 'card' : 'cards'
                               }`}
-                    </button>
-                    <button
-                        type="button"
+                    </Button>
+                    <Button
                         onClick={discard}
                         disabled={commit.isPending}
-                        className={secondaryButtonClasses}
+                        variant="secondary"
                     >
                         {discardText.label}
-                    </button>
+                    </Button>
                 </div>
             )}
 

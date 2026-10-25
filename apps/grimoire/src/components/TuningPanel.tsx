@@ -5,7 +5,7 @@
 // Remove with lib/autoCaptureTuning.ts once the values are settled.
 
 import { useState } from 'react';
-import { buttonClasses, secondaryButtonClasses } from '@scheigs/sylva-ui';
+import { Button } from '@scheigs/sylva-ui';
 import { TUNABLES, type Tuning, type TuningKey } from '@/lib/autoCaptureTuning';
 import type { ShapeStatus } from '@/lib/useCardScanner';
 
@@ -48,19 +48,18 @@ export default function TuningPanel({
                     <span className="text-body">Rectangle check</span>
                     <div className="flex gap-2">
                         {[false, true].map((on) => (
-                            <button
+                            <Button
                                 key={String(on)}
-                                type="button"
+                                variant={
+                                    tuning.shapeCheck === on
+                                        ? 'primary'
+                                        : 'secondary'
+                                }
                                 onClick={() => onShapeCheck(on)}
                                 aria-pressed={tuning.shapeCheck === on}
-                                className={
-                                    tuning.shapeCheck === on
-                                        ? buttonClasses
-                                        : secondaryButtonClasses
-                                }
                             >
                                 {on ? 'On' : 'Off'}
-                            </button>
+                            </Button>
                         ))}
                     </div>
                 </div>
@@ -122,13 +121,9 @@ export default function TuningPanel({
                     </div>
                 );
             })}
-            <button
-                type="button"
-                onClick={onReset}
-                className={secondaryButtonClasses}
-            >
+            <Button onClick={onReset} variant="secondary">
                 Reset to defaults
-            </button>
+            </Button>
         </div>
     );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { secondaryButtonClasses, X } from '@scheigs/sylva-ui';
+import { Button, X } from '@scheigs/sylva-ui';
 import {
     CARD_IMAGE_DIMENSIONS,
     cardImageUrl,
@@ -41,14 +41,14 @@ function CardPreview({
                     className="h-auto max-h-full w-auto max-w-full rounded-lg object-contain"
                 />
             </div>
-            <button
-                type="button"
+            <Button
                 onClick={onClose}
                 aria-label="Close preview"
-                className={`${secondaryButtonClasses} absolute right-4 top-4 min-w-11 bg-surface-minimal px-0`}
+                variant="secondary"
+                className="absolute right-4 top-4 min-w-11 bg-surface-minimal px-0"
             >
                 <X aria-hidden="true" />
-            </button>
+            </Button>
         </dialog>
     );
 }

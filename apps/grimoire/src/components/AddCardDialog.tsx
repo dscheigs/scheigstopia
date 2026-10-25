@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { inputClasses, secondaryButtonClasses, X } from '@scheigs/sylva-ui';
+import { Button, inputClasses, X } from '@scheigs/sylva-ui';
 import ScryfallFallback from '@/components/ScryfallFallback';
 import { searchCards, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import { useAddCard } from '@/lib/queries';
@@ -69,14 +69,14 @@ export default function AddCardDialog({
                     <h2 id="add-card-title" className="text-subheading">
                         Add cards
                     </h2>
-                    <button
-                        type="button"
+                    <Button
                         onClick={onClose}
                         aria-label="Close"
-                        className={`${secondaryButtonClasses} min-w-11 px-0`}
+                        variant="secondary"
+                        className="min-w-11 px-0"
                     >
                         <X aria-hidden="true" />
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="space-y-2">

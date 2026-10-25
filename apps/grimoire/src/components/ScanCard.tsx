@@ -2,12 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import {
-    buttonClasses,
-    secondaryButtonClasses,
-    Volume2,
-    VolumeOff,
-} from '@scheigs/sylva-ui';
+import { Button, Volume2, VolumeOff } from '@scheigs/sylva-ui';
 import TuningPanel from '@/components/TuningPanel';
 import { videoPlacement } from '@/lib/addRoutes';
 import { AUTO_CAPTURE } from '@/lib/autoCapture';
@@ -89,14 +84,13 @@ export default function ScanCard({
             {workerOn && <QueueWorker userId={userId} />}
 
             {showCamera && (phase === 'idle' || phase === 'starting') ? (
-                <button
-                    type="button"
+                <Button
                     onClick={() => void startCamera()}
                     disabled={phase === 'starting'}
-                    className={buttonClasses}
+                    variant="primary"
                 >
                     {phase === 'starting' ? 'Starting camera...' : 'Start'}
-                </button>
+                </Button>
             ) : null}
 
             {/* Always mounted so the stream can attach; hidden until the camera is on. */}
@@ -202,29 +196,23 @@ export default function ScanCard({
 
             {showControls && (
                 <div className="flex flex-wrap gap-2">
-                    <button
-                        type="button"
+                    <Button
                         onClick={toggleDebug}
                         aria-pressed={debug}
-                        className={secondaryButtonClasses}
+                        variant="secondary"
                     >
                         Debug
-                    </button>
-                    <button
-                        type="button"
+                    </Button>
+                    <Button
                         onClick={() => setTuningOpen((on) => !on)}
                         aria-pressed={tuningOpen}
-                        className={secondaryButtonClasses}
+                        variant="secondary"
                     >
                         Tune
-                    </button>
-                    <button
-                        type="button"
-                        onClick={closeCamera}
-                        className={secondaryButtonClasses}
-                    >
+                    </Button>
+                    <Button onClick={closeCamera} variant="secondary">
                         Close camera
-                    </button>
+                    </Button>
                 </div>
             )}
 
