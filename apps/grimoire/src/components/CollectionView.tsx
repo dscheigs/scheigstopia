@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from 'react';
 import AddCardDialog from '@/components/AddCardDialog';
+import CardThumbnail from '@/components/CardThumbnail';
 import ExportLink from '@/components/ExportLink';
 import {
     buttonClasses,
     inputClasses,
     secondaryButtonClasses,
 } from '@scheigs/sylva-ui';
+import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
 import { useCardNames, useCollection, useSetQuantity } from '@/lib/queries';
@@ -44,6 +46,15 @@ export default function CollectionView() {
             cardList === 'loading' || cardList === 'missing'
                 ? null
                 : buildIndex(cardList),
+        [cardList]
+    );
+
+    // oracleId -> Scryfall image id; empty until the card list loads.
+    const imageIds = useMemo(
+        () =>
+            cardList === 'loading' || cardList === 'missing'
+                ? new Map<string, string>()
+                : buildImageIds(cardList),
         [cardList]
     );
 
@@ -149,6 +160,10 @@ export default function CollectionView() {
                                     key={item.oracleId}
                                     className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
                                 >
+                                    <CardThumbnail
+                                        imageId={imageIds.get(item.oracleId)}
+                                        name={item.name}
+                                    />
                                     <span className="min-w-0 flex-1 text-body">
                                         {item.name}
                                     </span>

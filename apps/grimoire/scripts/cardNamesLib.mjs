@@ -15,8 +15,9 @@ const EXCLUDED_LAYOUTS = new Set([
 /**
  * @param {unknown[]} cards  Parsed contents of Scryfall's oracle-cards file.
  * @param {string} version   Scryfall's `updated_at` for the file, or a label.
- * @returns {{ version: string, count: number, cards: [string, string][] }}
- *   `cards` is [oracleId, name] pairs, sorted by name.
+ * @returns {{ version: string, count: number, cards: ([string, string] | [string, string, string])[] }}
+ *   `cards` is [oracleId, name] or [oracleId, name, imageId] entries, sorted by
+ *   name. The image id is left off when Scryfall has no image for the card.
  */
 export function slimOracleCards(cards, version) {
     const seen = new Set();
@@ -31,12 +32,30 @@ export function slimOracleCards(cards, version) {
     return { version, count: pairs.length, cards: pairs };
 }
 
+const IMAGE_ID = /\/front\/[0-9a-f]\/[0-9a-f]\/([0-9a-f-]{36})\.[a-z]+(?:\?|$)/;
+
 /**
- * One Scryfall card object as an [oracleId, name] pair, or null when it is not
- * a collectible card (excluded layout) or lacks an id or name. The build and
- * the app's live Scryfall lookup share this, so both apply the same rules.
+ * The id Scryfall's CDN uses for a card's front image, or null. It is the
+ * uuid in `image_uris.small`; double-faced cards keep their images on the
+ * faces, and the front face is the first one. Every size of the same image
+ * shares this id (see cardImageUrl in the app).
  * @param {unknown} card  A Scryfall card object.
- * @returns {[string, string] | null}
+ * @returns {string | null}
+ */
+export function scryfallImageId(card) {
+    const uris = card?.image_uris ?? card?.card_faces?.[0]?.image_uris;
+    const url = uris?.small ?? uris?.normal;
+    if (typeof url !== 'string') return null;
+    return IMAGE_ID.exec(url)?.[1] ?? null;
+}
+
+/**
+ * One Scryfall card object as an [oracleId, name] or [oracleId, name, imageId]
+ * entry, or null when it is not a collectible card (excluded layout) or lacks
+ * an id or name. The build and the app's live Scryfall lookup share this, so
+ * both apply the same rules.
+ * @param {unknown} card  A Scryfall card object.
+ * @returns {[string, string] | [string, string, string] | null}
  */
 export function slimOracleCard(card) {
     if (typeof card !== 'object' || card === null) return null;
@@ -46,7 +65,8 @@ export function slimOracleCard(card) {
     const oracleId = card.oracle_id ?? card.card_faces?.[0]?.oracle_id;
     const name = card.name;
     if (typeof oracleId !== 'string' || typeof name !== 'string') return null;
-    return [oracleId, name];
+    const imageId = scryfallImageId(card);
+    return imageId ? [oracleId, name, imageId] : [oracleId, name];
 }
 
 // A real Oracle Cards file has tens of thousands of entries. Anything far
@@ -136,7 +156,7 @@ export function pickOracleCardsEntry(bulk) {
 
 /**
  * True if `value` looks like a card list: a count that matches a non-empty
- * array of [oracleId, name] string pairs. This is the shape check only; use
+ * array of [oracleId, name] or [oracleId, name, imageId] string entries. This is the shape check only; use
  * `assertDeployableCardList` for the "is it a real Scryfall build" checks.
  * @param {unknown} value
  */
@@ -153,7 +173,8 @@ export function isCardList(value) {
         cards.every(
             (pair) =>
                 Array.isArray(pair) &&
-                pair.length === 2 &&
+                (pair.length === 2 ||
+                    (pair.length === 3 && typeof pair[2] === 'string')) &&
                 typeof pair[0] === 'string' &&
                 typeof pair[1] === 'string'
         )
@@ -165,13 +186,15 @@ export function isCardList(value) {
  * is ignored on purpose: Scryfall's timestamp changes daily even when no card
  * was added, and an upload for that would be pointless.
  * @param {unknown} published  The list currently published, or null if none.
- * @param {{ cards: [string, string][] }} next  The freshly built list.
+ * @param {{ cards: string[][] }} next  The freshly built list.
  */
 export function shouldUploadCardList(published, next) {
     if (!isCardList(published)) return true;
     if (published.cards.length !== next.cards.length) return true;
     return published.cards.some(
-        ([oracleId, name], i) =>
-            oracleId !== next.cards[i][0] || name !== next.cards[i][1]
+        ([oracleId, name, imageId], i) =>
+            oracleId !== next.cards[i][0] ||
+            name !== next.cards[i][1] ||
+            imageId !== next.cards[i][2]
     );
 }

@@ -4,8 +4,12 @@ import Fuse from 'fuse.js';
 export interface CardNameFile {
     version: string;
     count: number;
-    /** [oracleId, name] pairs. */
-    cards: [string, string][];
+    /**
+     * [oracleId, name] or [oracleId, name, imageId]. The image id is Scryfall's
+     * CDN id for the front face (see cardImages.ts); older builds and cards
+     * Scryfall has no image for leave it off.
+     */
+    cards: ([string, string] | [string, string, string])[];
 }
 
 export interface CardEntry {

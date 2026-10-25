@@ -19,7 +19,8 @@ export function isCardNameFile(value: unknown): value is CardNameFile {
         cards.every(
             (pair) =>
                 Array.isArray(pair) &&
-                pair.length === 2 &&
+                (pair.length === 2 ||
+                    (pair.length === 3 && typeof pair[2] === 'string')) &&
                 typeof pair[0] === 'string' &&
                 typeof pair[1] === 'string'
         )

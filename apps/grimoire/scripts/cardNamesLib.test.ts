@@ -5,7 +5,10 @@ import {
     MIN_REAL_CARD_COUNT,
     assertDeployableCardList,
     assertSaneRefresh,
+    isCardList,
     pickOracleCardsEntry,
+    scryfallImageId,
+    shouldUploadCardList,
     slimOracleCards,
 } from './cardNamesLib.mjs';
 
@@ -62,6 +65,25 @@ describe('slimOracleCards', () => {
             '00000000-0000-4000-8000-00000000000d',
             'Reversible Example // Reversible Example',
         ]);
+    });
+
+    it('adds the front image id, from the card or its first face', async () => {
+        const cards = (await import('./cardNamesLib.mjs')).slimOracleCards(
+            await loadFixture(),
+            'test'
+        ).cards;
+        const bolt = cards.find(([, name]) => name === 'Lightning Bolt');
+        const delver = cards.find(([, name]) => name.startsWith('Delver'));
+        expect(bolt?.[2]).toBe('e3285e6b-3e79-4d7c-bf96-d920f973b122');
+        expect(delver?.[2]).toBe('11bf83bb-c95b-4b4f-9a56-ce7a1816307a');
+    });
+
+    it('leaves the image id off cards without an image', async () => {
+        const cards = slimOracleCards(await loadFixture(), 'test').cards;
+        const reversible = cards.find(([, name]) =>
+            name.startsWith('Reversible')
+        );
+        expect(reversible).toHaveLength(2);
     });
 
     it('ignores junk entries', () => {
@@ -186,5 +208,53 @@ describe('assertSaneRefresh', () => {
         expect(() =>
             assertSaneRefresh(previous, list(previous.count, 'fixture'))
         ).toThrow(/fixture/);
+    });
+});
+
+describe('scryfallImageId', () => {
+    it('reads the uuid from a small or normal image url', () => {
+        const id = '11bf83bb-c95b-4b4f-9a56-ce7a1816307a';
+        expect(
+            scryfallImageId({
+                image_uris: {
+                    normal: `https://cards.scryfall.io/normal/front/1/1/${id}.jpg?1`,
+                },
+            })
+        ).toBe(id);
+    });
+
+    it('is null for missing or unexpected urls', () => {
+        expect(scryfallImageId({})).toBeNull();
+        expect(
+            scryfallImageId({ image_uris: { small: 'https://x.test/a.jpg' } })
+        ).toBeNull();
+        expect(scryfallImageId(null)).toBeNull();
+    });
+});
+
+describe('card list entries with image ids', () => {
+    const id = '11bf83bb-c95b-4b4f-9a56-ce7a1816307a';
+    const base = { version: 'v', count: 1 };
+
+    it('accepts two- and three-element entries, but not other shapes', () => {
+        expect(isCardList({ ...base, cards: [['a', 'A']] })).toBe(true);
+        expect(isCardList({ ...base, cards: [['a', 'A', id]] })).toBe(true);
+        expect(isCardList({ ...base, cards: [['a', 'A', 5]] })).toBe(false);
+        expect(isCardList({ ...base, cards: [['a', 'A', id, 'x']] })).toBe(
+            false
+        );
+    });
+
+    it('uploads when only an image id changed', () => {
+        const published = { ...base, cards: [['a', 'A']] };
+        expect(
+            shouldUploadCardList(published, { cards: [['a', 'A', id]] })
+        ).toBe(true);
+        expect(
+            shouldUploadCardList(
+                { ...base, cards: [['a', 'A', id]] },
+                { cards: [['a', 'A', id]] }
+            )
+        ).toBe(false);
     });
 });
