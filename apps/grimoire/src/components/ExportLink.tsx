@@ -17,12 +17,14 @@ export default function ExportLink({
     filename,
     type,
     className,
+    onClick,
     children,
 }: {
     href: string;
     filename: string;
     type: string;
     className: string;
+    onClick?: () => void;
     children: ReactNode;
 }) {
     return (
@@ -31,6 +33,7 @@ export default function ExportLink({
             download={filename}
             className={className}
             onClick={(event) => {
+                onClick?.();
                 if (
                     !isStandaloneApp(
                         window.matchMedia?.bind(window),
