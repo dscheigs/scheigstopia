@@ -3,13 +3,8 @@
 import { useMemo, useState } from 'react';
 import AddCardDialog from '@/components/AddCardDialog';
 import CardThumbnail from '@/components/CardThumbnail';
-import ExportLink from '@/components/ExportLink';
-import {
-    Button,
-    buttonClasses,
-    inputClasses,
-    secondaryButtonClasses,
-} from '@scheigs/sylva-ui';
+import ExportMenu from '@/components/ExportMenu';
+import { Button, inputClasses } from '@scheigs/sylva-ui';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
@@ -103,22 +98,7 @@ export default function CollectionView() {
                         >
                             Add Cards
                         </Button>
-                        <ExportLink
-                            href="/api/export"
-                            filename="grimoire-collection.txt"
-                            type="text/plain"
-                            className={buttonClasses}
-                        >
-                            Export
-                        </ExportLink>
-                        <ExportLink
-                            href="/api/export?format=csv"
-                            filename="grimoire-collection.csv"
-                            type="text/csv"
-                            className={secondaryButtonClasses}
-                        >
-                            Export CSV
-                        </ExportLink>
+                        <ExportMenu />
                     </div>
                 </div>
 
