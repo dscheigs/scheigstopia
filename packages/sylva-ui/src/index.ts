@@ -1,6 +1,8 @@
 export * from './icons';
 export * from './primitives';
 export { default as AnimatedNav } from './components/AnimatedNav';
+export { default as Button } from './components/Button';
+export type { ButtonProps, ButtonVariant } from './components/Button';
 export { default as GnomeIcon } from './components/GnomeIcon';
 export { default as SiteHeader } from './components/SiteHeader';
 export type { SiteHeaderProps } from './components/SiteHeader';
