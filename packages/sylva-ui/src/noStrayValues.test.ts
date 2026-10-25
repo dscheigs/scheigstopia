@@ -3,8 +3,8 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 // The "no stray values" rule from CLAUDE.md: app and sylva-ui source has no
-// hard-coded colors or font sizes. Colors come from Sylva tokens, type from the
-// typography classes. If a value is missing, add a token or class first.
+// hard-coded colors, font sizes or corner radii. Colors come from Sylva tokens,
+// type from the typography classes, radii from the radius classes. If a value is missing, add a token or class first.
 
 const repoRoot = path.resolve(__dirname, '../../..');
 const roots = [
@@ -48,6 +48,11 @@ const rules: { name: string; pattern: RegExp }[] = [
     {
         name: 'Tailwind arbitrary text size',
         pattern: /\btext-\[/,
+    },
+    {
+        name: 'raw border radius (use rounded-control, -surface, -thumb or -full)',
+        pattern:
+            /\brounded(?:-[trblse]{1,2})?-(?:xs|sm|md|lg|xl|2xl|3xl)\b|\brounded-\[/,
     },
     {
         name: 'raw font size',

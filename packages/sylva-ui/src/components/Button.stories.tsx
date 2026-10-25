@@ -7,7 +7,10 @@ const meta = {
     component: Button,
     args: { children: 'Button' },
     argTypes: {
-        variant: { control: 'inline-radio', options: ['primary', 'secondary'] },
+        variant: {
+            control: 'inline-radio',
+            options: ['primary', 'secondary', 'brand'],
+        },
         disabled: { control: 'boolean' },
     },
 } satisfies Meta<typeof Button>;
@@ -21,13 +24,17 @@ export const Primary: Story = { args: { variant: 'primary' } };
 /** The outlined button, for everything else. */
 export const Secondary: Story = { args: { variant: 'secondary' } };
 
-/** Hover the buttons: enabled ones show a pointer, disabled ones not-allowed. */
+/** The green call to action, for the one thing you most want pressed (sign in). */
+export const Brand: Story = { args: { variant: 'brand' } };
+
+/** Hover the buttons: enabled ones show a pointer, disabled ones the default arrow. */
 export const Disabled: Story = {
     args: { disabled: true },
     render: (args) => (
         <div className="flex gap-3">
             <Button {...args} variant="primary" />
             <Button {...args} variant="secondary" />
+            <Button {...args} variant="brand" />
         </div>
     ),
 };
@@ -43,6 +50,10 @@ export const AllStates: Story = {
             <Button variant="secondary">Secondary</Button>
             <Button variant="secondary" disabled>
                 Secondary disabled
+            </Button>
+            <Button variant="brand">Brand</Button>
+            <Button variant="brand" disabled>
+                Brand disabled
             </Button>
         </div>
     ),
@@ -92,19 +103,19 @@ export const Submit: Story = {
 export const NativeButtons: Story = {
     render: () => (
         <div className="flex flex-wrap gap-3">
-            <button type="button" className="rounded-lg border px-3 py-2">
+            <button type="button" className="rounded-control border px-3 py-2">
                 Bare button
             </button>
             <button
                 type="button"
                 disabled
-                className="rounded-lg border px-3 py-2"
+                className="rounded-control border px-3 py-2"
             >
                 Bare disabled
             </button>
             <button
                 type="button"
-                className="cursor-zoom-in rounded-lg border px-3 py-2"
+                className="cursor-zoom-in rounded-control border px-3 py-2"
             >
                 cursor-zoom-in
             </button>

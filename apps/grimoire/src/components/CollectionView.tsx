@@ -152,7 +152,7 @@ export default function CollectionView() {
                     )}
 
                 {visibleItems.length > 0 && (
-                    <ul className="divide-y divide-border-minimal rounded-lg border border-border-minimal bg-surface-minimal">
+                    <ul className="divide-y divide-border-minimal rounded-surface border border-border-minimal bg-surface-minimal">
                         {visibleItems.map((item) => {
                             const busy = busyId === item.oracleId;
                             return (
@@ -207,7 +207,7 @@ export default function CollectionView() {
                                             aria-label={`Remove ${item.name} from collection`}
                                             disabled={busy}
                                             onClick={() => removeCard(item)}
-                                            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border-minimal px-3 text-caption transition-colors hover:bg-surface-minimal-hover disabled:opacity-50"
+                                            className="inline-flex min-h-11 items-center justify-center rounded-control border border-border-minimal px-3 text-caption transition-colors hover:bg-surface-minimal-hover disabled:opacity-50"
                                         >
                                             Remove
                                         </button>

@@ -131,7 +131,7 @@ export default function QueueView({ userId }: { userId: string }) {
     });
 
     const listClasses =
-        'divide-y divide-border-minimal rounded-lg border border-border-minimal bg-surface-minimal';
+        'divide-y divide-border-minimal rounded-surface border border-border-minimal bg-surface-minimal';
 
     return (
         <div className="mx-auto max-w-2xl space-y-8 px-4 py-6">

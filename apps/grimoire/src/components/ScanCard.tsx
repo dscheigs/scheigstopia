@@ -103,7 +103,7 @@ export default function ScanCard({
                     playsInline
                     muted
                     aria-label="Camera view"
-                    className="aspect-[4/3] w-full rounded-lg bg-neutral-950 object-cover"
+                    className="aspect-[4/3] w-full rounded-surface bg-neutral-950 object-cover"
                 />
                 {showControls && tuning.shapeCheck && (
                     // The rectangle check needs all four card edges in view,
@@ -111,7 +111,7 @@ export default function ScanCard({
                     <div
                         aria-hidden="true"
                         data-testid="card-guide"
-                        className="pointer-events-none absolute left-1/2 top-1/2 aspect-[63/88] h-5/6 -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-dashed border-neutral-100/70"
+                        className="pointer-events-none absolute left-1/2 top-1/2 aspect-[63/88] h-5/6 -translate-x-1/2 -translate-y-1/2 rounded-surface border-2 border-dashed border-neutral-100/70"
                     />
                 )}
                 {showControls && (
@@ -120,7 +120,7 @@ export default function ScanCard({
                         onClick={() => setMuted(!muted)}
                         aria-pressed={muted}
                         aria-label="Mute sounds"
-                        className="absolute right-2 top-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-neutral-950/80 text-neutral-100 transition-colors hover:bg-neutral-950"
+                        className="absolute right-2 top-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control bg-neutral-950/80 text-neutral-100 transition-colors hover:bg-neutral-950"
                     >
                         {muted ? (
                             <VolumeOff aria-hidden="true" />
@@ -131,7 +131,7 @@ export default function ScanCard({
                 )}
                 {showControls && debug && reading && (
                     <dl
-                        className="absolute bottom-2 left-2 space-y-0.5 rounded-lg bg-neutral-950/80 p-2 font-mono text-caption text-neutral-100"
+                        className="absolute bottom-2 left-2 space-y-0.5 rounded-surface bg-neutral-950/80 p-2 font-mono text-caption text-neutral-100"
                         aria-label="Auto-capture readings"
                     >
                         <div>state: {reading.state}</div>

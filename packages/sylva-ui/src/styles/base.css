@@ -1,15 +1,11 @@
 /*
  * Tailwind v4 stopped giving buttons a pointer cursor, so a bare <button> shows
- * the arrow. This puts every native button on the same footing as `Button`:
- * a pointer when it can be pressed, not-allowed when it is disabled. It is in
- * the base layer, so a utility such as `cursor-zoom-in` still wins.
+ * the arrow. This puts every enabled native button on the same footing as
+ * `Button`; a disabled one keeps the default. It is in the base layer, so a
+ * utility such as `cursor-zoom-in` still wins.
  */
 @layer base {
     button:not(:disabled) {
         cursor: pointer;
-    }
-
-    button:disabled {
-        cursor: not-allowed;
     }
 }

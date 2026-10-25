@@ -1,3 +1,4 @@
+import { Button } from '@scheigs/sylva-ui';
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import ClearOfflineCache from '@/components/ClearOfflineCache';
@@ -42,12 +43,9 @@ export default async function SignInPage({
                     await signIn('github', { redirectTo: '/' });
                 }}
             >
-                <button
-                    type="submit"
-                    className="inline-flex min-h-11 items-center justify-center rounded-lg bg-accent-muted px-5 text-body font-medium text-neutral-50 transition-colors hover:bg-accent-muted-hover"
-                >
+                <Button type="submit" variant="brand" className="px-5">
                     Sign in with GitHub
-                </button>
+                </Button>
             </form>
         </div>
     );

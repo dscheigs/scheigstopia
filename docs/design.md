@@ -34,16 +34,27 @@ Architecture), and each PR gets a preview URL from the Vercel bot.
 
 ## Buttons
 
-Use `Button` from `@scheigs/sylva-ui` with `variant="primary"` (filled, the main action)
-or `variant="secondary"` (outlined). Its `type` defaults to `button`, so pass
+Use `Button` from `@scheigs/sylva-ui` with `variant="primary"` (filled, the main action),
+`variant="secondary"` (outlined) or `variant="brand"` (the green call to action, such as
+sign-in; one per screen). Its `type` defaults to `button`, so pass
 `type="submit"` in a form. Extra classes go in `className`, for example `min-w-11 px-0`
 for an icon-only button. A link that should look like a button uses `buttonClasses` or
-`secondaryButtonClasses` on the anchor.
+`secondaryButtonClasses` or `brandButtonClasses` on the anchor.
 
-The cursor is the same for every button: a pointer when it can be pressed, not-allowed
-when it is disabled. Tailwind v4 no longer sets that on buttons, so `Button` and the
-class strings say it, and `styles/base.css` gives any bare `<button>` the same, in the
-base layer so a utility such as `cursor-zoom-in` still wins.
+Every enabled button shows a pointer. A disabled button has no cursor rule of its own,
+so it keeps the browser's default arrow; the `disabled` attribute and the faded look are
+what say it is off. Tailwind v4 no longer sets a pointer on buttons, so `Button` and the
+class strings say `enabled:cursor-pointer`, and `styles/base.css` gives any bare
+`<button>` the same, in the base layer so a utility such as `cursor-zoom-in` still wins.
+
+## Border radius
+
+Three radii, defined once in `packages/sylva-ui/src/styles/radius.css`: `rounded-control`
+(buttons, inputs, segments), `rounded-surface` (cards, dialogs, panels, lists, images)
+and `rounded-thumb` (small thumbnails). `rounded-full` is for circles and pills. Do not
+use `rounded-sm`, `-md` or `-lg` in app code; `noStrayValues.test.ts` fails on them. To
+change the look, change the numbers in `radius.css`; the Foundations/Radius story shows
+the scale and a control inside a surface.
 
 ## Typography System
 

@@ -1,7 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { buttonClasses, secondaryButtonClasses } from '../primitives';
+import {
+    brandButtonClasses,
+    buttonClasses,
+    secondaryButtonClasses,
+} from '../primitives';
 import Button from './Button';
 
 describe('Button', () => {
@@ -19,20 +23,31 @@ describe('Button', () => {
         expect(button.className).not.toContain('bg-neutral-800');
     });
 
-    it('gives both variants the same cursor behavior', () => {
+    it('renders the brand variant in green', () => {
+        render(<Button variant="brand">Go</Button>);
+        const button = screen.getByRole('button', { name: 'Go' });
+        expect(button.className).toContain('bg-accent-muted');
+        expect(button.className).not.toContain('bg-neutral-800');
+    });
+
+    it('gives every variant the same cursor behavior', () => {
         const { rerender } = render(<Button variant="primary">Go</Button>);
-        for (const variant of ['primary', 'secondary'] as const) {
+        for (const variant of ['primary', 'secondary', 'brand'] as const) {
             rerender(<Button variant={variant}>Go</Button>);
             const classes = screen.getByRole('button').className.split(' ');
-            expect(classes).toContain('cursor-pointer');
-            expect(classes).toContain('disabled:cursor-not-allowed');
+            expect(classes).toContain('enabled:cursor-pointer');
+            expect(classes.join(' ')).not.toContain('disabled:cursor');
         }
     });
 
     it('keeps the cursor in the class strings used on links', () => {
-        for (const classes of [buttonClasses, secondaryButtonClasses]) {
-            expect(classes.split(' ')).toContain('cursor-pointer');
-            expect(classes.split(' ')).toContain('disabled:cursor-not-allowed');
+        for (const classes of [
+            buttonClasses,
+            secondaryButtonClasses,
+            brandButtonClasses,
+        ]) {
+            expect(classes.split(' ')).toContain('enabled:cursor-pointer');
+            expect(classes).not.toContain('disabled:cursor');
         }
     });
 

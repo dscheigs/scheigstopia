@@ -17,7 +17,7 @@ export default function Card({
 
     return (
         <div
-            className={`w-full h-full bg-surface-minimal border border-border-minimal rounded-lg p-6 shadow-lg ${hoverClasses} ${className}`}
+            className={`w-full h-full bg-surface-minimal border border-border-minimal rounded-surface p-6 shadow-lg ${hoverClasses} ${className}`}
         >
             {children}
         </div>

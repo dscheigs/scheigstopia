@@ -1,18 +1,22 @@
 // Class strings shared by more than one component.
 
 /**
- * Every button shares this cursor: a pointer while it can be pressed, not-allowed
- * while it is disabled. Tailwind v4 no longer gives buttons a pointer cursor, so
- * it has to be said here. `Button` and the class strings below both include it.
+ * Every button shares this cursor: a pointer while it can be pressed. A disabled
+ * button gets no cursor of its own (the browser's default arrow). Tailwind v4 no
+ * longer gives buttons a pointer cursor, so it has to be said here. `Button` and
+ * the class strings below both include it.
  */
-export const buttonCursorClasses = 'cursor-pointer disabled:cursor-not-allowed';
+export const buttonCursorClasses = 'enabled:cursor-pointer';
 
-export const buttonClasses = `inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-neutral-800 px-3 text-body font-medium text-neutral-100 transition-colors hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300 ${buttonCursorClasses}`;
+export const buttonClasses = `inline-flex min-h-11 min-w-11 items-center justify-center rounded-control bg-neutral-800 px-3 text-body font-medium text-neutral-100 transition-colors hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300 ${buttonCursorClasses}`;
 
-export const secondaryButtonClasses = `inline-flex min-h-11 items-center justify-center rounded-lg border border-border-minimal px-3 text-body transition-colors hover:bg-surface-minimal-hover disabled:opacity-50 ${buttonCursorClasses}`;
+/** The green call to action: sign-in and the like. Use sparingly, one per screen. */
+export const brandButtonClasses = `inline-flex min-h-11 min-w-11 items-center justify-center rounded-control bg-accent-muted px-3 text-body font-medium text-neutral-50 transition-colors hover:bg-accent-muted-hover disabled:opacity-50 ${buttonCursorClasses}`;
+
+export const secondaryButtonClasses = `inline-flex min-h-11 items-center justify-center rounded-control border border-border-minimal px-3 text-body transition-colors hover:bg-surface-minimal-hover disabled:opacity-50 ${buttonCursorClasses}`;
 
 export const inputClasses =
-    'w-full rounded-lg border border-border-minimal bg-surface-minimal px-4 py-3 text-body placeholder:text-text-minimal';
+    'w-full rounded-control border border-border-minimal bg-surface-minimal px-4 py-3 text-body placeholder:text-text-minimal';
 
 /** A header link. Shared by the desktop nav links and any button that sits among them. */
 export const navLinkClasses =

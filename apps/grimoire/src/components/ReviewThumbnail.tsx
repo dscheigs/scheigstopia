@@ -73,7 +73,7 @@ export default function ReviewThumbnail({
     }, [id]);
 
     const frame =
-        'h-16 w-12 shrink-0 overflow-hidden rounded-md border border-border-minimal bg-surface-minimal-hover';
+        'h-16 w-12 shrink-0 overflow-hidden rounded-thumb border border-border-minimal bg-surface-minimal-hover';
 
     return (
         <>

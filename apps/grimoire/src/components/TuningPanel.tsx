@@ -36,7 +36,7 @@ export default function TuningPanel({
 
     return (
         <div
-            className="space-y-4 rounded-lg border border-border-minimal bg-surface-minimal p-4"
+            className="space-y-4 rounded-surface border border-border-minimal bg-surface-minimal p-4"
             aria-label="Auto-capture tuning"
         >
             <div

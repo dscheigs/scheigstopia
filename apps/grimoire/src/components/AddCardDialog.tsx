@@ -62,7 +62,7 @@ export default function AddCardDialog({
                 // A click on the backdrop lands on the dialog itself.
                 if (event.target === event.currentTarget) onClose();
             }}
-            className="m-auto w-full max-w-md rounded-lg border border-border-minimal bg-surface-minimal p-0 text-foreground backdrop:bg-neutral-950/60"
+            className="m-auto w-full max-w-md rounded-surface border border-border-minimal bg-surface-minimal p-0 text-foreground backdrop:bg-neutral-950/60"
         >
             <div className="space-y-4 p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -108,7 +108,7 @@ export default function AddCardDialog({
                         </p>
                     )}
                     {results.length > 0 && (
-                        <ul className="divide-y divide-border-minimal overflow-hidden rounded-lg border border-border-minimal">
+                        <ul className="divide-y divide-border-minimal overflow-hidden rounded-surface border border-border-minimal">
                             {results.map((card) => (
                                 <li key={card.oracleId}>
                                     <button

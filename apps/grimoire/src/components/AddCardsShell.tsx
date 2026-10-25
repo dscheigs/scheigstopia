@@ -19,7 +19,7 @@ export default function AddCardsShell({ userId }: { userId: string }) {
     const { items } = useScanQueue(userId);
     const { total, review } = queueCounts(items);
     const segment =
-        'inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md px-3 text-body font-medium transition-colors';
+        'inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-control px-3 text-body font-medium transition-colors';
     const on =
         'bg-neutral-800 text-neutral-100 dark:bg-neutral-200 dark:text-neutral-900';
     const off = 'hover:bg-surface-minimal-hover';
@@ -29,7 +29,7 @@ export default function AddCardsShell({ userId }: { userId: string }) {
     return (
         <>
             <nav aria-label="Add cards" className="mx-auto max-w-2xl px-4 pt-4">
-                <div className="flex w-full gap-1 rounded-lg border border-border-minimal bg-surface-minimal p-1">
+                <div className="flex w-full gap-1 rounded-surface border border-border-minimal bg-surface-minimal p-1">
                     <button
                         type="button"
                         onClick={() => setView('camera')}

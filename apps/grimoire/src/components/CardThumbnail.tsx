@@ -38,7 +38,7 @@ function CardPreview({
                     alt={name}
                     width={width}
                     height={height}
-                    className="h-auto max-h-full w-auto max-w-full rounded-lg object-contain"
+                    className="h-auto max-h-full w-auto max-w-full rounded-surface object-contain"
                 />
             </div>
             <Button
@@ -72,7 +72,7 @@ export default function CardThumbnail({
     const thumbUrl = imageId ? cardImageUrl(imageId, 'small') : null;
 
     // Same footprint with or without an image, so rows don't shift.
-    const frame = 'h-14 w-10 shrink-0 rounded-sm';
+    const frame = 'h-14 w-10 shrink-0 rounded-thumb';
     if (!imageId || !thumbUrl) {
         return (
             <span
@@ -118,7 +118,7 @@ export default function CardThumbnail({
                     width={normal.width}
                     height={normal.height}
                     loading="lazy"
-                    className="h-auto w-full rounded-lg shadow-lg"
+                    className="h-auto w-full rounded-surface shadow-lg"
                 />
             </span>
             {open && (
