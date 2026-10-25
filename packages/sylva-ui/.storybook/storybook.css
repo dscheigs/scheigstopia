@@ -1,0 +1,28 @@
+/* The same CSS the apps load (see each app's globals.css). */
+@import 'tailwindcss';
+@import '@scheigs/sylva-ui/css';
+@import '@scheigs/sylva/motion';
+
+/*
+ * The apps follow the system theme, so Tailwind's `dark:` variant is the
+ * prefers-color-scheme media query there. Storybook has a theme toggle, so
+ * `dark:` follows the data-theme attribute the toolbar sets instead.
+ */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * light-dark() in the shared colors is compiled by Tailwind into toggles that
+ * react to prefers-color-scheme and to color-scheme rules written in a
+ * stylesheet, but not to one set from script. So the theme is a CSS rule.
+ */
+:root[data-theme='light'] {
+    color-scheme: light;
+}
+:root[data-theme='dark'] {
+    color-scheme: dark;
+}
+
+body {
+    background: var(--background);
+    color: var(--foreground);
+}

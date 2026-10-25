@@ -15,6 +15,18 @@
             "command": "vitest run --root packages/sylva-ui",
             "cache": true,
             "inputs": ["default", "^default"]
+        },
+        "storybook": {
+            "command": "storybook dev -p 6006 -c packages/sylva-ui/.storybook",
+            "cache": false,
+            "dependsOn": ["^build"]
+        },
+        "build-storybook": {
+            "command": "storybook build -c packages/sylva-ui/.storybook -o packages/sylva-ui/storybook-static",
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["default", "^default"],
+            "outputs": ["{projectRoot}/storybook-static"]
         }
     }
 }

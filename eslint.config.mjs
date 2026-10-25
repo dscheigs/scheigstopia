@@ -11,6 +11,7 @@ export default [
             '**/out/**',
             '**/.nx/**',
             '**/coverage/**',
+            '**/storybook-static/**',
         ],
     },
     {
