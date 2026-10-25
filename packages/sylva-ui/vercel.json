@@ -1,0 +1,14 @@
+{
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "framework": null,
+    "installCommand": "pnpm install --frozen-lockfile",
+    "buildCommand": "pnpm nx build-storybook sylva-ui",
+    "outputDirectory": "storybook-static",
+    "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ../sylva ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml ../../tsconfig.base.json",
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+        }
+    ]
+}
