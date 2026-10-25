@@ -21,7 +21,10 @@
         "object": "card",
         "oracle_id": "00000000-0000-4000-8000-000000000001",
         "name": "Lightning Bolt",
-        "layout": "normal"
+        "layout": "normal",
+        "image_uris": {
+            "small": "https://cards.scryfall.io/small/front/e/3/e3285e6b-3e79-4d7c-bf96-d920f973b122.jpg?1706239968"
+        }
     },
     {
         "object": "card",
@@ -75,7 +78,18 @@
         "object": "card",
         "oracle_id": "00000000-0000-4000-8000-00000000000a",
         "name": "Delver of Secrets // Insectile Aberration",
-        "layout": "transform"
+        "layout": "transform",
+        "card_faces": [
+            {
+                "name": "Delver of Secrets",
+                "image_uris": {
+                    "small": "https://cards.scryfall.io/small/front/1/1/11bf83bb-c95b-4b4f-9a56-ce7a1816307a.jpg?1562543644"
+                }
+            },
+            {
+                "name": "Insectile Aberration"
+            }
+        ]
     },
     {
         "object": "card",
@@ -93,7 +107,10 @@
         "object": "card",
         "oracle_id": "00000000-0000-4000-8000-000000000001",
         "name": "Lightning Bolt",
-        "layout": "normal"
+        "layout": "normal",
+        "image_uris": {
+            "small": "https://cards.scryfall.io/small/front/e/3/e3285e6b-3e79-4d7c-bf96-d920f973b122.jpg?1706239968"
+        }
     },
     {
         "object": "card",

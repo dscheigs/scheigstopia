@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { ViewTransition } from 'react';
+import { preconnect } from 'react-dom';
 import { Inter } from 'next/font/google';
 import '../styles/globals.css';
 import AppHeader from '@/components/AppHeader';
 import Providers from '@/components/Providers';
 import PwaSetup from '@/components/PwaSetup';
+import { SCRYFALL_IMAGE_ORIGIN } from '@/lib/cardImages';
 
 const inter = Inter({
     subsets: ['latin'],
@@ -25,6 +27,8 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    // Card images load from Scryfall's CDN; open the connection early.
+    preconnect(SCRYFALL_IMAGE_ORIGIN);
     return (
         <html lang="en">
             <body
