@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import AddCardDialog from '@/components/AddCardDialog';
 import CardThumbnail from '@/components/CardThumbnail';
-import ExportLink from '@/components/ExportLink';
+import ExportMenu from '@/components/ExportMenu';
 import {
     buttonClasses,
     inputClasses,
@@ -103,22 +103,7 @@ export default function CollectionView() {
                         >
                             Add Cards
                         </button>
-                        <ExportLink
-                            href="/api/export"
-                            filename="grimoire-collection.txt"
-                            type="text/plain"
-                            className={buttonClasses}
-                        >
-                            Export
-                        </ExportLink>
-                        <ExportLink
-                            href="/api/export?format=csv"
-                            filename="grimoire-collection.csv"
-                            type="text/csv"
-                            className={secondaryButtonClasses}
-                        >
-                            Export CSV
-                        </ExportLink>
+                        <ExportMenu />
                     </div>
                 </div>
 
