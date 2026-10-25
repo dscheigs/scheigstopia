@@ -38,7 +38,7 @@ export default function Button(props: ButtonProps) {
         disabled = false,
     } = props;
 
-    const baseClasses = `px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles[variant]} ${className}`;
+    const baseClasses = `px-4 py-2 rounded-button font-medium transition-all duration-200 enabled:cursor-pointer disabled:opacity-50 ${variantStyles[variant]} ${className}`;
 
     if (props.as === 'link') {
         return (

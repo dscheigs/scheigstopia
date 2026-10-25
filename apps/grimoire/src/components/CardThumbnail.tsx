@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { secondaryButtonClasses, X } from '@scheigs/sylva-ui';
+import { Button, X } from '@scheigs/sylva-ui';
 import {
     CARD_IMAGE_DIMENSIONS,
     cardImageUrl,
@@ -38,17 +38,18 @@ function CardPreview({
                     alt={name}
                     width={width}
                     height={height}
-                    className="h-auto max-h-full w-auto max-w-full rounded-lg object-contain"
+                    className="h-auto max-h-full w-auto max-w-full rounded-surface object-contain"
                 />
             </div>
-            <button
-                type="button"
+            <Button
                 onClick={onClose}
                 aria-label="Close preview"
-                className={`${secondaryButtonClasses} absolute right-4 top-4 min-w-11 bg-surface-minimal px-0`}
+                variant="secondary"
+                size="icon"
+                className="absolute right-4 top-4 bg-surface-minimal"
             >
                 <X aria-hidden="true" />
-            </button>
+            </Button>
         </dialog>
     );
 }
@@ -72,7 +73,7 @@ export default function CardThumbnail({
     const thumbUrl = imageId ? cardImageUrl(imageId, 'small') : null;
 
     // Same footprint with or without an image, so rows don't shift.
-    const frame = 'h-14 w-10 shrink-0 rounded-sm';
+    const frame = 'h-14 w-10 shrink-0 rounded-thumb';
     if (!imageId || !thumbUrl) {
         return (
             <span
@@ -118,7 +119,7 @@ export default function CardThumbnail({
                     width={normal.width}
                     height={normal.height}
                     loading="lazy"
-                    className="h-auto w-full rounded-lg shadow-lg"
+                    className="h-auto w-full rounded-surface shadow-lg"
                 />
             </span>
             {open && (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { inputClasses, secondaryButtonClasses, X } from '@scheigs/sylva-ui';
+import { Button, inputClasses, X } from '@scheigs/sylva-ui';
 import ScryfallFallback from '@/components/ScryfallFallback';
 import { searchCards, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import { useModalDialog } from '@/lib/useModalDialog';
@@ -45,7 +45,7 @@ export default function EditCardDialog({
                 // A click on the backdrop lands on the dialog itself.
                 if (event.target === event.currentTarget) onClose();
             }}
-            className="m-auto w-full max-w-md rounded-lg border border-border-minimal bg-surface-minimal p-0 text-foreground backdrop:bg-neutral-950/60"
+            className="m-auto w-full max-w-md rounded-surface border border-border-minimal bg-surface-minimal p-0 text-foreground backdrop:bg-neutral-950/60"
         >
             <div className="space-y-4 p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -57,14 +57,14 @@ export default function EditCardDialog({
                             Now: {label}
                         </p>
                     </div>
-                    <button
-                        type="button"
+                    <Button
                         onClick={onClose}
                         aria-label="Close"
-                        className={`${secondaryButtonClasses} min-w-11 px-0`}
+                        variant="secondary"
+                        size="icon"
                     >
                         <X aria-hidden="true" />
-                    </button>
+                    </Button>
                 </div>
 
                 {children}
@@ -89,7 +89,7 @@ export default function EditCardDialog({
                         className={inputClasses}
                     />
                     {results.length > 0 && (
-                        <ul className="divide-y divide-border-minimal overflow-hidden rounded-lg border border-border-minimal">
+                        <ul className="divide-y divide-border-minimal overflow-hidden rounded-surface border border-border-minimal">
                             {results.map((card) => (
                                 <li key={card.oracleId}>
                                     <button

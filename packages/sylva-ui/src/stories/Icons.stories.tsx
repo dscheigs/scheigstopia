@@ -18,7 +18,7 @@ export const All: Story = {
             {Object.entries(icons).map(([name, Icon]) => (
                 <li
                     key={name}
-                    className="flex w-28 flex-col items-center gap-2 rounded-lg border border-border-minimal bg-surface-minimal p-4"
+                    className="flex w-28 flex-col items-center gap-2 rounded-surface border border-border-minimal bg-surface-minimal p-4"
                 >
                     <Icon aria-hidden="true" />
                     <code className="text-caption text-text-minimal">

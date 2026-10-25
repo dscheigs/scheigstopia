@@ -1,0 +1,11 @@
+/*
+ * Tailwind v4 stopped giving buttons a pointer cursor, so a bare <button> shows
+ * the arrow. This puts every enabled native button on the same footing as
+ * `Button`; a disabled one keeps the default. It is in the base layer, so a
+ * utility such as `cursor-zoom-in` still wins.
+ */
+@layer base {
+    button:not(:disabled) {
+        cursor: pointer;
+    }
+}

@@ -4,11 +4,7 @@ import { useMemo, useState } from 'react';
 import AddCardDialog from '@/components/AddCardDialog';
 import CardThumbnail from '@/components/CardThumbnail';
 import ExportMenu from '@/components/ExportMenu';
-import {
-    buttonClasses,
-    inputClasses,
-    secondaryButtonClasses,
-} from '@scheigs/sylva-ui';
+import { Button, inputClasses } from '@scheigs/sylva-ui';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
@@ -96,13 +92,12 @@ export default function CollectionView() {
                         )}
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            type="button"
+                        <Button
                             onClick={() => setAdding(true)}
-                            className={secondaryButtonClasses}
+                            variant="secondary"
                         >
                             Add Cards
-                        </button>
+                        </Button>
                         <ExportMenu />
                     </div>
                 </div>
@@ -137,7 +132,7 @@ export default function CollectionView() {
                     )}
 
                 {visibleItems.length > 0 && (
-                    <ul className="divide-y divide-border-minimal rounded-lg border border-border-minimal bg-surface-minimal">
+                    <ul className="divide-y divide-border-minimal rounded-surface border border-border-minimal bg-surface-minimal">
                         {visibleItems.map((item) => {
                             const busy = busyId === item.oracleId;
                             return (
@@ -153,8 +148,7 @@ export default function CollectionView() {
                                         {item.name}
                                     </span>
                                     <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
+                                        <Button
                                             aria-label={`Remove one ${item.name}`}
                                             disabled={
                                                 busy || item.quantity <= 1
@@ -165,18 +159,17 @@ export default function CollectionView() {
                                                     item.quantity - 1
                                                 )
                                             }
-                                            className={buttonClasses}
+                                            variant="primary"
                                         >
                                             −
-                                        </button>
+                                        </Button>
                                         <span
                                             className="min-w-8 text-center text-body font-medium"
                                             aria-label={`${item.quantity} owned`}
                                         >
                                             {item.quantity}
                                         </span>
-                                        <button
-                                            type="button"
+                                        <Button
                                             aria-label={`Add one ${item.name}`}
                                             disabled={busy}
                                             onClick={() =>
@@ -185,16 +178,16 @@ export default function CollectionView() {
                                                     item.quantity + 1
                                                 )
                                             }
-                                            className={buttonClasses}
+                                            variant="primary"
                                         >
                                             +
-                                        </button>
+                                        </Button>
                                         <button
                                             type="button"
                                             aria-label={`Remove ${item.name} from collection`}
                                             disabled={busy}
                                             onClick={() => removeCard(item)}
-                                            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border-minimal px-3 text-caption transition-colors hover:bg-surface-minimal-hover disabled:opacity-50"
+                                            className="inline-flex min-h-11 items-center justify-center rounded-button border border-border-minimal px-3 text-caption transition-colors hover:bg-surface-minimal-hover disabled:opacity-50"
                                         >
                                             Remove
                                         </button>

@@ -79,7 +79,7 @@ export const Palette: Story = {
                         {group.swatches.map(({ name, className }) => (
                             <li key={name}>
                                 <div
-                                    className={`${className} h-16 rounded-lg border border-border-minimal`}
+                                    className={`${className} h-16 rounded-surface border border-border-minimal`}
                                 />
                                 <code className="text-caption text-text-minimal">
                                     {name}

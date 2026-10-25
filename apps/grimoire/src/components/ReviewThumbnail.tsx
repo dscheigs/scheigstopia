@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { secondaryButtonClasses, X } from '@scheigs/sylva-ui';
+import { Button, X } from '@scheigs/sylva-ui';
 import { getBlobs, pickReviewBlob } from '@/lib/scanQueueBlobs';
 import { useModalDialog } from '@/lib/useModalDialog';
 
@@ -34,14 +34,15 @@ function ReviewViewer({
                     className="max-h-full max-w-full object-contain"
                 />
             </div>
-            <button
-                type="button"
+            <Button
                 onClick={onClose}
                 aria-label="Close photo"
-                className={`${secondaryButtonClasses} absolute right-4 top-4 min-w-11 bg-surface-minimal px-0`}
+                variant="secondary"
+                size="icon"
+                className="absolute right-4 top-4 bg-surface-minimal"
             >
                 <X aria-hidden="true" />
-            </button>
+            </Button>
         </dialog>
     );
 }
@@ -73,7 +74,7 @@ export default function ReviewThumbnail({
     }, [id]);
 
     const frame =
-        'h-16 w-12 shrink-0 overflow-hidden rounded-md border border-border-minimal bg-surface-minimal-hover';
+        'h-16 w-12 shrink-0 overflow-hidden rounded-thumb border border-border-minimal bg-surface-minimal-hover';
 
     return (
         <>
