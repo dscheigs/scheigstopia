@@ -9,8 +9,10 @@
 //
 // The collection copy is private data, so the page empties these caches on the
 // sign-in page (see ClearOfflineCache). Bump VERSION to drop old caches.
+// It is only registered in a production build (PwaSetup): in development the
+// build file URLs do not change with their contents, so cache first breaks them.
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const STATIC_CACHE = `grimoire-static-${VERSION}`;
 const PAGES_CACHE = `grimoire-pages-${VERSION}`;
 const SCOPE_PATH = new URL(self.registration.scope).pathname.replace(/\/$/, '');

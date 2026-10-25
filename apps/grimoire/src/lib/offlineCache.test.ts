@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { clearOfflineCaches, registerServiceWorker } from '@/lib/offlineCache';
+import {
+    clearOfflineCaches,
+    registerServiceWorker,
+    unregisterServiceWorkers,
+} from '@/lib/offlineCache';
 
 describe('registerServiceWorker', () => {
     it('registers the script with the scope', async () => {
@@ -22,6 +26,32 @@ describe('registerServiceWorker', () => {
         expect(await registerServiceWorker('/sw.js', '/', { register })).toBe(
             false
         );
+    });
+});
+
+describe('unregisterServiceWorkers', () => {
+    it('unregisters every registration', async () => {
+        const first = vi.fn().mockResolvedValue(true);
+        const second = vi.fn().mockResolvedValue(true);
+        await unregisterServiceWorkers({
+            getRegistrations: async () =>
+                [{ unregister: first }, { unregister: second }] as never,
+        });
+        expect(first).toHaveBeenCalledTimes(1);
+        expect(second).toHaveBeenCalledTimes(1);
+    });
+
+    it('does nothing without support, and swallows errors', async () => {
+        await expect(
+            unregisterServiceWorkers(undefined)
+        ).resolves.toBeUndefined();
+        await expect(
+            unregisterServiceWorkers({
+                getRegistrations: async () => {
+                    throw new Error('blocked');
+                },
+            })
+        ).resolves.toBeUndefined();
     });
 });
 
