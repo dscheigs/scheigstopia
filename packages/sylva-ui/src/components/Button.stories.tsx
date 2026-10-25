@@ -83,3 +83,31 @@ export const Submit: Story = {
         </form>
     ),
 };
+
+/**
+ * A bare `<button>` gets the same cursor from the base styles, so buttons that
+ * are not `Button` (list rows, segments, thumbnails) stay consistent. A utility
+ * such as `cursor-zoom-in` still wins.
+ */
+export const NativeButtons: Story = {
+    render: () => (
+        <div className="flex flex-wrap gap-3">
+            <button type="button" className="rounded-lg border px-3 py-2">
+                Bare button
+            </button>
+            <button
+                type="button"
+                disabled
+                className="rounded-lg border px-3 py-2"
+            >
+                Bare disabled
+            </button>
+            <button
+                type="button"
+                className="cursor-zoom-in rounded-lg border px-3 py-2"
+            >
+                cursor-zoom-in
+            </button>
+        </div>
+    ),
+};

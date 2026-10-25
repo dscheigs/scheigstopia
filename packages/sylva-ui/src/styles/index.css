@@ -1,8 +1,10 @@
 /*
- * Entry point for apps: the Sylva color mapping and the typography classes.
+ * Entry point for apps: the Sylva color mapping, the typography classes and the
+ * base button cursor.
  * The @source line makes Tailwind scan this package's components for classes.
  */
 @import './colors.css';
 @import './typography.css';
+@import './base.css';
 @import './nav.css';
 @source '../';

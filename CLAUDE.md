@@ -105,9 +105,12 @@ Read [`docs/design.md`](docs/design.md) before touching styles or UI. It covers 
 Sylva color system, the typography classes and the minimal-color philosophy.
 
 Shared UI lives in `packages/sylva-ui` (`@scheigs/sylva-ui`). Apps import the shared
-color mapping, typography CSS, class strings (`buttonClasses`, `inputClasses`), icons
-(`Check`, `Pencil`, `X`, ...) and `GnomeIcon` from it, never from `lucide-react`
-directly. Add a component there when a second app needs it, not before. Only apps may
+color mapping, typography CSS, `Button` (variants `primary` and `secondary`), class
+strings (`buttonClasses` and `secondaryButtonClasses` for anchors that look like
+buttons, `inputClasses`), icons (`Check`, `Pencil`, `X`, ...) and `GnomeIcon` from it,
+never from `lucide-react` directly. Use `<Button>` for buttons, not hand-written
+classes: every button gets the same cursor (a pointer, or not-allowed when disabled),
+and the shared base styles give any bare `<button>` the same. Add a component there when a second app needs it, not before. Only apps may
 import it, and it may only import Sylva (`@nx/enforce-module-boundaries`).
 
 Both apps render `SiteHeader`: the gnome (always a plain `<a>` to `/`), the app name,

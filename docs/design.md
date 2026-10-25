@@ -32,6 +32,19 @@ apps, so a missing class or token shows up there first.
 A hosted copy is deployed to Vercel from `main` (see `CLAUDE.md`, Storybook under
 Architecture), and each PR gets a preview URL from the Vercel bot.
 
+## Buttons
+
+Use `Button` from `@scheigs/sylva-ui` with `variant="primary"` (filled, the main action)
+or `variant="secondary"` (outlined). Its `type` defaults to `button`, so pass
+`type="submit"` in a form. Extra classes go in `className`, for example `min-w-11 px-0`
+for an icon-only button. A link that should look like a button uses `buttonClasses` or
+`secondaryButtonClasses` on the anchor.
+
+The cursor is the same for every button: a pointer when it can be pressed, not-allowed
+when it is disabled. Tailwind v4 no longer sets that on buttons, so `Button` and the
+class strings say it, and `styles/base.css` gives any bare `<button>` the same, in the
+base layer so a utility such as `cursor-zoom-in` still wins.
+
 ## Typography System
 
 The project uses custom typography classes with responsive clamp() sizing. **ALWAYS use these classes instead of Tailwind's default text sizing:**
