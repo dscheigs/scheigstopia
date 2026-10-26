@@ -35,6 +35,11 @@ export const AppWithNav: Story = {
     },
 };
 
+/** Grimoire's header: the gnome holding a book. */
+export const GrimoireGnome: Story = {
+    args: { ...AppWithNav.args, gnome: 'grimoire' },
+};
+
 /** An extra control after the links, such as sign-out. */
 export const WithAction: Story = {
     args: {

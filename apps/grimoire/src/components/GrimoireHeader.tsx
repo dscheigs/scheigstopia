@@ -20,6 +20,7 @@ export default function GrimoireHeader({
     const pathname = usePathname();
     return (
         <SiteHeader
+            gnome="grimoire"
             app={{ name: 'Grimoire', href: COLLECTION_PATH }}
             nav={
                 signedIn
