@@ -1,11 +1,16 @@
+export type GnomeVariant = 'default' | 'grimoire';
+
 interface GnomeIconProps {
     size?: number;
     className?: string;
+    /** `grimoire` holds a closed book across the belly. Same grid, same palette. */
+    variant?: GnomeVariant;
 }
 
 export default function GnomeIcon({
     size = 24,
     className = '',
+    variant = 'default',
 }: GnomeIconProps) {
     return (
         <svg
@@ -121,6 +126,22 @@ export default function GnomeIcon({
             <rect x="9" y="21" width="2" height="1" fill="#54473d" />
             <rect x="2" y="22" width="4" height="1" fill="#463b32" />
             <rect x="8" y="22" width="4" height="1" fill="#463b32" />
+            {variant === 'grimoire' ? (
+                <g data-variant="grimoire">
+                    {/* Closed book across the belly: outline, spine, cover, gold mark, page stack. The hands stay on its sides. */}
+                    <rect x="2" y="16" width="10" height="1" fill="#463b32" />
+                    <rect x="2" y="17" width="1" height="4" fill="#463b32" />
+                    <rect x="11" y="17" width="1" height="4" fill="#463b32" />
+                    <rect x="2" y="21" width="10" height="1" fill="#463b32" />
+                    <rect x="3" y="17" width="1" height="3" fill="#3f2763" />
+                    <rect x="4" y="17" width="7" height="3" fill="#5b3a8c" />
+                    <rect x="6" y="17" width="3" height="1" fill="#d9b44a" />
+                    <rect x="7" y="18" width="1" height="1" fill="#d9b44a" />
+                    <rect x="3" y="20" width="8" height="1" fill="#f6e9d3" />
+                    <rect x="1" y="18" width="1" height="1" fill="#eba966" />
+                    <rect x="12" y="18" width="1" height="1" fill="#eba966" />
+                </g>
+            ) : null}
         </svg>
     );
 }

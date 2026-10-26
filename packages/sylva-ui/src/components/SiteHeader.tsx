@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import { SITE_HOME_HREF, type HeaderApp, type NavItem } from '../navItems';
 import AnimatedNav from './AnimatedNav';
-import GnomeIcon from './GnomeIcon';
+import GnomeIcon, { type GnomeVariant } from './GnomeIcon';
 import NavAnchor from './NavAnchor';
 
 export type SiteHeaderProps = {
@@ -21,6 +21,8 @@ export type SiteHeaderProps = {
      * origin passes the site's absolute URL, since `/` is its own home there.
      */
     homeHref?: string;
+    /** Which gnome to show. It still links to the site root. */
+    gnome?: GnomeVariant;
 };
 
 /**
@@ -34,6 +36,7 @@ export default function SiteHeader({
     nav,
     actions,
     homeHref = SITE_HOME_HREF,
+    gnome,
 }: SiteHeaderProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const hasMenu = nav.length > 0 || Boolean(actions);
@@ -61,7 +64,11 @@ export default function SiteHeader({
                             href={homeHref}
                             className="flex items-center"
                         >
-                            <GnomeIcon size={26} className="flex-shrink-0" />
+                            <GnomeIcon
+                                size={26}
+                                variant={gnome}
+                                className="flex-shrink-0"
+                            />
                         </a>
                         {app ? (
                             <NavAnchor

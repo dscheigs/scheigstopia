@@ -38,6 +38,18 @@ describe('SiteHeader', () => {
         expect(crumb).toHaveAttribute('href', '/');
     });
 
+    it('shows the book gnome only when asked, still linking to the root', () => {
+        const { container, rerender } = render(<SiteHeader nav={nav} />);
+        expect(container.querySelector('[data-variant="grimoire"]')).toBeNull();
+        rerender(<SiteHeader nav={nav} gnome="grimoire" />);
+        expect(
+            container.querySelector('[data-variant="grimoire"]')
+        ).not.toBeNull();
+        expect(
+            screen.getByRole('link', { name: 'Scheigstopia - Home' })
+        ).toHaveAttribute('href', '/');
+    });
+
     it('shows the app name after the gnome only inside an app', () => {
         const { rerender } = render(<SiteHeader nav={nav} />);
         expect(

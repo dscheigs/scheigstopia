@@ -26,6 +26,7 @@ export default function GrimoireHeader({
     return (
         <SiteHeader
             homeHref={homeHref}
+            gnome="grimoire"
             app={{ name: 'Grimoire', href: COLLECTION_PATH }}
             nav={
                 signedIn
