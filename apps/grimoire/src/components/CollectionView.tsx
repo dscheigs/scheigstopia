@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import AddCardDialog from '@/components/AddCardDialog';
 import CardThumbnail from '@/components/CardThumbnail';
 import ExportMenu from '@/components/ExportMenu';
-import { Button, inputClasses } from '@scheigs/sylva-ui';
+import { Button, inputClasses, QuantityStepper } from '@scheigs/sylva-ui';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
@@ -148,40 +148,18 @@ export default function CollectionView() {
                                         {item.name}
                                     </span>
                                     <div className="flex items-center gap-2">
-                                        <Button
-                                            aria-label={`Remove one ${item.name}`}
-                                            disabled={
-                                                busy || item.quantity <= 1
+                                        <QuantityStepper
+                                            value={item.quantity}
+                                            onChange={(next) =>
+                                                setQuantity(item, next)
                                             }
-                                            onClick={() =>
-                                                setQuantity(
-                                                    item,
-                                                    item.quantity - 1
-                                                )
-                                            }
-                                            variant="primary"
-                                        >
-                                            −
-                                        </Button>
-                                        <span
-                                            className="min-w-8 text-center text-body font-medium"
-                                            aria-label={`${item.quantity} owned`}
-                                        >
-                                            {item.quantity}
-                                        </span>
-                                        <Button
-                                            aria-label={`Add one ${item.name}`}
+                                            min={1}
                                             disabled={busy}
-                                            onClick={() =>
-                                                setQuantity(
-                                                    item,
-                                                    item.quantity + 1
-                                                )
-                                            }
-                                            variant="primary"
-                                        >
-                                            +
-                                        </Button>
+                                            editable
+                                            decrementLabel={`Remove one ${item.name}`}
+                                            incrementLabel={`Add one ${item.name}`}
+                                            valueLabel={`${item.quantity} owned`}
+                                        />
                                         <button
                                             type="button"
                                             aria-label={`Remove ${item.name} from collection`}

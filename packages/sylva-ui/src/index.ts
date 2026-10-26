@@ -8,6 +8,8 @@ export type {
     ButtonVariant,
 } from './components/Button';
 export { default as GnomeIcon } from './components/GnomeIcon';
+export { default as QuantityStepper } from './components/QuantityStepper';
+export type { QuantityStepperProps } from './components/QuantityStepper';
 export { default as SiteHeader } from './components/SiteHeader';
 export type { SiteHeaderProps } from './components/SiteHeader';
 export { linkKind, SITE_HOME_HREF } from './navItems';
