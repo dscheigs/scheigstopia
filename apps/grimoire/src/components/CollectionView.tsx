@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import AddCardDialog from '@/components/AddCardDialog';
 import CardThumbnail from '@/components/CardThumbnail';
 import ExportMenu from '@/components/ExportMenu';
-import { Button, Search } from '@scheigs/sylva-ui';
+import { Button, Search, Spinner } from '@scheigs/sylva-ui';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
@@ -113,7 +113,7 @@ export default function CollectionView() {
                 />
 
                 {items === null && (
-                    <p className="text-body text-text-minimal">Loading...</p>
+                    <Spinner className="mx-auto block w-fit text-text-minimal" />
                 )}
                 {items !== null && items.length === 0 && (
                     <p className="text-body text-text-minimal">
