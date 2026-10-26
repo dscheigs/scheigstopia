@@ -143,7 +143,9 @@ export default function QueueView({ userId }: { userId: string }) {
             </div>
 
             {!ready && (
-                <Spinner className="mx-auto block w-fit text-text-minimal" />
+                <div className="flex justify-center">
+                    <Spinner className="text-text-minimal" />
+                </div>
             )}
             {ready && items.length === 0 && (
                 <p className="text-body text-text-minimal">
