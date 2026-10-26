@@ -30,9 +30,21 @@ describe('Button', () => {
         expect(button.className).not.toContain('bg-neutral-800');
     });
 
+    it('renders the destructive variant in red', () => {
+        render(<Button variant="destructive">Go</Button>);
+        const button = screen.getByRole('button', { name: 'Go' });
+        expect(button.className).toContain('bg-destructive');
+        expect(button.className).not.toContain('bg-neutral-800');
+    });
+
     it('gives every variant the same cursor behavior', () => {
         const { rerender } = render(<Button variant="primary">Go</Button>);
-        for (const variant of ['primary', 'secondary', 'brand'] as const) {
+        for (const variant of [
+            'primary',
+            'secondary',
+            'brand',
+            'destructive',
+        ] as const) {
             rerender(<Button variant={variant}>Go</Button>);
             const classes = screen.getByRole('button').className.split(' ');
             expect(classes).toContain('enabled:cursor-pointer');
@@ -72,7 +84,12 @@ describe('Button', () => {
     });
 
     it('gives every variant the button radius', () => {
-        for (const variant of ['primary', 'secondary', 'brand'] as const) {
+        for (const variant of [
+            'primary',
+            'secondary',
+            'brand',
+            'destructive',
+        ] as const) {
             const { unmount } = render(<Button variant={variant}>Go</Button>);
             expect(screen.getByRole('button').className).toContain(
                 'rounded-button'

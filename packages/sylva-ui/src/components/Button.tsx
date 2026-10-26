@@ -11,7 +11,8 @@ export type ButtonSize = keyof typeof buttonSizeClasses;
 export type ButtonProps = ComponentProps<'button'> & {
     /**
      * `primary` is the filled button; `secondary` is the outlined one; `brand`
-     * is the green call to action.
+     * is the green call to action; `destructive` is the red one for actions
+     * that delete or lose data.
      */
     variant?: ButtonVariant;
     /** `icon` makes a square (a circle, with the button radius) for one icon. */

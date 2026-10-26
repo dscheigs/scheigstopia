@@ -109,6 +109,16 @@ describe('CardDetailDialog', () => {
         expect(confirm).toHaveAttribute('open');
         expect(removed).not.toHaveBeenCalled();
 
+        // Cancel on the left, the red Remove on the right.
+        const actions = Array.from(
+            confirm.querySelectorAll('[data-dialog-actions] button')
+        );
+        expect(actions.map((button) => button.textContent)).toEqual([
+            'Cancel',
+            'Remove card',
+        ]);
+        expect(actions[1].className).toContain('bg-destructive');
+
         // Cancel keeps the card and the sheet.
         await user.click(
             within(confirm).getByRole('button', { name: 'Cancel' })

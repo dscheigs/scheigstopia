@@ -48,6 +48,13 @@
     --success: var(--color-success-500);
     --warning: var(--color-warning-500);
     --error: var(--color-error-500);
+
+    /* Destructive actions: Sylva's feedback "solid" red, darker on hover */
+    --destructive: var(--color-feedback-error-solid);
+    --destructive-hover: light-dark(
+        var(--color-error-700),
+        var(--color-error-600)
+    );
 }
 
 /* Color Theme Mapping */
@@ -67,6 +74,8 @@
     --color-success: var(--success);
     --color-warning: var(--warning);
     --color-error: var(--error);
+    --color-destructive: var(--destructive);
+    --color-destructive-hover: var(--destructive-hover);
 
     /* Neutral colors */
     --color-neutral-50: var(--neutral-50);

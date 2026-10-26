@@ -112,3 +112,45 @@ describe('nested Dialog', () => {
         expect(screen.getByText('Open inner')).toBeInTheDocument();
     });
 });
+
+describe('Dialog actions', () => {
+    it('puts the secondary action first and the primary one last, whatever the prop order', () => {
+        render(
+            <Dialog
+                open
+                onClose={() => {}}
+                title="Remove this card?"
+                primaryAction={<button>Remove</button>}
+                secondaryAction={<button>Cancel</button>}
+            >
+                <p>Body</p>
+            </Dialog>
+        );
+        const footer = document.querySelector('[data-dialog-actions]');
+        expect(footer).not.toBeNull();
+        const labels = Array.from(footer!.querySelectorAll('button')).map(
+            (button) => button.textContent
+        );
+        expect(labels).toEqual(['Cancel', 'Remove']);
+        expect(footer!.className).toContain('justify-between');
+    });
+
+    it('keeps a lone primary action on the right and renders no footer without actions', () => {
+        const { rerender } = render(
+            <Dialog
+                open
+                onClose={() => {}}
+                title="Island"
+                primaryAction={<button>Save</button>}
+            />
+        );
+        const footer = document.querySelector('[data-dialog-actions]')!;
+        expect(footer.lastElementChild).toContainElement(
+            screen.getByRole('button', { name: 'Save' })
+        );
+        expect(footer.firstElementChild).toBeEmptyDOMElement();
+
+        rerender(<Dialog open onClose={() => {}} title="Island" />);
+        expect(document.querySelector('[data-dialog-actions]')).toBeNull();
+    });
+});

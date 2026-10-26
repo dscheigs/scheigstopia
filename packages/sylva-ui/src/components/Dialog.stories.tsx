@@ -40,6 +40,42 @@ export const Default: Story = {
 };
 
 /**
+ * A confirm with actions. Pass `secondaryAction` (Cancel) and `primaryAction`
+ * (Remove); the dialog puts them on the left and right, in that order, whatever
+ * order the props are written in.
+ */
+export const WithActions: Story = {
+    args: { open: false, onClose: () => {}, title: 'Island' },
+    render: function Render() {
+        const dialog = useDialogState();
+        return (
+            <>
+                <Button onClick={() => dialog.show()}>Open dialog</Button>
+                <Dialog
+                    open={dialog.open}
+                    onClose={dialog.close}
+                    title="Remove this card?"
+                    primaryAction={
+                        <Button variant="destructive" onClick={dialog.close}>
+                            Remove
+                        </Button>
+                    }
+                    secondaryAction={
+                        <Button variant="secondary" onClick={dialog.close}>
+                            Cancel
+                        </Button>
+                    }
+                >
+                    <p className="text-body text-text-minimal">
+                        Island will be removed from your collection.
+                    </p>
+                </Dialog>
+            </>
+        );
+    },
+};
+
+/**
  * Dialogs stack in the browser's top layer, so a confirm can open inside
  * another dialog. Escape closes only the top one.
  */
@@ -59,13 +95,24 @@ export const Nested: Story = {
                         open={confirm.open}
                         onClose={confirm.close}
                         title="Remove this card?"
-                    >
-                        <div className="flex gap-2">
-                            <Button onClick={confirm.close}>Remove</Button>
+                        primaryAction={
+                            <Button
+                                variant="destructive"
+                                onClick={confirm.close}
+                            >
+                                Remove
+                            </Button>
+                        }
+                        secondaryAction={
                             <Button variant="secondary" onClick={confirm.close}>
                                 Cancel
                             </Button>
-                        </div>
+                        }
+                    >
+                        <p className="text-body text-text-minimal">
+                            Cancel sits on the left, the primary action on the
+                            right.
+                        </p>
                     </Dialog>
                 </Dialog>
             </>

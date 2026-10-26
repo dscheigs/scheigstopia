@@ -9,7 +9,7 @@ const meta = {
     argTypes: {
         variant: {
             control: 'inline-radio',
-            options: ['primary', 'secondary', 'brand'],
+            options: ['primary', 'secondary', 'brand', 'destructive'],
         },
         disabled: { control: 'boolean' },
     },
@@ -27,6 +27,9 @@ export const Secondary: Story = { args: { variant: 'secondary' } };
 /** The green call to action, for the one thing you most want pressed (sign in). */
 export const Brand: Story = { args: { variant: 'brand' } };
 
+/** The red button, for actions that delete or lose data (Remove). */
+export const Destructive: Story = { args: { variant: 'destructive' } };
+
 /** Hover the buttons: enabled ones show a pointer, disabled ones the default arrow. */
 export const Disabled: Story = {
     args: { disabled: true },
@@ -35,6 +38,7 @@ export const Disabled: Story = {
             <Button {...args} variant="primary" />
             <Button {...args} variant="secondary" />
             <Button {...args} variant="brand" />
+            <Button {...args} variant="destructive" />
         </div>
     ),
 };
@@ -54,6 +58,10 @@ export const AllStates: Story = {
             <Button variant="brand">Brand</Button>
             <Button variant="brand" disabled>
                 Brand disabled
+            </Button>
+            <Button variant="destructive">Destructive</Button>
+            <Button variant="destructive" disabled>
+                Destructive disabled
             </Button>
         </div>
     ),
