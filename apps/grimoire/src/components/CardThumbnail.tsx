@@ -59,13 +59,18 @@ function CardPreview({
  * image beside it; tapping or clicking it (phones, keyboards) opens the same
  * image full screen. The larger image starts loading on the first pointer or
  * focus event, so it is usually ready by the time it is shown.
+ *
+ * With `interactive={false}` it is only a picture (plus the hover preview), for
+ * use inside a button, which cannot hold another button.
  */
 export default function CardThumbnail({
     imageId,
     name,
+    interactive = true,
 }: {
     imageId: string | undefined;
     name: string;
+    interactive?: boolean;
 }) {
     const [open, setOpen] = useState(false);
     const small = CARD_IMAGE_DIMENSIONS.small;
@@ -85,28 +90,42 @@ export default function CardThumbnail({
 
     const preload = () => preloadCardImage(imageId);
 
+    // eslint-disable-next-line @next/next/no-img-element -- Scryfall's CDN already serves right-sized images
+    const image = (
+        <img
+            src={thumbUrl}
+            alt=""
+            width={small.width}
+            height={small.height}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+        />
+    );
+
     return (
         <span className="group relative shrink-0">
-            <button
-                type="button"
-                aria-label={`Show ${name}`}
-                onPointerEnter={preload}
-                onPointerDown={preload}
-                onFocus={preload}
-                onClick={() => setOpen(true)}
-                className={`${frame} block cursor-zoom-in overflow-hidden`}
-            >
-                {/* eslint-disable-next-line @next/next/no-img-element -- Scryfall's CDN already serves right-sized images */}
-                <img
-                    src={thumbUrl}
-                    alt=""
-                    width={small.width}
-                    height={small.height}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover"
-                />
-            </button>
+            {interactive ? (
+                <button
+                    type="button"
+                    aria-label={`Show ${name}`}
+                    onPointerEnter={preload}
+                    onPointerDown={preload}
+                    onFocus={preload}
+                    onClick={() => setOpen(true)}
+                    className={`${frame} block cursor-zoom-in overflow-hidden`}
+                >
+                    {image}
+                </button>
+            ) : (
+                <span
+                    onPointerEnter={preload}
+                    onPointerDown={preload}
+                    className={`${frame} block overflow-hidden`}
+                >
+                    {image}
+                </span>
+            )}
             {/* Hover only: hover: never matches on touch screens. */}
             <span
                 aria-hidden="true"

@@ -1,10 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AddCardDialog from '@/components/AddCardDialog';
+import CardDetailDialog from '@/components/CardDetailDialog';
 import CollectionList from '@/components/CollectionList';
 import ExportMenu from '@/components/ExportMenu';
 import { Button, Search, Spinner } from '@scheigs/sylva-ui';
+import { useUrlDialogState } from '@/lib/useUrlDialogState';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
@@ -13,6 +15,7 @@ import { useCardNames, useCollection, useSetQuantity } from '@/lib/queries';
 export default function CollectionView() {
     const [filter, setFilter] = useState('');
     const [adding, setAdding] = useState(false);
+    const detail = useUrlDialogState('card');
 
     const collection = useCollection();
     const cardNames = useCardNames();
@@ -71,11 +74,20 @@ export default function CollectionView() {
         setQuantityMutation.mutate({ item, quantity });
     };
 
-    const removeCard = (item: CollectionItem) => {
-        if (window.confirm(`Remove ${item.name} from your collection?`)) {
-            setQuantity(item, 0);
-        }
-    };
+    // Only the id is kept; the card is looked up on each render, so a quantity
+    // change shows in the open sheet at once and a removed card closes it.
+    const selected =
+        detail.value === null
+            ? undefined
+            : items?.find((item) => item.oracleId === detail.value);
+
+    // A card that is gone (removed, or from a stale link) leaves nothing to
+    // show, so drop the selection and its address parameter.
+    const { value: selectedId, close: closeDetail } = detail;
+    const missing = items !== null && selectedId !== null && !selected;
+    useEffect(() => {
+        if (missing) closeDetail();
+    }, [missing, closeDetail]);
 
     return (
         <div className="mx-auto max-w-5xl space-y-10 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
@@ -134,9 +146,7 @@ export default function CollectionView() {
                     <CollectionList
                         items={visibleItems}
                         imageIds={imageIds}
-                        busyId={busyId}
-                        onSetQuantity={setQuantity}
-                        onRemove={removeCard}
+                        onOpen={(item) => detail.show(item.oracleId)}
                     />
                 )}
             </section>
@@ -144,6 +154,15 @@ export default function CollectionView() {
             <p role="alert" aria-live="polite" className="text-body text-error">
                 {error}
             </p>
+
+            <CardDetailDialog
+                item={selected}
+                imageId={selected && imageIds.get(selected.oracleId)}
+                busy={selected !== undefined && busyId === selected.oracleId}
+                onSetQuantity={setQuantity}
+                onRemove={(item) => setQuantity(item, 0)}
+                onClose={detail.close}
+            />
 
             {adding && (
                 <AddCardDialog

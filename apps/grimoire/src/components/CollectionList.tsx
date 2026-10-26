@@ -3,16 +3,15 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import CardThumbnail from '@/components/CardThumbnail';
-import { QuantityStepper } from '@scheigs/sylva-ui';
 import type { CollectionItem } from '@/lib/collection';
 
 /**
  * A row's height in rem, used only until the row has been measured. Rows are
- * one layout at every width (thumbnail, then a one-line name over the
- * controls), so the estimate is close and the measurement a formality. It is
+ * one layout at every width (thumbnail, a one-line name and a quantity
+ * badge), so the estimate is close and the measurement a formality. It is
  * in rem, not pixels, so it follows the user's text size.
  */
-const ROW_ESTIMATE_REM = 6.25;
+const ROW_ESTIMATE_REM = 5.5;
 
 /** Rows kept mounted beyond the visible ones, so a fast scroll does not flash. */
 const OVERSCAN = 8;
@@ -28,10 +27,8 @@ type CollectionListProps = {
     items: CollectionItem[];
     /** oracleId -> Scryfall image id; empty until the card list loads. */
     imageIds: Map<string, string>;
-    /** The card whose quantity is being saved, or null. */
-    busyId: string | null;
-    onSetQuantity: (item: CollectionItem, quantity: number) => void;
-    onRemove: (item: CollectionItem) => void;
+    /** Called when a row is activated; the caller shows the card's detail. */
+    onOpen: (item: CollectionItem) => void;
 };
 
 /**
@@ -40,13 +37,12 @@ type CollectionListProps = {
  * it uses the window virtualizer. It stays a real `ul` of `li`s: because most
  * rows are not in the DOM, each row says its place and the list's size
  * (`aria-posinset` / `aria-setsize`) so assistive tech still hears "3 of 2,400".
+ * Each row is one button that opens the card's detail; editing lives there.
  */
 export default function CollectionList({
     items,
     imageIds,
-    busyId,
-    onSetQuantity,
-    onRemove,
+    onOpen,
 }: CollectionListProps) {
     const listRef = useRef<HTMLUListElement>(null);
     // Distance from the top of the page to the top of the list. Nothing above
@@ -81,7 +77,6 @@ export default function CollectionList({
         >
             {virtualizer.getVirtualItems().map((row) => {
                 const item = items[row.index];
-                const busy = busyId === item.oracleId;
                 return (
                     <li
                         key={row.key}
@@ -89,7 +84,7 @@ export default function CollectionList({
                         data-index={row.index}
                         aria-posinset={row.index + 1}
                         aria-setsize={items.length}
-                        className={`absolute left-0 top-0 flex w-full items-center gap-3 px-4 py-3 ${
+                        className={`absolute left-0 top-0 w-full ${
                             row.index > 0
                                 ? 'border-t border-border-minimal'
                                 : ''
@@ -98,38 +93,31 @@ export default function CollectionList({
                             transform: `translateY(${row.start - virtualizer.options.scrollMargin}px)`,
                         }}
                     >
-                        <CardThumbnail
-                            imageId={imageIds.get(item.oracleId)}
-                            name={item.name}
-                        />
-                        <div className="min-w-0 flex-1 space-y-1">
-                            <p className="truncate text-body" title={item.name}>
+                        <button
+                            type="button"
+                            aria-haspopup="dialog"
+                            aria-label={`${item.name}, ${item.quantity} owned`}
+                            onClick={() => onOpen(item)}
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-minimal-hover"
+                        >
+                            <CardThumbnail
+                                imageId={imageIds.get(item.oracleId)}
+                                name={item.name}
+                                interactive={false}
+                            />
+                            <span
+                                className="min-w-0 flex-1 truncate text-body"
+                                title={item.name}
+                            >
                                 {item.name}
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <QuantityStepper
-                                    value={item.quantity}
-                                    onChange={(next) =>
-                                        onSetQuantity(item, next)
-                                    }
-                                    min={1}
-                                    disabled={busy}
-                                    editable
-                                    decrementLabel={`Remove one ${item.name}`}
-                                    incrementLabel={`Add one ${item.name}`}
-                                    valueLabel={`${item.quantity} owned`}
-                                />
-                                <button
-                                    type="button"
-                                    aria-label={`Remove ${item.name} from collection`}
-                                    disabled={busy}
-                                    onClick={() => onRemove(item)}
-                                    className="inline-flex min-h-11 items-center justify-center rounded-button border border-border-minimal px-3 text-caption transition-colors hover:bg-surface-minimal-hover disabled:opacity-50"
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                        </div>
+                            </span>
+                            <span
+                                aria-hidden="true"
+                                className="shrink-0 rounded-button border border-border-minimal px-2 text-caption"
+                            >
+                                ×{item.quantity}
+                            </span>
+                        </button>
                     </li>
                 );
             })}

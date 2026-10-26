@@ -20,3 +20,7 @@ export { default as SiteHeader } from './components/SiteHeader';
 export type { SiteHeaderProps } from './components/SiteHeader';
 export { linkKind, SITE_HOME_HREF } from './navItems';
 export type { HeaderApp, LinkKind, NavItem } from './navItems';
+export { default as Dialog } from './components/Dialog';
+export type { DialogProps } from './components/Dialog';
+export { useDialogState } from './useDialogState';
+export type { DialogState, ShowDialog } from './useDialogState';
