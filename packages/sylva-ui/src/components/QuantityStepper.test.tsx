@@ -106,4 +106,12 @@ describe('QuantityStepper', () => {
         await user.tab();
         expect(onChange).not.toHaveBeenCalled();
     });
+
+    it('keeps the editable field at 16px so iOS Safari does not zoom on focus', () => {
+        setup({ editable: true });
+        // text-input is fixed at 1rem; text-body follows the smaller body size.
+        const field = screen.getByRole('textbox');
+        expect(field).toHaveClass('text-input');
+        expect(field).not.toHaveClass('text-body');
+    });
 });

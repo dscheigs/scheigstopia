@@ -63,8 +63,8 @@ export const InsideButton: Story = {
 /** Centered, as in an empty list that is still loading. */
 export const Centered: Story = {
     render: () => (
-        <div className="py-8 text-text-minimal">
-            <Spinner className="mx-auto block w-fit" />
+        <div className="flex justify-center py-8 text-text-minimal">
+            <Spinner />
         </div>
     ),
 };

@@ -113,7 +113,9 @@ export default function CollectionView() {
                 />
 
                 {items === null && (
-                    <Spinner className="mx-auto block w-fit text-text-minimal" />
+                    <div className="flex justify-center">
+                        <Spinner className="text-text-minimal" />
+                    </div>
                 )}
                 {items !== null && items.length === 0 && (
                     <p className="text-body text-text-minimal">
