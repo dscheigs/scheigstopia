@@ -17,6 +17,7 @@ const scale = [
     { name: 'text-subheading', className: 'text-subheading' },
     { name: 'text-lead', className: 'text-lead' },
     { name: 'text-body', className: 'text-body' },
+    { name: 'text-input', className: 'text-input' },
     { name: 'text-caption', className: 'text-caption' },
 ];
 
