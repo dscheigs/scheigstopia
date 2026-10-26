@@ -235,10 +235,6 @@ export default function QueueView({ userId }: { userId: string }) {
                     />
                 </EditCardDialog>
             )}
-
-            <p role="alert" aria-live="polite" className="text-body text-error">
-                {commit.error?.message ?? null}
-            </p>
         </div>
     );
 }
