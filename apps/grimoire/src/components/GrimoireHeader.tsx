@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { SiteHeader } from '@scheigs/sylva-ui';
+import { siteOrigin } from '@/lib/siteUrl';
 import { ADD_PATH, COLLECTION_PATH, isAddRoute } from '@/lib/addRoutes';
 
 /**
@@ -18,8 +19,13 @@ export default function GrimoireHeader({
     signOut: ReactNode;
 }) {
     const pathname = usePathname();
+    // Literal property access so Next inlines the value into the client bundle.
+    const homeHref = siteOrigin({
+        NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    });
     return (
         <SiteHeader
+            homeHref={homeHref}
             app={{ name: 'Grimoire', href: COLLECTION_PATH }}
             nav={
                 signedIn

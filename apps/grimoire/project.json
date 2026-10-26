@@ -31,7 +31,10 @@
         "dev-pair": {
             "command": "next dev --port 3001",
             "options": {
-                "cwd": "apps/grimoire"
+                "cwd": "apps/grimoire",
+                "env": {
+                    "NEXT_PUBLIC_SITE_URL": "http://localhost:3000"
+                }
             },
             "continuous": true,
             "cache": false
