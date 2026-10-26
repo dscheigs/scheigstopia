@@ -20,6 +20,7 @@
         "@scheigs/sylva": "workspace:*",
         "@scheigs/sylva-ui": "workspace:*",
         "@tanstack/react-query": "^5.104.1",
+        "@tanstack/react-virtual": "^3.14.22",
         "@techstark/opencv-js": "5.0.0-release.1",
         "@vercel/analytics": "^2.0.1",
         "@vercel/blob": "2.8.1",
