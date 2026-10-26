@@ -23,6 +23,21 @@ describe('SiteHeader', () => {
         expect(home).not.toHaveAttribute('data-client-link');
     });
 
+    it('uses homeHref for the gnome, still as a plain anchor', () => {
+        render(
+            <SiteHeader
+                nav={nav}
+                app={{ name: 'Grimoire', href: '/' }}
+                homeHref="https://site.test"
+            />
+        );
+        const home = screen.getByRole('link', { name: 'Scheigstopia - Home' });
+        expect(home).toHaveAttribute('href', 'https://site.test');
+        expect(home).not.toHaveAttribute('data-client-link');
+        const crumb = screen.getAllByRole('link', { name: 'Grimoire' })[0];
+        expect(crumb).toHaveAttribute('href', '/');
+    });
+
     it('shows the book gnome only when asked, still linking to the root', () => {
         const { container, rerender } = render(<SiteHeader nav={nav} />);
         expect(container.querySelector('[data-variant="grimoire"]')).toBeNull();

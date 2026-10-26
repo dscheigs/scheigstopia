@@ -102,6 +102,7 @@ The project follows a **minimalistic color approach** with strategic use of colo
 
 - **Minimal body colors**: Content areas (cards, modals, forms) use neutral black/white/gray colors
 - **Accent colors for navigation**: Headers, navigation, and primary actions use the green theme
+- **Header gnome**: the gnome in `SiteHeader` always goes to the site root, a plain `<a>`. An app on its own origin supplies the site's absolute URL as `homeHref` (Grimoire reads `NEXT_PUBLIC_SITE_URL`); the app-name breadcrumb stays the app's own home.
 - **Clean contrast**: High contrast between text and backgrounds for readability
 - **Consistent neutrals**: Use the defined neutral scale for all non-accent elements
 

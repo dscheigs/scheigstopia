@@ -16,19 +16,26 @@ export type SiteHeaderProps = {
      * menu too, so style it with `navActionClasses` to look like the links.
      */
     actions?: ReactNode;
+    /**
+     * Where the gnome goes. Defaults to the site root (`/`). An app on its own
+     * origin passes the site's absolute URL, since `/` is its own home there.
+     */
+    homeHref?: string;
     /** Which gnome to show. It still links to the site root. */
     gnome?: GnomeVariant;
 };
 
 /**
  * The header both apps share. Left, the constant global layer: the gnome, which
- * always goes to the site root, then the current app's name. Right, the
+ * always goes to the site root (`homeHref`, an absolute URL when the app is on
+ * its own origin), then the current app's name. Right, the
  * contextual layer: the current app's navigation.
  */
 export default function SiteHeader({
     app,
     nav,
     actions,
+    homeHref = SITE_HOME_HREF,
     gnome,
 }: SiteHeaderProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -54,7 +61,7 @@ export default function SiteHeader({
                         <a
                             title="(It's pronounced Shy-gert)"
                             aria-label="Scheigstopia - Home"
-                            href={SITE_HOME_HREF}
+                            href={homeHref}
                             className="flex items-center"
                         >
                             <GnomeIcon
