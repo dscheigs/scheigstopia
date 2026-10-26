@@ -89,7 +89,7 @@ function CardDetailBody({
                     valueLabel={`${item.quantity} owned`}
                 />
                 <Button
-                    variant="secondary"
+                    variant="destructive"
                     disabled={busy}
                     onClick={() => confirm.show()}
                 >
@@ -100,25 +100,26 @@ function CardDetailBody({
                 open={confirm.open}
                 onClose={confirm.close}
                 title="Remove this card?"
+                primaryAction={
+                    <Button
+                        variant="destructive"
+                        onClick={() => {
+                            confirm.close();
+                            onRemove(item);
+                        }}
+                    >
+                        Remove card
+                    </Button>
+                }
+                secondaryAction={
+                    <Button variant="secondary" onClick={confirm.close}>
+                        Cancel
+                    </Button>
+                }
             >
-                <div className="space-y-4">
-                    <p className="text-body text-text-minimal">
-                        {item.name} will be removed from your collection.
-                    </p>
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={() => {
-                                confirm.close();
-                                onRemove(item);
-                            }}
-                        >
-                            Remove card
-                        </Button>
-                        <Button variant="secondary" onClick={confirm.close}>
-                            Cancel
-                        </Button>
-                    </div>
-                </div>
+                <p className="text-body text-text-minimal">
+                    {item.name} will be removed from your collection.
+                </p>
             </Dialog>
         </div>
     );

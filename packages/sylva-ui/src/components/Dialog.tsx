@@ -11,6 +11,13 @@ export type DialogProps = {
     /** The heading, also the dialog's accessible name. */
     title: ReactNode;
     children?: ReactNode;
+    /**
+     * The main action, such as a submit or confirm button. The footer always
+     * puts it on the right, so callers cannot get the order wrong.
+     */
+    primaryAction?: ReactNode;
+    /** The other action, usually Cancel. Always on the left, opposite the primary one. */
+    secondaryAction?: ReactNode;
     /** Extra classes for the content area under the heading. */
     className?: string;
 };
@@ -21,6 +28,11 @@ export type DialogProps = {
  * dialog from `sm` up. Controlled: it owns no state, so pair it with
  * `useDialogState`. Its children mount only while open.
  *
+ * Actions go in `primaryAction` and `secondaryAction`, not in the children:
+ * the footer lays them out with the secondary one (Cancel) on the left and the
+ * primary one (Remove, Save) on the right, the same in every dialog. Use
+ * `variant="destructive"` on the primary button for a destructive confirm.
+ *
  * Dialogs stack in the browser's top layer, so one can open inside another
  * and Escape closes only the top one.
  */
@@ -29,6 +41,8 @@ export default function Dialog({
     onClose,
     title,
     children,
+    primaryAction,
+    secondaryAction,
     className = '',
 }: DialogProps) {
     const ref = useRef<HTMLDialogElement>(null);
@@ -77,6 +91,15 @@ export default function Dialog({
                         </Button>
                     </div>
                     <div className={className}>{children}</div>
+                    {(primaryAction || secondaryAction) && (
+                        <div
+                            data-dialog-actions
+                            className="flex items-center justify-between gap-2"
+                        >
+                            <div>{secondaryAction}</div>
+                            <div>{primaryAction}</div>
+                        </div>
+                    )}
                 </div>
             )}
         </dialog>

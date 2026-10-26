@@ -36,7 +36,9 @@ Architecture), and each PR gets a preview URL from the Vercel bot.
 
 Use `Button` from `@scheigs/sylva-ui` with `variant="primary"` (filled, the main action),
 `variant="secondary"` (outlined) or `variant="brand"` (the green call to action, such as
-sign-in; one per screen). Its `type` defaults to `button`, so pass
+sign-in; one per screen) or `variant="destructive"` (red, for actions that delete or lose
+data, such as Remove; its color is the Sylva feedback error "solid", mapped to
+`bg-destructive`). Its `type` defaults to `button`, so pass
 `type="submit"` in a form. Use `size="icon"` (with an `aria-label`) for an
 icon-only button: a square, so a circle with the button radius. Extra classes go in
 `className`, for example to position it. A link that should look like a button uses `buttonClasses` or
@@ -56,6 +58,12 @@ and a close button also close it): a bottom sheet on small screens, a centered d
 from `sm` up. It is controlled (`open`, `onClose`, `title`) and its children mount only
 while open. `useDialogState()` holds the open state; `useDialogState<string>()` also holds
 a payload such as an id (store the id, not a copy of the item). Dialogs can nest.
+
+Put a dialog's buttons in its `primaryAction` and `secondaryAction` props, not in the
+children. The footer lays them out the same way everywhere: the secondary action
+(Cancel) on the left, the primary action (Save, Remove) on the right, so a caller cannot
+get the order wrong. For a destructive confirm, make the primary button
+`variant="destructive"`.
 
 ## Border radius
 

@@ -24,6 +24,9 @@ export const buttonVariantClasses = {
     secondary: 'border border-border-minimal hover:bg-surface-minimal-hover',
     /** The green call to action: sign-in and the like. Use sparingly, one per screen. */
     brand: 'bg-accent-muted font-medium text-neutral-50 hover:bg-accent-muted-hover',
+    /** The red button for actions that delete or lose data, such as Remove. */
+    destructive:
+        'bg-destructive font-medium text-neutral-50 hover:bg-destructive-hover',
 };
 
 // For anchors that look like buttons; use `Button` for real buttons.
