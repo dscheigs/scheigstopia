@@ -61,3 +61,15 @@ export const Disabled: Story = {
     args: { disabled: true, editable: true },
     render: (args) => <Live {...args} />,
 };
+
+/** A save is pending or in flight: a line says so, and the buttons keep working. */
+export const Pending: Story = {
+    args: { editable: true, pending: true },
+    render: (args) => <Live {...args} />,
+};
+
+/** A failed save: the app rolls the count back and passes the message. */
+export const ErrorState: Story = {
+    args: { editable: true, error: 'Could not save. Try again.' },
+    render: (args) => <Live {...args} />,
+};

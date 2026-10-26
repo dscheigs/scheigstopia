@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useDialogState } from '@scheigs/sylva-ui';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CardDetailDialog from '@/components/CardDetailDialog';
 import type { CollectionItem } from '@/lib/collection';
 
@@ -14,7 +14,13 @@ const initial: CollectionItem[] = [
 ];
 
 /** Like CollectionView: keeps only the id and looks the card up each render. */
-function Harness({ onRemoveSpy }: { onRemoveSpy?: (id: string) => void }) {
+function Harness({
+    onRemoveSpy,
+    onSave,
+}: {
+    onRemoveSpy?: (id: string) => void;
+    onSave?: (id: string, quantity: number) => Promise<void>;
+}) {
     const [items, setItems] = useState(initial);
     const detail = useDialogState<string>();
     const selected = items.find((item) => item.oracleId === detail.value);
@@ -24,17 +30,21 @@ function Harness({ onRemoveSpy }: { onRemoveSpy?: (id: string) => void }) {
             <CardDetailDialog
                 item={selected}
                 imageId={imageId}
-                busy={false}
-                onSetQuantity={(item, quantity) =>
+                onSaveQuantity={async (item, quantity) => {
+                    await onSave?.(item.oracleId, quantity);
                     setItems((all) =>
                         all.map((other) =>
-                            other === item ? { ...item, quantity } : other
+                            other.oracleId === item.oracleId
+                                ? { ...other, quantity }
+                                : other
                         )
-                    )
-                }
+                    );
+                }}
                 onRemove={(item) => {
                     onRemoveSpy?.(item.oracleId);
-                    setItems((all) => all.filter((other) => other !== item));
+                    setItems((all) =>
+                        all.filter((other) => other.oracleId !== item.oracleId)
+                    );
                 }}
                 onClose={detail.close}
             />
@@ -44,8 +54,13 @@ function Harness({ onRemoveSpy }: { onRemoveSpy?: (id: string) => void }) {
 
 const sheet = () => document.querySelector('dialog') as HTMLDialogElement;
 
+beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
+afterEach(() => vi.useRealTimers());
+
+const settle = () => act(() => vi.advanceTimersByTimeAsync(600));
+
 async function openSheet() {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<Harness />);
     await user.click(screen.getByRole('button', { name: 'Open Island' }));
     return user;
@@ -70,16 +85,55 @@ describe('CardDetailDialog', () => {
         expect(dialog.getByRole('button', { name: 'Remove' })).toBeTruthy();
     });
 
-    it('updates the open sheet when the quantity changes', async () => {
+    it('shows clicks at once and saves the final count once', async () => {
+        const saved = vi.fn().mockResolvedValue(undefined);
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+        render(<Harness onSave={saved} />);
+        await user.click(screen.getByRole('button', { name: 'Open Island' }));
+
+        const add = screen.getByRole('button', { name: 'Add one Island' });
+        await user.click(add);
+        await user.click(add);
+        await user.click(screen.getByRole('button', { name: /^Remove one/ }));
+        expect(screen.getByLabelText('4 owned')).toHaveValue('4');
+        expect(saved).not.toHaveBeenCalled();
+        expect(screen.getByText('Saving…')).toBeTruthy();
+        // Neither the buttons nor Remove are locked by the save, except Remove.
+        expect(add).toBeEnabled();
+
+        await settle();
+        expect(saved).toHaveBeenCalledTimes(1);
+        expect(saved).toHaveBeenCalledWith('a', 4);
+        expect(screen.queryByText('Saving…')).toBeNull();
+        expect(screen.getByLabelText('4 owned')).toHaveValue('4');
+    });
+
+    it('rolls the count back and shows the error when the save fails', async () => {
+        const saved = vi.fn().mockRejectedValue(new Error('Could not save.'));
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+        render(<Harness onSave={saved} />);
+        await user.click(screen.getByRole('button', { name: 'Open Island' }));
+        await user.click(
+            screen.getByRole('button', { name: 'Add one Island' })
+        );
+        await settle();
+
+        expect(screen.getByLabelText('3 owned')).toHaveValue('3');
+        expect(screen.getByRole('alert')).toHaveTextContent('Could not save.');
+    });
+
+    it('holds Remove while a save is pending', async () => {
         const user = await openSheet();
         await user.click(
             screen.getByRole('button', { name: 'Add one Island' })
         );
-        expect(screen.getByLabelText('4 owned')).toHaveValue('4');
-        await user.click(
-            screen.getByRole('button', { name: 'Remove one Island' })
-        );
-        expect(screen.getByLabelText('3 owned')).toHaveValue('3');
+        expect(
+            within(sheet()).getByRole('button', { name: 'Remove' })
+        ).toBeDisabled();
+        await settle();
+        expect(
+            within(sheet()).getByRole('button', { name: 'Remove' })
+        ).toBeEnabled();
     });
 
     it('closes from the close button, the backdrop and the browser (Escape)', async () => {
@@ -98,7 +152,7 @@ describe('CardDetailDialog', () => {
 
     it('asks before removing, and removing closes the sheet', async () => {
         const removed = vi.fn();
-        const user = userEvent.setup();
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
         render(<Harness onRemoveSpy={removed} />);
         await user.click(screen.getByRole('button', { name: 'Open Island' }));
 

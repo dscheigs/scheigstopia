@@ -8,15 +8,21 @@ import {
 } from '@scheigs/sylva-ui';
 import { CARD_IMAGE_DIMENSIONS, cardImageUrl } from '@/lib/cardImages';
 import type { CollectionItem } from '@/lib/collection';
+import { useDebouncedQuantity } from '@/lib/useDebouncedQuantity';
 
 type CardDetailDialogProps = {
     /** The card to show, or undefined to keep the sheet closed. */
     item: CollectionItem | undefined;
     /** Scryfall image id for the card, if the card list has loaded. */
     imageId: string | undefined;
-    /** True while this card's quantity is being saved. */
-    busy: boolean;
-    onSetQuantity: (item: CollectionItem, quantity: number) => void;
+    /**
+     * Saves a quantity and rejects with a displayable message if it fails.
+     * The sheet debounces: it is called once, with the final count.
+     */
+    onSaveQuantity: (
+        item: CollectionItem,
+        quantity: number
+    ) => Promise<unknown>;
     onRemove: (item: CollectionItem) => void;
     onClose: () => void;
 };
@@ -24,15 +30,15 @@ type CardDetailDialogProps = {
 /**
  * What a collection row opens: the large card image, the quantity stepper and
  * Remove, in a bottom sheet on a phone and a centered dialog on desktop. It
- * shows whatever `item` it is given on each render, so a quantity change
- * appears at once and a removed card (item undefined) closes it. Remove asks
- * first, in a second dialog stacked on top of the sheet.
+ * shows whatever `item` it is given on each render and a removed card (item
+ * undefined) closes it. The count changes at once on every click and is saved
+ * once, after the user stops (see `useDebouncedQuantity`). Remove asks first,
+ * in a second dialog stacked on top of the sheet.
  */
 export default function CardDetailDialog({
     item,
     imageId,
-    busy,
-    onSetQuantity,
+    onSaveQuantity,
     onRemove,
     onClose,
 }: CardDetailDialogProps) {
@@ -43,8 +49,7 @@ export default function CardDetailDialog({
                 <CardDetailBody
                     item={item}
                     imageId={imageId}
-                    busy={busy}
-                    onSetQuantity={onSetQuantity}
+                    onSaveQuantity={onSaveQuantity}
                     onRemove={onRemove}
                 />
             )}
@@ -55,13 +60,16 @@ export default function CardDetailDialog({
 function CardDetailBody({
     item,
     imageId,
-    busy,
-    onSetQuantity,
+    onSaveQuantity,
     onRemove,
 }: Omit<CardDetailDialogProps, 'item' | 'onClose'> & {
     item: CollectionItem;
 }) {
     const confirm = useDialogState();
+    const counter = useDebouncedQuantity({
+        saved: item.quantity,
+        save: (quantity) => onSaveQuantity(item, quantity),
+    });
     const { width, height } = CARD_IMAGE_DIMENSIONS.normal;
     const imageUrl = imageId ? cardImageUrl(imageId, 'normal') : null;
 
@@ -79,18 +87,20 @@ function CardDetailBody({
             )}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <QuantityStepper
-                    value={item.quantity}
-                    onChange={(next) => onSetQuantity(item, next)}
+                    value={counter.quantity}
+                    onChange={counter.setQuantity}
                     min={1}
-                    disabled={busy}
                     editable
+                    pending={counter.pending}
+                    error={counter.error}
                     decrementLabel={`Remove one ${item.name}`}
                     incrementLabel={`Add one ${item.name}`}
-                    valueLabel={`${item.quantity} owned`}
+                    valueLabel={`${counter.quantity} owned`}
                 />
+                {/* Not while a save is pending: it could land after the remove. */}
                 <Button
                     variant="destructive"
-                    disabled={busy}
+                    disabled={counter.pending}
                     onClick={() => confirm.show()}
                 >
                     Remove
@@ -104,6 +114,7 @@ function CardDetailBody({
                     <Button
                         variant="destructive"
                         onClick={() => {
+                            counter.cancel();
                             confirm.close();
                             onRemove(item);
                         }}
