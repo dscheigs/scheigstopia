@@ -33,7 +33,8 @@ function withinRange(n: number, min: number, max: number | undefined) {
  *
  * With `editable`, the number is a text field. A typed value is reported on
  * commit (blur or Enter), clamped to `min`/`max`; an empty or non-numeric
- * entry reverts to the current value, and Escape abandons the edit.
+ * entry reverts to the current value, and Escape abandons the edit. The field
+ * uses `text-input` (a fixed 1rem) so iOS Safari does not zoom on focus.
  */
 export default function QuantityStepper({
     value,
@@ -87,7 +88,7 @@ export default function QuantityStepper({
                             setDraft(null);
                         }
                     }}
-                    className="min-h-11 w-16 rounded-control border border-border-minimal bg-surface-minimal px-2 text-center text-body font-medium disabled:opacity-50"
+                    className="min-h-11 w-16 rounded-control border border-border-minimal bg-surface-minimal px-2 text-center text-input font-medium disabled:opacity-50"
                 />
             ) : (
                 <span

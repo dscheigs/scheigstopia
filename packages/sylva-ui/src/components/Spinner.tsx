@@ -22,7 +22,8 @@ export type SpinnerProps = Omit<ComponentProps<'span'>, 'children'> & {
  * motion get a slow pulse instead of a spin.
  *
  * It is `role="status"` with a visually hidden label (default "Loading").
- * Extra classes go in `className`, for example `mx-auto` to center it.
+ * It is an `inline-block`, so `mx-auto` does not center it: put it in a
+ * `flex justify-center` parent instead.
  */
 export default function Spinner({
     size = 'md',
