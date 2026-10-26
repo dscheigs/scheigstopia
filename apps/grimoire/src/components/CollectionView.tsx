@@ -19,7 +19,10 @@ export default function CollectionView() {
 
     const collection = useCollection();
     const cardNames = useCardNames();
-    const setQuantityMutation = useSetQuantity();
+    // Two mutations so a failed quantity save is reported in the sheet (by
+    // its counter) and only a failed Remove lands in the page-level alert.
+    const saveQuantityMutation = useSetQuantity();
+    const removeMutation = useSetQuantity();
 
     // null while loading; a failed load shows the error and an empty list.
     const items = useMemo(
@@ -33,12 +36,7 @@ export default function CollectionView() {
           : cardNames.data;
 
     const error =
-        setQuantityMutation.error?.message ?? collection.error?.message ?? null;
-
-    const busyId =
-        (setQuantityMutation.isPending &&
-            setQuantityMutation.variables.item.oracleId) ||
-        null;
+        removeMutation.error?.message ?? collection.error?.message ?? null;
 
     const index = useMemo(
         () =>
@@ -70,9 +68,8 @@ export default function CollectionView() {
         [items]
     );
 
-    const setQuantity = (item: CollectionItem, quantity: number) => {
-        setQuantityMutation.mutate({ item, quantity });
-    };
+    const saveQuantity = (item: CollectionItem, quantity: number) =>
+        saveQuantityMutation.mutateAsync({ item, quantity });
 
     // Only the id is kept; the card is looked up on each render, so a quantity
     // change shows in the open sheet at once and a removed card closes it.
@@ -158,9 +155,10 @@ export default function CollectionView() {
             <CardDetailDialog
                 item={selected}
                 imageId={selected && imageIds.get(selected.oracleId)}
-                busy={selected !== undefined && busyId === selected.oracleId}
-                onSetQuantity={setQuantity}
-                onRemove={(item) => setQuantity(item, 0)}
+                onSaveQuantity={saveQuantity}
+                onRemove={(item) =>
+                    removeMutation.mutate({ item, quantity: 0 })
+                }
                 onClose={detail.close}
             />
 

@@ -20,6 +20,15 @@ export type QuantityStepperProps = {
     valueLabel: string;
     /** Show the value as a text field the user can type into, not plain text. */
     editable?: boolean;
+    /**
+     * A save is pending or in flight. Shows `pendingLabel` under the buttons;
+     * the buttons stay enabled, so the user can keep stepping.
+     */
+    pending?: boolean;
+    /** Text shown while `pending`. Default "Saving…". */
+    pendingLabel?: string;
+    /** A failed save's message, shown under the buttons as an alert. */
+    error?: string | null;
 };
 
 function withinRange(n: number, min: number, max: number | undefined) {
@@ -35,6 +44,10 @@ function withinRange(n: number, min: number, max: number | undefined) {
  * commit (blur or Enter), clamped to `min`/`max`; an empty or non-numeric
  * entry reverts to the current value, and Escape abandons the edit. The field
  * uses `text-input` (a fixed 1rem) so iOS Safari does not zoom on focus.
+ *
+ * `pending` and `error` only display a save's state, in a line reserved under
+ * the buttons so nothing jumps. The component never disables itself for them:
+ * the app owns the saving (and any debounce), the user keeps clicking.
  */
 export default function QuantityStepper({
     value,
@@ -46,6 +59,9 @@ export default function QuantityStepper({
     incrementLabel,
     valueLabel,
     editable = false,
+    pending = false,
+    pendingLabel = 'Saving…',
+    error = null,
 }: QuantityStepperProps) {
     // The text being typed, or null when the field just shows `value`.
     const [draft, setDraft] = useState<string | null>(null);
@@ -60,53 +76,62 @@ export default function QuantityStepper({
     }
 
     return (
-        <div className="flex items-center gap-2">
-            <Button
-                aria-label={decrementLabel}
-                disabled={disabled || value <= min}
-                onClick={() => onChange(withinRange(value - 1, min, max))}
-                size="icon"
-                variant="primary"
-            >
-                −
-            </Button>
-            {editable ? (
-                <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    aria-label={valueLabel}
-                    disabled={disabled}
-                    value={draft ?? String(value)}
-                    onChange={(event) => setDraft(event.target.value)}
-                    onFocus={(event) => event.target.select()}
-                    onBlur={commit}
-                    onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
-                            commit();
-                        } else if (event.key === 'Escape') {
-                            setDraft(null);
-                        }
-                    }}
-                    className="min-h-11 w-16 rounded-control border border-border-minimal bg-surface-minimal px-2 text-center text-input font-medium disabled:opacity-50"
-                />
-            ) : (
-                <span
-                    className="min-w-8 text-center text-body font-medium"
-                    aria-label={valueLabel}
+        <div aria-busy={pending || undefined}>
+            <div className="flex items-center gap-2">
+                <Button
+                    aria-label={decrementLabel}
+                    disabled={disabled || value <= min}
+                    onClick={() => onChange(withinRange(value - 1, min, max))}
+                    size="icon"
+                    variant="primary"
                 >
-                    {value}
-                </span>
-            )}
-            <Button
-                aria-label={incrementLabel}
-                disabled={disabled || (max !== undefined && value >= max)}
-                onClick={() => onChange(withinRange(value + 1, min, max))}
-                size="icon"
-                variant="primary"
+                    −
+                </Button>
+                {editable ? (
+                    <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        aria-label={valueLabel}
+                        disabled={disabled}
+                        value={draft ?? String(value)}
+                        onChange={(event) => setDraft(event.target.value)}
+                        onFocus={(event) => event.target.select()}
+                        onBlur={commit}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                commit();
+                            } else if (event.key === 'Escape') {
+                                setDraft(null);
+                            }
+                        }}
+                        className="min-h-11 w-16 rounded-control border border-border-minimal bg-surface-minimal px-2 text-center text-input font-medium disabled:opacity-50"
+                    />
+                ) : (
+                    <span
+                        className="min-w-8 text-center text-body font-medium"
+                        aria-label={valueLabel}
+                    >
+                        {value}
+                    </span>
+                )}
+                <Button
+                    aria-label={incrementLabel}
+                    disabled={disabled || (max !== undefined && value >= max)}
+                    onClick={() => onChange(withinRange(value + 1, min, max))}
+                    size="icon"
+                    variant="primary"
+                >
+                    +
+                </Button>
+            </div>
+            <p
+                role={error ? 'alert' : 'status'}
+                aria-live="polite"
+                className={`min-h-5 pt-1 text-caption ${error ? 'text-error' : 'text-text-minimal'}`}
             >
-                +
-            </Button>
+                {error ?? (pending ? pendingLabel : null)}
+            </p>
         </div>
     );
 }
