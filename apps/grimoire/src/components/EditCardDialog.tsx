@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { Button, inputClasses, X } from '@scheigs/sylva-ui';
+import { Button, TextField, X } from '@scheigs/sylva-ui';
 import ScryfallFallback from '@/components/ScryfallFallback';
 import { searchCards, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import { useModalDialog } from '@/lib/useModalDialog';
@@ -73,7 +73,7 @@ export default function EditCardDialog({
                     <label htmlFor="edit-card-search" className="sr-only">
                         Card name
                     </label>
-                    <input
+                    <TextField
                         id="edit-card-search"
                         type="search"
                         autoFocus
@@ -86,7 +86,6 @@ export default function EditCardDialog({
                         }
                         disabled={!index}
                         autoComplete="off"
-                        className={inputClasses}
                     />
                     {results.length > 0 && (
                         <ul className="divide-y divide-border-minimal overflow-hidden rounded-surface border border-border-minimal">

@@ -69,6 +69,13 @@
     line-height: 1.6;
 }
 
+.text-input {
+    /* Fixed at 1rem: iOS Safari zooms the page when a focused input is under 16px. */
+    font-size: 1rem;
+    font-weight: var(--font-weight-normal);
+    line-height: 1.6;
+}
+
 .text-caption {
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-light);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { Button, inputClasses, X } from '@scheigs/sylva-ui';
+import { Button, TextField, X } from '@scheigs/sylva-ui';
 import ScryfallFallback from '@/components/ScryfallFallback';
 import { searchCards, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import { useAddCard } from '@/lib/queries';
@@ -83,7 +83,7 @@ export default function AddCardDialog({
                     <label htmlFor="add-card-search" className="sr-only">
                         Card name
                     </label>
-                    <input
+                    <TextField
                         id="add-card-search"
                         ref={searchRef}
                         type="search"
@@ -96,7 +96,6 @@ export default function AddCardDialog({
                         autoCapitalize="none"
                         spellCheck={false}
                         disabled={!index}
-                        className={inputClasses}
                     />
                     {missing && (
                         <p className="text-caption text-text-minimal">

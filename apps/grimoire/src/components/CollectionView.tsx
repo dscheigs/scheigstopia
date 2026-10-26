@@ -4,12 +4,7 @@ import { useMemo, useState } from 'react';
 import AddCardDialog from '@/components/AddCardDialog';
 import CardThumbnail from '@/components/CardThumbnail';
 import ExportMenu from '@/components/ExportMenu';
-import {
-    Button,
-    inputClasses,
-    QuantityStepper,
-    Spinner,
-} from '@scheigs/sylva-ui';
+import { Button, QuantityStepper, Search, Spinner } from '@scheigs/sylva-ui';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
@@ -110,14 +105,11 @@ export default function CollectionView() {
                 <label htmlFor="collection-filter" className="sr-only">
                     Filter your collection
                 </label>
-                <input
+                <Search
                     id="collection-filter"
-                    type="search"
                     value={filter}
                     onChange={(event) => setFilter(event.target.value)}
                     placeholder="Filter your collection"
-                    autoComplete="off"
-                    className={inputClasses}
                 />
 
                 {items === null && (

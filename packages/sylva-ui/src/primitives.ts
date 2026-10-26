@@ -34,7 +34,7 @@ export const secondaryButtonClasses = `${buttonBaseClasses} ${buttonSizeClasses.
 export const brandButtonClasses = `${buttonBaseClasses} ${buttonSizeClasses.default} ${buttonVariantClasses.brand}`;
 
 export const inputClasses =
-    'w-full rounded-control border border-border-minimal bg-surface-minimal px-4 py-3 text-body placeholder:text-text-minimal';
+    'w-full rounded-control border border-border-minimal bg-surface-minimal px-4 py-3 text-input placeholder:text-text-minimal';
 
 /** A header link. Shared by the desktop nav links and any button that sits among them. */
 export const navLinkClasses =

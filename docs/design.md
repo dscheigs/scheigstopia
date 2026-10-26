@@ -70,6 +70,7 @@ The project uses custom typography classes with responsive clamp() sizing. **ALW
 - `text-subheading` - Subheadings (20-24px, medium)
 - `text-lead` - Introduction/lead paragraphs (18-20px, normal)
 - `text-body` - Regular body text (14-16px, normal)
+- `text-input` - Text inputs (fixed 16px, so iOS Safari does not zoom on focus; never disable zoom instead)
 - `text-caption` - Small text, captions, metadata (13-14px, light)
 
 ### Fonts
