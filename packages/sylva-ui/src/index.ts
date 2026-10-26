@@ -8,6 +8,8 @@ export type {
     ButtonVariant,
 } from './components/Button';
 export { default as GnomeIcon } from './components/GnomeIcon';
+export { default as Spinner } from './components/Spinner';
+export type { SpinnerProps, SpinnerSize } from './components/Spinner';
 export { default as SiteHeader } from './components/SiteHeader';
 export type { SiteHeaderProps } from './components/SiteHeader';
 export { linkKind, SITE_HOME_HREF } from './navItems';

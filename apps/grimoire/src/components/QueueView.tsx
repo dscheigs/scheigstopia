@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Check, Pencil, X } from '@scheigs/sylva-ui';
+import { Button, Check, Pencil, Spinner, X } from '@scheigs/sylva-ui';
 import CardSuggestions from '@/components/CardSuggestions';
 import EditCardDialog from '@/components/EditCardDialog';
 import ReviewThumbnail from '@/components/ReviewThumbnail';
@@ -143,7 +143,7 @@ export default function QueueView({ userId }: { userId: string }) {
             </div>
 
             {!ready && (
-                <p className="text-body text-text-minimal">Loading...</p>
+                <Spinner className="mx-auto block w-fit text-text-minimal" />
             )}
             {ready && items.length === 0 && (
                 <p className="text-body text-text-minimal">
