@@ -1,5 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Check, LogOut, Pencil, Volume2, VolumeOff, X } from '../icons';
+import {
+    Check,
+    ChevronRight,
+    LogOut,
+    Pencil,
+    Volume2,
+    VolumeOff,
+    X,
+} from '../icons';
 
 const meta = {
     title: 'Foundations/Icons',
@@ -9,7 +17,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const icons = { Check, LogOut, Pencil, Volume2, VolumeOff, X };
+const icons = { Check, ChevronRight, LogOut, Pencil, Volume2, VolumeOff, X };
 
 /** Apps import these from the package, never from lucide-react directly. */
 export const All: Story = {

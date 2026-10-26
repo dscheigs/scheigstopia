@@ -2,6 +2,7 @@
 // moving off lucide later is a change to this file only.
 export {
     Check,
+    ChevronRight,
     LogOut,
     Pencil,
     Search as SearchIcon,

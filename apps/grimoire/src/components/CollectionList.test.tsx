@@ -114,6 +114,16 @@ describe('CollectionList', () => {
         ).toBeTruthy();
     });
 
+    it('marks each row as tappable with a chevron and a pressed state', () => {
+        renderList();
+        const row = screen.getAllByRole('button', { name: /owned$/ })[0];
+        expect(row.querySelector('svg.lucide-chevron-right')).toHaveAttribute(
+            'aria-hidden',
+            'true'
+        );
+        expect(row.className).toContain('active:bg-surface-minimal-hover');
+    });
+
     it('opens the tapped row, by click or by keyboard', async () => {
         const onOpen = vi.fn();
         renderList(onOpen);

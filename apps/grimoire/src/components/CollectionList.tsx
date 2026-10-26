@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
+import { ChevronRight } from '@scheigs/sylva-ui';
 import CardThumbnail from '@/components/CardThumbnail';
 import type { CollectionItem } from '@/lib/collection';
 
@@ -98,7 +99,7 @@ export default function CollectionList({
                             aria-haspopup="dialog"
                             aria-label={`${item.name}, ${item.quantity} owned`}
                             onClick={() => onOpen(item)}
-                            className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-minimal-hover"
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-minimal-hover active:bg-surface-minimal-hover"
                         >
                             <CardThumbnail
                                 imageId={imageIds.get(item.oracleId)}
@@ -117,6 +118,10 @@ export default function CollectionList({
                             >
                                 ×{item.quantity}
                             </span>
+                            <ChevronRight
+                                aria-hidden="true"
+                                className="shrink-0 text-text-minimal"
+                            />
                         </button>
                     </li>
                 );
