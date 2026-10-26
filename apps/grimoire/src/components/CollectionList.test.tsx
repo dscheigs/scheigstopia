@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CollectionList from '@/components/CollectionList';
 import type { CollectionItem } from '@/lib/collection';
@@ -20,15 +21,9 @@ function setScroll(y: number) {
     });
 }
 
-function renderList() {
+function renderList(onOpen: (item: CollectionItem) => void = () => {}) {
     return render(
-        <CollectionList
-            items={items}
-            imageIds={new Map()}
-            busyId={null}
-            onSetQuantity={() => {}}
-            onRemove={() => {}}
-        />
+        <CollectionList items={items} imageIds={new Map()} onOpen={onOpen} />
     );
 }
 
@@ -98,26 +93,42 @@ describe('CollectionList', () => {
         expect(renderedRows().length).toBeLessThan(60);
     });
 
-    it('reports changes for the row it was used on', () => {
-        const onSetQuantity = vi.fn();
-        const onRemove = vi.fn();
-        render(
-            <CollectionList
-                items={items}
-                imageIds={new Map()}
-                busyId={null}
-                onSetQuantity={onSetQuantity}
-                onRemove={onRemove}
-            />
-        );
-        fireEvent.click(screen.getByRole('button', { name: 'Add one Card 0' }));
-        expect(onSetQuantity).toHaveBeenCalledWith(items[0], 2);
+    it('has one button per row and no quantity controls or Remove', () => {
+        renderList();
+        const rows = renderedRows();
+        for (const row of rows) {
+            expect(row.querySelectorAll('button')).toHaveLength(1);
+        }
+        expect(screen.queryByRole('button', { name: /^Add one/ })).toBeNull();
+        expect(screen.queryByRole('button', { name: /^Remove/ })).toBeNull();
+        expect(screen.queryByRole('textbox')).toBeNull();
+    });
 
-        fireEvent.click(
-            screen.getByRole('button', {
-                name: 'Remove Card 0 from collection',
-            })
+    it('shows the quantity as a badge and names it on the row button', () => {
+        renderList();
+        const row = renderedRows()[0];
+        expect(row).toHaveTextContent('Card 0');
+        expect(row).toHaveTextContent('×1');
+        expect(
+            screen.getByRole('button', { name: 'Card 1, 2 owned' })
+        ).toBeTruthy();
+    });
+
+    it('opens the tapped row, by click or by keyboard', async () => {
+        const onOpen = vi.fn();
+        renderList(onOpen);
+        const user = userEvent.setup();
+
+        await user.click(
+            screen.getByRole('button', { name: 'Card 2, 3 owned' })
         );
-        expect(onRemove).toHaveBeenCalledWith(items[0]);
+        expect(onOpen).toHaveBeenLastCalledWith(items[2]);
+
+        // Rows are reachable with Tab and activate with Enter and Space.
+        screen.getByRole('button', { name: 'Card 3, 4 owned' }).focus();
+        await user.keyboard('{Enter}');
+        expect(onOpen).toHaveBeenLastCalledWith(items[3]);
+        await user.keyboard(' ');
+        expect(onOpen).toHaveBeenCalledTimes(3);
     });
 });

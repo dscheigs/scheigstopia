@@ -48,6 +48,15 @@ what say it is off. Tailwind v4 no longer sets a pointer on buttons, so `Button`
 class strings say `enabled:cursor-pointer`, and `styles/base.css` gives any bare
 `<button>` the same, in the base layer so a utility such as `cursor-zoom-in` still wins.
 
+## Dialog
+
+Use `Dialog` and `useDialogState` from `@scheigs/sylva-ui` for modals. `Dialog` is the
+native `<dialog>` (Escape, focus trap and focus restore from the browser; the backdrop
+and a close button also close it): a bottom sheet on small screens, a centered dialog
+from `sm` up. It is controlled (`open`, `onClose`, `title`) and its children mount only
+while open. `useDialogState()` holds the open state; `useDialogState<string>()` also holds
+a payload such as an id (store the id, not a copy of the item). Dialogs can nest.
+
 ## Border radius
 
 Four radii, defined once in `packages/sylva-ui/src/styles/radius.css`: `rounded-button`
