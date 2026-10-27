@@ -96,6 +96,20 @@ describe('CatalogResults', () => {
         expect(screen.queryByText('Lightning Card 30')).toBeNull();
     });
 
+    it('opens the full-screen card from the thumbnail without adding it', async () => {
+        renderResults({
+            ownedIds: new Set(['o-chain']),
+            imageIds: new Map([
+                ['o-bolt', '11bf83bb-c95b-4b4f-9a56-ce7a1816307a'],
+            ]),
+        });
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Show Lightning Bolt' })
+        );
+        expect(document.querySelector('dialog img')).not.toBeNull();
+        expect(mutate).not.toHaveBeenCalled();
+    });
+
     it('adds the card whose + was pressed', async () => {
         renderResults({});
         await userEvent.click(

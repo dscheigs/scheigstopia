@@ -73,7 +73,7 @@ export default function CollectionList({
     return (
         <ul
             ref={listRef}
-            className="relative rounded-surface border border-border-minimal bg-surface-minimal"
+            className="relative overflow-hidden rounded-surface border border-border-minimal bg-surface-minimal"
             style={{ height: virtualizer.getTotalSize() }}
         >
             {virtualizer.getVirtualItems().map((row) => {
