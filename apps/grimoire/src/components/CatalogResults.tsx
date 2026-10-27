@@ -122,7 +122,6 @@ export default function CatalogResults({
                             <CardThumbnail
                                 imageId={imageIds.get(card.oracleId)}
                                 name={card.name}
-                                interactive={false}
                             />
                             <span
                                 className="min-w-0 flex-1 truncate text-body"
