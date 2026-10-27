@@ -85,6 +85,18 @@ describe('CardDetailDialog', () => {
         expect(dialog.getByRole('button', { name: 'Remove' })).toBeTruthy();
     });
 
+    it('aligns Remove with the stepper buttons, not the line under them', async () => {
+        render(<Harness />);
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Open Island' })
+        );
+        const remove = within(sheet()).getByRole('button', { name: 'Remove' });
+        // The stepper reserves a status line below its buttons, so a centered
+        // row would drop Remove below them.
+        expect(remove.parentElement).toHaveClass('items-start');
+        expect(remove.parentElement).not.toHaveClass('items-center');
+    });
+
     it('shows clicks at once and saves the final count once', async () => {
         const saved = vi.fn().mockResolvedValue(undefined);
         const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
