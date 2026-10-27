@@ -85,7 +85,8 @@ function CardDetailBody({
                     className="mx-auto h-auto w-64 max-w-full rounded-surface"
                 />
             )}
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* items-start: the stepper has a status line under its buttons, and centering would push Remove down to the middle of both. */}
+            <div className="flex flex-wrap items-start justify-between gap-3">
                 <QuantityStepper
                     value={counter.quantity}
                     onChange={counter.setQuantity}
