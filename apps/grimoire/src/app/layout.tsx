@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { ViewTransition } from 'react';
 import { preconnect } from 'react-dom';
 import { Inter } from 'next/font/google';
 import '../styles/globals.css';
@@ -44,9 +43,7 @@ export default function RootLayout({
                 <main id="main-content" className="flex-1">
                     <Providers>
                         <PwaSetup />
-                        <ViewTransition default="page-fade">
-                            {children}
-                        </ViewTransition>
+                        {children}
                     </Providers>
                 </main>
             </body>
