@@ -1,9 +1,12 @@
+import type { GnomeVariant } from '@scheigs/sylva-ui';
 import { grimoireOrigin } from '@/grimoire';
 
 export interface HubApp {
     name: string;
     description: string;
     href: string;
+    /** The app's gnome, shown on its home page card. Omit for a text-only card. */
+    gnome?: GnomeVariant;
 }
 
 const grimoireUrl = grimoireOrigin(process.env);
@@ -19,6 +22,7 @@ export const apps: HubApp[] = [
                   description:
                       'A private Magic: The Gathering collection tracker.',
                   href: grimoireUrl,
+                  gnome: 'grimoire' as const,
               },
           ]
         : []),
