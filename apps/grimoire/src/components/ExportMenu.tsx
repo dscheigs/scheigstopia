@@ -45,6 +45,7 @@ export default function ExportMenu() {
     return (
         <div ref={rootRef} className="relative">
             <Button
+                variant="secondary"
                 aria-expanded={open}
                 aria-controls="export-menu"
                 onClick={() => setOpen((value) => !value)}
