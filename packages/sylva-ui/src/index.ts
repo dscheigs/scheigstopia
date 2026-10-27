@@ -11,6 +11,8 @@ export { default as GnomeIcon } from './components/GnomeIcon';
 export { default as QuantityStepper } from './components/QuantityStepper';
 export type { QuantityStepperProps } from './components/QuantityStepper';
 export { default as Search } from './components/Search';
+export { useHotkey } from './useHotkey';
+export { isApplePlatform, useShortcutPlatform } from './platform';
 export type { SearchProps } from './components/Search';
 export { default as TextField } from './components/TextField';
 export type { TextFieldProps } from './components/TextField';
