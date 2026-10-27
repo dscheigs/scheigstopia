@@ -1,20 +1,25 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import AddCardDialog from '@/components/AddCardDialog';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CardDetailDialog from '@/components/CardDetailDialog';
+import CatalogResults from '@/components/CatalogResults';
 import CollectionList from '@/components/CollectionList';
 import ExportMenu from '@/components/ExportMenu';
-import { Button, Search, Spinner } from '@scheigs/sylva-ui';
+import { Search, Spinner } from '@scheigs/sylva-ui';
+import { useCollectionSearch } from '@/lib/useCollectionSearch';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useUrlDialogState } from '@/lib/useUrlDialogState';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
 import { useCardNames, useCollection, useSetQuantity } from '@/lib/queries';
 
+/** The same settle time as the card-list search used before. */
+const SEARCH_DEBOUNCE_MS = 150;
+
 export default function CollectionView() {
-    const [filter, setFilter] = useState('');
-    const [adding, setAdding] = useState(false);
+    const [query, setQuery] = useState('');
+    const searchRef = useRef<HTMLInputElement>(null);
     const detail = useUrlDialogState('card');
 
     const collection = useCollection();
@@ -55,13 +60,17 @@ export default function CollectionView() {
         [cardList]
     );
 
-    const visibleItems = useMemo(() => {
-        const needle = filter.trim().toLowerCase();
-        if (!items) return [];
-        return needle
-            ? items.filter((item) => item.name.toLowerCase().includes(needle))
-            : items;
-    }, [items, filter]);
+    // One debounced query feeds both searches: the owned cards (with their own
+    // index, so it works before the card list loads) and the catalog below.
+    const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS);
+    const search = useCollectionSearch(items ?? [], debouncedQuery);
+    const visibleItems = search.results;
+    const ownedIds = useMemo(
+        () => new Set((items ?? []).map((item) => item.oracleId)),
+        [items]
+    );
+    const cardListState =
+        cardList === 'loading' || cardList === 'missing' ? cardList : 'ready';
 
     const totalCards = useMemo(
         () => (items ?? []).reduce((sum, item) => sum + item.quantity, 0),
@@ -100,25 +109,18 @@ export default function CollectionView() {
                             </p>
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            onClick={() => setAdding(true)}
-                            variant="secondary"
-                        >
-                            Add Cards
-                        </Button>
-                        <ExportMenu />
-                    </div>
+                    <ExportMenu />
                 </div>
 
-                <label htmlFor="collection-filter" className="sr-only">
-                    Filter your collection
+                <label htmlFor="collection-search" className="sr-only">
+                    Search your collection and all cards
                 </label>
                 <Search
-                    id="collection-filter"
-                    value={filter}
-                    onChange={(event) => setFilter(event.target.value)}
-                    placeholder="Filter your collection"
+                    id="collection-search"
+                    ref={searchRef}
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search"
                 />
 
                 {items === null && (
@@ -128,14 +130,14 @@ export default function CollectionView() {
                 )}
                 {items !== null && items.length === 0 && (
                     <p className="text-body text-text-minimal">
-                        Nothing here yet. Use Add Cards to add your first card.
+                        Nothing here yet. Search for a card to add it.
                     </p>
                 )}
                 {items !== null &&
                     items.length > 0 &&
                     visibleItems.length === 0 && (
                         <p className="text-body text-text-minimal">
-                            No cards match that filter.
+                            No cards in your collection match.
                         </p>
                     )}
 
@@ -146,6 +148,17 @@ export default function CollectionView() {
                         onOpen={(item) => detail.show(item.oracleId)}
                     />
                 )}
+
+                {/* Below the list, never above it: the list measures its offset
+                    from the page top once, so nothing above may change height. */}
+                <CatalogResults
+                    query={debouncedQuery}
+                    index={index}
+                    cardListState={cardListState}
+                    ownedIds={ownedIds}
+                    imageIds={imageIds}
+                    onAdded={() => searchRef.current?.focus()}
+                />
             </section>
 
             <p role="alert" aria-live="polite" className="text-body text-error">
@@ -161,14 +174,6 @@ export default function CollectionView() {
                 }
                 onClose={detail.close}
             />
-
-            {adding && (
-                <AddCardDialog
-                    index={index}
-                    missing={cardList === 'missing'}
-                    onClose={() => setAdding(false)}
-                />
-            )}
         </div>
     );
 }

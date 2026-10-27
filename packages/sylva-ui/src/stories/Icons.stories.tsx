@@ -4,6 +4,7 @@ import {
     ChevronRight,
     LogOut,
     Pencil,
+    Plus,
     Volume2,
     VolumeOff,
     X,
@@ -17,7 +18,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const icons = { Check, ChevronRight, LogOut, Pencil, Volume2, VolumeOff, X };
+const icons = {
+    Check,
+    ChevronRight,
+    LogOut,
+    Pencil,
+    Plus,
+    Volume2,
+    VolumeOff,
+    X,
+};
 
 /** Apps import these from the package, never from lucide-react directly. */
 export const All: Story = {
