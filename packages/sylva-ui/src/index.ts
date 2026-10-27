@@ -8,6 +8,7 @@ export type {
     ButtonVariant,
 } from './components/Button';
 export { default as GnomeIcon } from './components/GnomeIcon';
+export type { GnomeVariant } from './components/GnomeIcon';
 export { default as QuantityStepper } from './components/QuantityStepper';
 export type { QuantityStepperProps } from './components/QuantityStepper';
 export { default as Search } from './components/Search';
