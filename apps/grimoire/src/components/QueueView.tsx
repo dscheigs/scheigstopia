@@ -5,6 +5,7 @@ import { Button, Check, Pencil, Spinner, X } from '@scheigs/sylva-ui';
 import CardSuggestions from '@/components/CardSuggestions';
 import EditCardDialog from '@/components/EditCardDialog';
 import ReviewThumbnail from '@/components/ReviewThumbnail';
+import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex, type CardEntry, type CardIndex } from '@/lib/cardSearch';
 import {
     describeProblem,
@@ -20,20 +21,29 @@ import { useScanQueue } from '@/lib/useScanQueue';
 
 interface ItemRowProps {
     item: QueueItem;
+    /** Scryfall image id of the matched card, if the card list has one. */
+    imageId: string | undefined;
     onEdit: () => void;
     onConfirm: () => void;
     onRemove: () => void;
     onRetry: () => void;
 }
 
-function ItemRow({ item, onEdit, onConfirm, onRemove, onRetry }: ItemRowProps) {
+function ItemRow({
+    item,
+    imageId,
+    onEdit,
+    onConfirm,
+    onRemove,
+    onRetry,
+}: ItemRowProps) {
     const needsReview = item.status === 'flagged' || item.status === 'failed';
     const label = itemLabel(item);
     const actions = rowActions(item);
 
     return (
         <li className="flex flex-wrap items-center gap-3 px-4 py-3">
-            <ReviewThumbnail id={item.id} label={label} />
+            <ReviewThumbnail id={item.id} label={label} imageId={imageId} />
             <div className="min-w-0 flex-1">
                 <p className="text-body">{label}</p>
                 {needsReview && (
@@ -93,6 +103,14 @@ export default function QueueView({ userId }: { userId: string }) {
         () => (cardNames.data ? buildIndex(cardNames.data) : null),
         [cardNames.data]
     );
+    // oracleId -> Scryfall image id; empty until the card list loads.
+    const imageIds = useMemo(
+        () =>
+            cardNames.data
+                ? buildImageIds(cardNames.data)
+                : new Map<string, string>(),
+        [cardNames.data]
+    );
     const groups = useMemo(() => groupQueue(items), [items]);
     const plan = useMemo(() => planCommit(items), [items]);
 
@@ -121,6 +139,9 @@ export default function QueueView({ userId }: { userId: string }) {
 
     const rowProps = (item: QueueItem): ItemRowProps => ({
         item,
+        imageId: item.matchedCard
+            ? imageIds.get(item.matchedCard.oracleId)
+            : undefined,
         onEdit: () => setEditingId(item.id),
         onConfirm: () => store.getState().confirm(item.id),
         onRemove: () => {
