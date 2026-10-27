@@ -5,7 +5,7 @@ import { afterEach } from 'vitest';
 afterEach(cleanup);
 
 // jsdom may not implement the native dialog methods the app's modals call
-// (EditCardDialog, AddCardDialog, the photo viewer). This shim covers them:
+// (EditCardDialog, the photo viewer). This shim covers them:
 // showModal and close toggle `open`, and close fires a `close` event.
 if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
     HTMLDialogElement.prototype.showModal = function showModal() {

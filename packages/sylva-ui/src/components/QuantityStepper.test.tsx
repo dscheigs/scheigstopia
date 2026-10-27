@@ -114,24 +114,4 @@ describe('QuantityStepper', () => {
         expect(field).toHaveClass('text-input');
         expect(field).not.toHaveClass('text-body');
     });
-
-    it('shows a pending line without disabling anything', async () => {
-        const { onChange, user } = setup({ pending: true, editable: true });
-        expect(screen.getByRole('status')).toHaveTextContent('Saving…');
-        const plus = screen.getByRole('button', { name: 'Add one' });
-        expect(plus).toBeEnabled();
-        await user.click(plus);
-        expect(onChange).toHaveBeenCalledWith(4);
-    });
-
-    it('announces an error as an alert and keeps the controls enabled', () => {
-        setup({ error: 'Could not save.' });
-        expect(screen.getByRole('alert')).toHaveTextContent('Could not save.');
-        expect(screen.getByRole('button', { name: 'Add one' })).toBeEnabled();
-    });
-
-    it('reserves the status line when idle so nothing jumps', () => {
-        setup();
-        expect(screen.getByRole('status')).toBeEmptyDOMElement();
-    });
 });

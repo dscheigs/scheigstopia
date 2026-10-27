@@ -5,6 +5,7 @@ export {
     ChevronRight,
     LogOut,
     Pencil,
+    Plus,
     Search as SearchIcon,
     Volume2,
     VolumeOff,

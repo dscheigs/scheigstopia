@@ -23,7 +23,7 @@ function redirectIfSignedOut(error: unknown) {
 /**
  * Every failed mutation is reported once, here, so no component has to wire
  * it up. A 401 is not: it already redirects. A mutation that shows its error
- * in place (the card sheet's counter) opts out with `meta: { toast: false }`.
+ * in place opts out with `meta: { toast: false }`.
  */
 function reportMutationError(
     error: unknown,
