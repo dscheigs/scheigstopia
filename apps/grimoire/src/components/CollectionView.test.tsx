@@ -96,6 +96,27 @@ describe('CollectionView search', () => {
         ).toBeNull();
     });
 
+    it('puts the search field above the collection heading, the list and the suggestions', async () => {
+        render(<CollectionView />);
+        await userEvent.type(search(), 'lightning');
+        const catalog = await screen.findByRole('heading', {
+            name: 'Not in collection',
+        });
+        const heading = screen.getByRole('heading', {
+            name: 'Your collection',
+        });
+        const list = screen.getByRole('button', {
+            name: 'Lightning Bolt, 4 owned',
+        });
+        const before = (a: Node, b: Node) =>
+            Boolean(
+                a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING
+            );
+        expect(before(search(), heading)).toBe(true);
+        expect(before(heading, list)).toBe(true);
+        expect(before(list, catalog)).toBe(true);
+    });
+
     it('invites a search when nothing is owned', () => {
         collection.data = [];
         render(<CollectionView />);

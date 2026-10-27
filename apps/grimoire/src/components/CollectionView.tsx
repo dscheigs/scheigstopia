@@ -98,6 +98,17 @@ export default function CollectionView() {
     return (
         <div className="mx-auto max-w-5xl space-y-10 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
             <section aria-labelledby="collection-heading" className="space-y-3">
+                <label htmlFor="collection-search" className="sr-only">
+                    Search your collection and all cards
+                </label>
+                <Search
+                    id="collection-search"
+                    ref={searchRef}
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search"
+                />
+
                 <div className="flex items-end justify-between gap-3">
                     <div>
                         <h2 id="collection-heading" className="text-subheading">
@@ -111,17 +122,6 @@ export default function CollectionView() {
                     </div>
                     <ExportMenu />
                 </div>
-
-                <label htmlFor="collection-search" className="sr-only">
-                    Search your collection and all cards
-                </label>
-                <Search
-                    id="collection-search"
-                    ref={searchRef}
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search"
-                />
 
                 {items === null && (
                     <div className="flex justify-center">
