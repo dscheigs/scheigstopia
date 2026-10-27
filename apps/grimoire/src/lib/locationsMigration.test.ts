@@ -42,25 +42,36 @@ describe('migration 0003: locations and moves', () => {
         expect(rows).toHaveLength(2);
     });
 
-    it('backfills one opening-balance move per row, dated by created_at', async () => {
+    it('backfills one copy per unit owned, each with an opening-balance move', async () => {
         const { query, after, a } = await legacyDb();
         await runMigrations({ query, migrations: after });
-        const rows = await query(
-            `select m.oracle_id, m.quantity, m.created_at, m.from_location, l.kind
-             from moves m join locations l on l.id = m.to_location
-             where m.user_id = $1 order by m.oracle_id`,
+        const copies = await query(
+            `select c.oracle_id, c.created_at, l.kind
+             from copies c join locations l on l.id = c.location_id
+             where c.user_id = $1 order by c.oracle_id`,
             [a]
         );
-        expect(rows).toHaveLength(2);
-        expect(rows[0]).toMatchObject({
-            oracle_id: BOLT,
-            quantity: 3,
-            from_location: null,
-            kind: 'unsorted',
-        });
-        expect(new Date(rows[0].created_at as string).toISOString()).toBe(
+        // 3 Lightning Bolts and 1 Sol Ring, all in Unsorted.
+        expect(copies).toHaveLength(4);
+        expect(copies.filter((c) => c.oracle_id === BOLT)).toHaveLength(3);
+        expect(copies.every((c) => c.kind === 'unsorted')).toBe(true);
+        expect(new Date(copies[0].created_at as string).toISOString()).toBe(
             '2026-01-02T00:00:00.000Z'
         );
+        const moves = await query(
+            `select m.from_location, m.to_location, m.note, m.created_at
+             from moves m where m.user_id = $1`,
+            [a]
+        );
+        expect(moves).toHaveLength(4);
+        expect(
+            moves.every(
+                (m) =>
+                    m.from_location === null &&
+                    m.to_location !== null &&
+                    m.note === 'Opening balance'
+            )
+        ).toBe(true);
     });
 
     it('keeps the collection view equal to the old table', async () => {
@@ -88,7 +99,9 @@ describe('migration 0003: locations and moves', () => {
             '0003_locations_and_moves.sql',
         ]);
         expect(await runMigrations({ query, migrations: after })).toEqual([]);
-        expect(await query('select 1 from moves')).toHaveLength(3);
+        // 3 + 1 + 9 copies and one opening move each; the old table is kept.
+        expect(await query('select 1 from copies')).toHaveLength(13);
+        expect(await query('select 1 from moves')).toHaveLength(13);
         expect(await query('select 1 from collection_legacy')).toHaveLength(3);
     });
 
@@ -106,7 +119,8 @@ describe('migration 0003: locations and moves', () => {
             .filter(Boolean)
             .slice(0, -2);
         for (const step of steps) await query(step);
-        expect(await query('select 1 from moves')).toHaveLength(3);
+        expect(await query('select 1 from copies')).toHaveLength(13);
+        expect(await query('select 1 from moves')).toHaveLength(13);
         expect(await query('select 1 from locations')).toHaveLength(2);
     });
 });

@@ -32,16 +32,17 @@ export async function listCollection(
 }
 
 /*
- * The collection is a view over the move ledger (see migration 0003). Every
- * write records moves, into or out of the user's Unsorted location for now,
- * and stays a single statement so it applies fully or not at all. Neon's HTTP
+ * The collection is a view over individual copies (see migration 0003): each
+ * physical card is a row in `copies`, and every change is recorded as a row in
+ * `moves`. For now every copy lives in the user's Unsorted location; moving
+ * copies elsewhere comes with the locations API.
+ *
+ * Every write is one statement, so it applies fully or not at all. Neon's HTTP
  * client has no interactive transaction, and `Sql.transaction` is not atomic
  * in the PGlite test double, so one statement is the form that behaves the
- * same in production and in tests.
- *
- * Copies held, per card, are moves in minus moves out. The `unsorted` CTE
- * below creates the user's Unsorted location when it is missing (a user who
- * signed in after the migration) and otherwise finds it.
+ * same in production and in tests. The `unsorted` CTE creates the user's
+ * Unsorted location when it is missing (a user who signed in after the
+ * migration) and otherwise finds it.
  */
 
 /**
@@ -55,13 +56,11 @@ export async function addToCollection(
 ): Promise<CollectionItem> {
     const rows = await sql`
         with cur as (
-            select coalesce(
-                sum(case when to_location is not null then quantity else 0 end)
-                - sum(case when from_location is not null then quantity else 0 end),
-                0
-            )::integer as q
-            from moves
-            where user_id = ${userId}::uuid and oracle_id = ${card.oracleId}::uuid
+            select count(*)::integer as q
+            from copies
+            where user_id = ${userId}::uuid
+                and oracle_id = ${card.oracleId}::uuid
+                and location_id is not null
         ),
         new_unsorted as (
             insert into locations (user_id, kind, label)
@@ -76,22 +75,30 @@ export async function addToCollection(
             where user_id = ${userId}::uuid and kind = 'unsorted'
             limit 1
         ),
-        mv as (
-            insert into moves (user_id, oracle_id, name, from_location, to_location, quantity)
-            select ${userId}::uuid, ${card.oracleId}::uuid, ${card.name}, null, unsorted.id,
+        added as (
+            insert into copies (user_id, oracle_id, name, location_id)
+            select ${userId}::uuid, ${card.oracleId}::uuid, ${card.name}, unsorted.id
+            from cur
+            cross join unsorted
+            cross join lateral generate_series(
+                1,
                 least(${card.delta}::integer, ${MAX_QUANTITY}::integer - cur.q)
-            from cur, unsorted
-            where least(${card.delta}::integer, ${MAX_QUANTITY}::integer - cur.q) > 0
-            returning quantity, created_at
+            ) as g
+            returning id, location_id, created_at
+        ),
+        mv as (
+            insert into moves (user_id, copy_id, from_location, to_location)
+            select ${userId}::uuid, id, null, location_id from added
         )
         select
             ${card.oracleId}::uuid as oracle_id,
             ${card.name}::text as name,
-            cur.q + coalesce((select quantity from mv), 0) as quantity,
+            cur.q + (select count(*) from added) as quantity,
             coalesce(
-                (select created_at from mv),
+                (select max(created_at) from added),
                 (select updated_at from collection
-                    where user_id = ${userId}::uuid and oracle_id = ${card.oracleId}::uuid)
+                    where user_id = ${userId}::uuid
+                        and oracle_id = ${card.oracleId}::uuid)
             ) as updated_at
         from cur
     `;
@@ -129,13 +136,12 @@ export async function addManyToCollection(
                 as c(oracle_id uuid, name text, delta integer)
         ),
         cur as (
-            select i.oracle_id, coalesce(
-                sum(case when m.to_location is not null then m.quantity else 0 end)
-                - sum(case when m.from_location is not null then m.quantity else 0 end),
-                0
-            )::integer as q
+            select i.oracle_id, count(c.id)::integer as q
             from input i
-            left join moves m on m.user_id = ${userId}::uuid and m.oracle_id = i.oracle_id
+            left join copies c
+                on c.user_id = ${userId}::uuid
+                and c.oracle_id = i.oracle_id
+                and c.location_id is not null
             group by i.oracle_id
         ),
         new_unsorted as (
@@ -151,24 +157,32 @@ export async function addManyToCollection(
             where user_id = ${userId}::uuid and kind = 'unsorted'
             limit 1
         ),
-        mv as (
-            insert into moves (user_id, oracle_id, name, from_location, to_location, quantity)
-            select ${userId}::uuid, i.oracle_id, i.name, null, unsorted.id,
-                least(i.delta, ${MAX_QUANTITY}::integer - cur.q)
+        added as (
+            insert into copies (user_id, oracle_id, name, location_id)
+            select ${userId}::uuid, i.oracle_id, i.name, unsorted.id
             from input i
             join cur on cur.oracle_id = i.oracle_id
             cross join unsorted
-            where least(i.delta, ${MAX_QUANTITY}::integer - cur.q) > 0
-            returning oracle_id, quantity, created_at
+            cross join lateral generate_series(
+                1,
+                least(i.delta, ${MAX_QUANTITY}::integer - cur.q)
+            ) as g
+            returning id, oracle_id, location_id, created_at
+        ),
+        mv as (
+            insert into moves (user_id, copy_id, from_location, to_location)
+            select ${userId}::uuid, id, null, location_id from added
         )
         select
             i.oracle_id,
             i.name,
-            cur.q + coalesce(mv.quantity, 0) as quantity,
-            coalesce(mv.created_at, now()) as updated_at
+            cur.q + (select count(*) from added a where a.oracle_id = i.oracle_id) as quantity,
+            coalesce(
+                (select max(created_at) from added a where a.oracle_id = i.oracle_id),
+                now()
+            ) as updated_at
         from input i
         join cur on cur.oracle_id = i.oracle_id
-        left join mv on mv.oracle_id = i.oracle_id
     `;
     return rows.map(toItem);
 }
@@ -178,7 +192,10 @@ export type SetQuantityResult =
     | { status: 'removed' }
     | { status: 'not_found' };
 
-/** Set an exact quantity. Zero removes the card. */
+/**
+ * Set an exact quantity. Zero removes the card. Raising it adds copies to
+ * Unsorted; lowering it removes the newest copies, Unsorted first.
+ */
 export async function setQuantity(
     sql: Sql,
     userId: string,
@@ -192,35 +209,59 @@ export async function setQuantity(
     const rows = await sql`
         with cur as (
             select
-                coalesce(
-                    sum(case when to_location is not null then quantity else 0 end)
-                    - sum(case when from_location is not null then quantity else 0 end),
-                    0
-                )::integer as q,
-                (array_agg(name order by id desc))[1] as name,
+                count(*)::integer as q,
+                (array_agg(name order by created_at desc, id))[1] as name,
                 max(created_at) as at
-            from moves
-            where user_id = ${userId}::uuid and oracle_id = ${oracleId}::uuid
+            from copies
+            where user_id = ${userId}::uuid
+                and oracle_id = ${oracleId}::uuid
+                and location_id is not null
         ),
         unsorted as (
             select id from locations
             where user_id = ${userId}::uuid and kind = 'unsorted'
         ),
+        added as (
+            insert into copies (user_id, oracle_id, name, location_id)
+            select ${userId}::uuid, ${oracleId}::uuid, cur.name, unsorted.id
+            from cur
+            cross join unsorted
+            cross join lateral generate_series(1, ${quantity}::integer - cur.q) as g
+            where cur.q > 0
+            returning id, location_id, created_at
+        ),
+        victims as (
+            select c.id, c.location_id
+            from copies c, cur, unsorted
+            where c.user_id = ${userId}::uuid
+                and c.oracle_id = ${oracleId}::uuid
+                and c.location_id is not null
+                and cur.q > ${quantity}::integer
+            order by (c.location_id = unsorted.id) desc, c.created_at desc, c.id
+            limit greatest((select q from cur) - ${quantity}::integer, 0)
+            for update of c
+        ),
+        removed as (
+            update copies
+            set location_id = null
+            where id in (select id from victims)
+            returning id
+        ),
         mv as (
-            insert into moves (user_id, oracle_id, name, from_location, to_location, quantity)
-            select ${userId}::uuid, ${oracleId}::uuid, cur.name,
-                case when ${quantity}::integer < cur.q then unsorted.id end,
-                case when ${quantity}::integer > cur.q then unsorted.id end,
-                abs(${quantity}::integer - cur.q)
-            from cur, unsorted
-            where cur.q > 0 and ${quantity}::integer <> cur.q
-            returning created_at
+            insert into moves (user_id, copy_id, from_location, to_location)
+            select ${userId}::uuid, id, null, location_id from added
+            union all
+            select ${userId}::uuid, v.id, v.location_id, null from victims v
         )
         select
             ${oracleId}::uuid as oracle_id,
             cur.name,
-            ${quantity}::integer as quantity,
-            coalesce((select created_at from mv), cur.at) as updated_at
+            cur.q + (select count(*) from added) - (select count(*) from removed) as quantity,
+            coalesce(
+                (select max(created_at) from added),
+                case when exists (select 1 from removed) then now() end,
+                cur.at
+            ) as updated_at
         from cur
         where cur.q > 0
     `;
@@ -229,33 +270,33 @@ export async function setQuantity(
         : { status: 'not_found' };
 }
 
-/** Remove a card from the collection. Returns whether it was owned. */
+/** Remove every copy of a card from the collection. Returns whether it was owned. */
 export async function removeFromCollection(
     sql: Sql,
     userId: string,
     oracleId: string
 ): Promise<boolean> {
     const rows = await sql`
-        with cur as (
-            select
-                coalesce(
-                    sum(case when to_location is not null then quantity else 0 end)
-                    - sum(case when from_location is not null then quantity else 0 end),
-                    0
-                )::integer as q,
-                (array_agg(name order by id desc))[1] as name
-            from moves
-            where user_id = ${userId}::uuid and oracle_id = ${oracleId}::uuid
+        with victims as (
+            select id, location_id
+            from copies
+            where user_id = ${userId}::uuid
+                and oracle_id = ${oracleId}::uuid
+                and location_id is not null
+            for update
         ),
-        unsorted as (
-            select id from locations
-            where user_id = ${userId}::uuid and kind = 'unsorted'
+        removed as (
+            update copies
+            set location_id = null
+            where id in (select id from victims)
+            returning id
+        ),
+        mv as (
+            insert into moves (user_id, copy_id, from_location, to_location, note)
+            select ${userId}::uuid, v.id, v.location_id, null, 'Removed'
+            from victims v
         )
-        insert into moves (user_id, oracle_id, name, from_location, to_location, quantity, note)
-        select ${userId}::uuid, ${oracleId}::uuid, cur.name, unsorted.id, null, cur.q, 'Removed'
-        from cur, unsorted
-        where cur.q > 0
-        returning id
+        select id from removed
     `;
     return rows.length > 0;
 }
