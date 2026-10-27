@@ -61,6 +61,8 @@ vi.mock('@/lib/useScanQueue', () => ({
     }),
 }));
 
+const BOLT_IMAGE_ID = 'e3285e6b-3e79-4d7c-bf96-d6920f1c4b5b';
+
 const scryfallCards: Record<string, { oracleId: string; name: string }> = {
     'brand new card': { oracleId: 'o-new', name: 'Brand New Card' },
 };
@@ -77,7 +79,7 @@ vi.mock('@/lib/queries', () => ({
             version: 'test',
             count: 2,
             cards: [
-                ['o-bolt', 'Lightning Bolt'],
+                ['o-bolt', 'Lightning Bolt', BOLT_IMAGE_ID],
                 ['o-bear', 'Grizzly Bears'],
             ],
         },
@@ -137,6 +139,27 @@ describe('QueueView', () => {
         renderQueue([]);
         expect(screen.getByText('The queue is empty.')).toBeInTheDocument();
         expect(screen.queryByRole('button', { name: /discard/i })).toBeNull();
+    });
+
+    it('shows the matched card image in the row, and the photo when there is no image', () => {
+        renderQueue([
+            makeItem({ matchedCard: bolt }),
+            makeItem({
+                matchedCard: { oracleId: 'o-bear', name: 'Grizzly Bears' },
+            }),
+        ]);
+        const rows = rowsIn(/ready to add/i);
+        const boltThumb = within(rows[0]).getByRole('button', {
+            name: 'Compare Lightning Bolt with your photo',
+        });
+        expect(boltThumb.querySelector('img')).toHaveAttribute(
+            'src',
+            expect.stringContaining(`/small/front/e/3/${BOLT_IMAGE_ID}.jpg`)
+        );
+        // No catalog image for this card and no photo in the test: just a frame.
+        expect(
+            within(rows[1]).queryByRole('button', { name: /compare/i })
+        ).toBeNull();
     });
 
     it('groups items by status and orders each group oldest first', () => {
