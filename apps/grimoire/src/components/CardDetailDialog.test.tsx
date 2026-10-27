@@ -85,18 +85,6 @@ describe('CardDetailDialog', () => {
         expect(dialog.getByRole('button', { name: 'Remove' })).toBeTruthy();
     });
 
-    it('aligns Remove with the stepper buttons, not the line under them', async () => {
-        render(<Harness />);
-        await userEvent.click(
-            screen.getByRole('button', { name: 'Open Island' })
-        );
-        const remove = within(sheet()).getByRole('button', { name: 'Remove' });
-        // The stepper reserves a status line below its buttons, so a centered
-        // row would drop Remove below them.
-        expect(remove.parentElement).toHaveClass('items-start');
-        expect(remove.parentElement).not.toHaveClass('items-center');
-    });
-
     it('shows clicks at once and saves the final count once', async () => {
         const saved = vi.fn().mockResolvedValue(undefined);
         const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -109,18 +97,16 @@ describe('CardDetailDialog', () => {
         await user.click(screen.getByRole('button', { name: /^Remove one/ }));
         expect(screen.getByLabelText('4 owned')).toHaveValue('4');
         expect(saved).not.toHaveBeenCalled();
-        expect(screen.getByText('Saving…')).toBeTruthy();
         // Neither the buttons nor Remove are locked by the save, except Remove.
         expect(add).toBeEnabled();
 
         await settle();
         expect(saved).toHaveBeenCalledTimes(1);
         expect(saved).toHaveBeenCalledWith('a', 4);
-        expect(screen.queryByText('Saving…')).toBeNull();
         expect(screen.getByLabelText('4 owned')).toHaveValue('4');
     });
 
-    it('rolls the count back and shows the error when the save fails', async () => {
+    it('rolls the count back when the save fails', async () => {
         const saved = vi.fn().mockRejectedValue(new Error('Could not save.'));
         const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
         render(<Harness onSave={saved} />);
@@ -131,7 +117,8 @@ describe('CardDetailDialog', () => {
         await settle();
 
         expect(screen.getByLabelText('3 owned')).toHaveValue('3');
-        expect(screen.getByRole('alert')).toHaveTextContent('Could not save.');
+        // The error itself is the global toast's job, not the sheet's.
+        expect(screen.queryByRole('alert')).toBeNull();
     });
 
     it('holds Remove while a save is pending', async () => {

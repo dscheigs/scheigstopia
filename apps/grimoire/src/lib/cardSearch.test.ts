@@ -3,7 +3,12 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { slimOracleCards } from '../../scripts/cardNamesLib.mjs';
 import {
+    CATALOG_MIN_QUERY_LENGTH,
+    CATALOG_RESULT_LIMIT,
+    COLLECTION_MIN_QUERY_LENGTH,
     buildIndex,
+    buildIndexFromEntries,
+    toCardEntry,
     matchReadName,
     searchCards,
     type CardIndex,
@@ -95,5 +100,37 @@ describe('matchReadName', () => {
 
     it('respects the limit', () => {
         expect(matchReadName(index, 'er', 2).length).toBeLessThanOrEqual(2);
+    });
+});
+
+describe('search constants and the shared index', () => {
+    it('names the two thresholds and the catalog cap', () => {
+        expect(COLLECTION_MIN_QUERY_LENGTH).toBe(2);
+        expect(CATALOG_MIN_QUERY_LENGTH).toBe(3);
+        expect(CATALOG_RESULT_LIMIT).toBe(20);
+    });
+
+    it('builds the same index from a card list and from entries', () => {
+        const fromEntries = buildIndexFromEntries([
+            toCardEntry('o-bolt', 'Lightning Bolt'),
+            toCardEntry(
+                'o-delver',
+                'Delver of Secrets // Insectile Aberration'
+            ),
+        ]);
+        expect(searchCards(fromEntries, 'lightnig bolt')[0]?.oracleId).toBe(
+            'o-bolt'
+        );
+        expect(searchCards(fromEntries, 'Delver of Secrets')[0]?.front).toBe(
+            'Delver of Secrets'
+        );
+    });
+
+    it('lets a caller raise the minimum query length', () => {
+        const index = buildIndexFromEntries([
+            toCardEntry('o-bolt', 'Lightning Bolt'),
+        ]);
+        expect(searchCards(index, 'li', 8, 3)).toEqual([]);
+        expect(searchCards(index, 'lig', 8, 3)).toHaveLength(1);
     });
 });

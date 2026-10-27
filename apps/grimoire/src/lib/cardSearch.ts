@@ -21,20 +21,38 @@ export interface CardEntry {
 
 export type CardIndex = Fuse<CardEntry>;
 
-const MIN_QUERY_LENGTH = 2;
+/** Fewest characters that search the collection (and match a read name). */
+export const COLLECTION_MIN_QUERY_LENGTH = 2;
+/** Fewest characters that also suggest cards you do not own yet. */
+export const CATALOG_MIN_QUERY_LENGTH = 3;
+/** Most catalog suggestions shown under "Not in collection". */
+export const CATALOG_RESULT_LIMIT = 20;
+
+/**
+ * The one set of Fuse options, shared by the catalog and the collection so a
+ * misspelled name finds the same card in both and the two cannot drift.
+ */
+export const FUSE_OPTIONS = {
+    keys: ['name', 'front'],
+    threshold: 0.3,
+    ignoreLocation: true,
+    minMatchCharLength: COLLECTION_MIN_QUERY_LENGTH,
+};
+
+/** A searchable entry for a card; `front` is the name before " // ". */
+export function toCardEntry(oracleId: string, name: string): CardEntry {
+    return { oracleId, name, front: name.split(' // ')[0] };
+}
+
+/** Builds a search index over entries with the shared options. */
+export function buildIndexFromEntries(entries: CardEntry[]): CardIndex {
+    return new Fuse(entries, FUSE_OPTIONS);
+}
 
 export function buildIndex(file: CardNameFile): CardIndex {
-    const entries: CardEntry[] = file.cards.map(([oracleId, name]) => ({
-        oracleId,
-        name,
-        front: name.split(' // ')[0],
-    }));
-    return new Fuse(entries, {
-        keys: ['name', 'front'],
-        threshold: 0.3,
-        ignoreLocation: true,
-        minMatchCharLength: MIN_QUERY_LENGTH,
-    });
+    return buildIndexFromEntries(
+        file.cards.map(([oracleId, name]) => toCardEntry(oracleId, name))
+    );
 }
 
 export const normalize = (text: string) =>
@@ -60,13 +78,17 @@ export function matchReadName(
     return [...exact, ...rest].slice(0, limit);
 }
 
-/** Best matches for what the user typed. Short or empty queries match nothing. */
+/**
+ * Best matches for what the user typed, best first. Queries shorter than
+ * `minLength` (default 2) match nothing.
+ */
 export function searchCards(
     index: CardIndex,
     query: string,
-    limit = 8
+    limit = 8,
+    minLength = COLLECTION_MIN_QUERY_LENGTH
 ): CardEntry[] {
     const trimmed = query.trim();
-    if (trimmed.length < MIN_QUERY_LENGTH) return [];
+    if (trimmed.length < minLength) return [];
     return index.search(trimmed, { limit }).map((result) => result.item);
 }
