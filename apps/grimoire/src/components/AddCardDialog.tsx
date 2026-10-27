@@ -141,13 +141,6 @@ export default function AddCardDialog({
                 <p role="status" className="text-caption text-text-minimal">
                     {lastAdded ? `Added ${lastAdded}.` : null}
                 </p>
-                <p
-                    role="alert"
-                    aria-live="polite"
-                    className="text-body text-error"
-                >
-                    {addCard.error?.message}
-                </p>
             </div>
         </dialog>
     );

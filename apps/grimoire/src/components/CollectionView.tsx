@@ -20,8 +20,8 @@ export default function CollectionView() {
     const collection = useCollection();
     const cardNames = useCardNames();
     // Two mutations so a failed quantity save is reported in the sheet (by
-    // its counter) and only a failed Remove lands in the page-level alert.
-    const saveQuantityMutation = useSetQuantity();
+    // its counter) and a failed Remove is reported by the global toast.
+    const saveQuantityMutation = useSetQuantity({ reportInline: true });
     const removeMutation = useSetQuantity();
 
     // null while loading; a failed load shows the error and an empty list.
@@ -35,8 +35,8 @@ export default function CollectionView() {
           ? 'loading'
           : cardNames.data;
 
-    const error =
-        removeMutation.error?.message ?? collection.error?.message ?? null;
+    // Mutation errors are toasts; a failed load stays on the page.
+    const error = collection.error?.message ?? null;
 
     const index = useMemo(
         () =>

@@ -65,6 +65,27 @@ children. The footer lays them out the same way everywhere: the secondary action
 get the order wrong. For a destructive confirm, make the primary button
 `variant="destructive"`.
 
+## Toasts
+
+`Toaster` and `toast()` come from `@scheigs/sylva-ui`. Mount `<Toaster />` once
+near the root of an app (Grimoire does it in `Providers`), then call `toast()`
+from anywhere, including outside React:
+
+- `toast(message)`, `toast.success(message)`, `toast.error(message)`, each with
+  an optional `{ action: { label, onClick }, duration }`. `toast.dismiss(id?)`
+  removes one or all.
+- Neutral and success toasts last `TOAST_DURATION_MS`, errors
+  `TOAST_ERROR_DURATION_MS`; a toast with an action stays until dismissed.
+  Hover or focus pauses the timer. At most `MAX_TOASTS` show, and an identical
+  message that is already showing is not added again.
+- Errors are `role="alert"`, the rest `role="status"`.
+- It sits in the browser's top layer, so it shows above an open dialog. The page
+  behind a modal is inert, so a toast's buttons work once the modal closes.
+- In Grimoire a failed mutation toasts by itself (`MutationCache.onError` in
+  `Providers`), except a 401, which redirects. A mutation that shows its error
+  in place opts out with `meta: { toast: false }`. Inline form validation stays
+  inline; toasts are for "that did not save".
+
 ## Border radius
 
 Four radii, defined once in `packages/sylva-ui/src/styles/radius.css`: `rounded-button`

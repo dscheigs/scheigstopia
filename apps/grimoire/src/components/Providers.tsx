@@ -6,6 +6,7 @@ import {
     QueryClient,
     QueryClientProvider,
 } from '@tanstack/react-query';
+import { Toaster, toast } from '@scheigs/sylva-ui';
 import { useState } from 'react';
 import { ApiError, isUnauthorized } from '@/lib/apiClient';
 import { SIGN_IN_PATH } from '@/lib/sessionNotice';
@@ -19,10 +20,30 @@ function redirectIfSignedOut(error: unknown) {
     window.location.href = SIGN_IN_PATH;
 }
 
+/**
+ * Every failed mutation is reported once, here, so no component has to wire
+ * it up. A 401 is not: it already redirects. A mutation that shows its error
+ * in place (the card sheet's counter) opts out with `meta: { toast: false }`.
+ */
+function reportMutationError(
+    error: unknown,
+    _variables: unknown,
+    _result: unknown,
+    mutation: { meta?: Record<string, unknown> }
+) {
+    redirectIfSignedOut(error);
+    if (isUnauthorized(error) || mutation.meta?.toast === false) return;
+    toast.error(
+        error instanceof Error && error.message
+            ? error.message
+            : 'Something went wrong.'
+    );
+}
+
 function makeQueryClient() {
     return new QueryClient({
         queryCache: new QueryCache({ onError: redirectIfSignedOut }),
-        mutationCache: new MutationCache({ onError: redirectIfSignedOut }),
+        mutationCache: new MutationCache({ onError: reportMutationError }),
         defaultOptions: {
             queries: {
                 // One retry for flaky networks and 5xx; a 4xx will not change.
@@ -41,6 +62,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     return (
         <QueryClientProvider client={queryClient}>
             {children}
+            <Toaster />
         </QueryClientProvider>
     );
 }
