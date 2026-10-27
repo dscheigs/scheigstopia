@@ -92,15 +92,9 @@ export function useCommitQueue() {
 }
 
 /** Set how many copies are owned. Zero removes the card. */
-export function useSetQuantity({
-    reportInline = false,
-}: {
-    /** The caller shows a failure in place, so skip the global error toast. */
-    reportInline?: boolean;
-} = {}) {
+export function useSetQuantity() {
     const queryClient = useQueryClient();
     return useMutation({
-        meta: reportInline ? { toast: false } : undefined,
         mutationFn: ({
             item,
             quantity,

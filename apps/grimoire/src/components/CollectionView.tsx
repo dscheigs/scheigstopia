@@ -24,9 +24,9 @@ export default function CollectionView() {
 
     const collection = useCollection();
     const cardNames = useCardNames();
-    // Two mutations so a failed quantity save is reported in the sheet (by
-    // its counter) and a failed Remove is reported by the global toast.
-    const saveQuantityMutation = useSetQuantity({ reportInline: true });
+    // Two mutations so a quantity save and a Remove do not share pending
+    // state. Either one's failure is reported by the global toast.
+    const saveQuantityMutation = useSetQuantity();
     const removeMutation = useSetQuantity();
 
     // null while loading; a failed load shows the error and an empty list.
