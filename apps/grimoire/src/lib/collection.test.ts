@@ -190,13 +190,154 @@ describe('removeFromCollection', () => {
 });
 
 describe('database constraints', () => {
-    it('rejects a non-positive quantity even if the app is bypassed', async () => {
+    it('rejects a non-positive move quantity even if the app is bypassed', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        const [unsorted] = await query(
+            "select id from locations where user_id = $1 and kind = 'unsorted'",
+            [me]
+        );
         await expect(
             query(
-                'insert into collection (user_id, oracle_id, name, quantity) values ($1, $2, $3, 0)',
+                'insert into moves (user_id, oracle_id, name, to_location, quantity) values ($1, $2, $3, $4, 0)',
+                [me, BOLT, 'Lightning Bolt', unsorted.id]
+            )
+        ).rejects.toThrow();
+    });
+
+    it('rejects a move with no location at either end', async () => {
+        await expect(
+            query(
+                'insert into moves (user_id, oracle_id, name, quantity) values ($1, $2, $3, 1)',
                 [me, BOLT, 'Lightning Bolt']
             )
         ).rejects.toThrow();
+    });
+});
+
+describe('move ledger', () => {
+    async function moves() {
+        return query(
+            `select m.oracle_id, m.quantity, m.from_location, m.to_location, l.kind
+             from moves m
+             left join locations l on l.id = coalesce(m.to_location, m.from_location)
+             where m.user_id = $1 order by m.id`,
+            [me]
+        );
+    }
+
+    it('records an add as a move from outside into Unsorted', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 3,
+        });
+        const rows = await moves();
+        expect(rows).toHaveLength(1);
+        expect(rows[0]).toMatchObject({
+            quantity: 3,
+            from_location: null,
+            kind: 'unsorted',
+        });
+        expect(rows[0].to_location).not.toBeNull();
+    });
+
+    it('creates one Unsorted location per user and reuses it', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        await addManyToCollection(sql, me, [
+            { oracleId: RING, name: 'Sol Ring', delta: 1 },
+        ]);
+        await addToCollection(sql, other, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        const rows = await query(
+            "select user_id from locations where kind = 'unsorted'"
+        );
+        expect(rows).toHaveLength(2);
+    });
+
+    it('records only the copies that fit under the cap, and none at the cap', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: MAX_QUANTITY - 1,
+        });
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 50,
+        });
+        const atCap = await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 5,
+        });
+        expect(atCap.quantity).toBe(MAX_QUANTITY);
+        expect((await moves()).map((m) => m.quantity)).toEqual([
+            MAX_QUANTITY - 1,
+            1,
+        ]);
+    });
+
+    it('records setQuantity as the difference, in or out of Unsorted', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 4,
+        });
+        await setQuantity(sql, me, BOLT, 7);
+        await setQuantity(sql, me, BOLT, 2);
+        await setQuantity(sql, me, BOLT, 2);
+        const rows = await moves();
+        expect(rows.map((m) => [m.quantity, m.from_location === null])).toEqual(
+            [
+                [4, true],
+                [3, true],
+                [5, false],
+            ]
+        );
+        expect((await listCollection(sql, me))[0].quantity).toBe(2);
+    });
+
+    it('records a removal as a move out, and a re-add starts from zero', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 3,
+        });
+        expect(await removeFromCollection(sql, me, BOLT)).toBe(true);
+        const rows = await moves();
+        expect(rows[1]).toMatchObject({ quantity: 3, to_location: null });
+        expect(await listCollection(sql, me)).toEqual([]);
+        const item = await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        expect(item.quantity).toBe(1);
+    });
+
+    it('shows the latest name for a card', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Old Name',
+            delta: 1,
+        });
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        expect((await listCollection(sql, me))[0].name).toBe('Lightning Bolt');
     });
 });
 
