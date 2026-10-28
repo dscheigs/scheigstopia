@@ -190,13 +190,222 @@ describe('removeFromCollection', () => {
 });
 
 describe('database constraints', () => {
-    it('rejects a non-positive quantity even if the app is bypassed', async () => {
+    async function unsortedId() {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        const [row] = await query(
+            "select id from locations where user_id = $1 and kind = 'unsorted'",
+            [me]
+        );
+        return row.id;
+    }
+
+    it('rejects a move with no location at either end', async () => {
+        await unsortedId();
+        const [copy] = await query('select id from copies where user_id = $1', [
+            me,
+        ]);
+        await expect(
+            query('insert into moves (user_id, copy_id) values ($1, $2)', [
+                me,
+                copy.id,
+            ])
+        ).rejects.toThrow();
+    });
+
+    it('rejects a move from a location to itself', async () => {
+        const unsorted = await unsortedId();
+        const [copy] = await query('select id from copies where user_id = $1', [
+            me,
+        ]);
         await expect(
             query(
-                'insert into collection (user_id, oracle_id, name, quantity) values ($1, $2, $3, 0)',
-                [me, BOLT, 'Lightning Bolt']
+                'insert into moves (user_id, copy_id, from_location, to_location) values ($1, $2, $3, $3)',
+                [me, copy.id, unsorted]
             )
         ).rejects.toThrow();
+    });
+
+    it('allows only one Unsorted location per user', async () => {
+        await unsortedId();
+        await expect(
+            query(
+                "insert into locations (user_id, kind, label) values ($1, 'unsorted', 'Again')",
+                [me]
+            )
+        ).rejects.toThrow();
+    });
+
+    it('lets a location sit inside another', async () => {
+        const unsorted = await unsortedId();
+        await query(
+            "insert into locations (user_id, kind, label, parent_id) values ($1, 'keepers', 'Binder A', $2)",
+            [me, unsorted]
+        );
+        const rows = await query(
+            'select parent_id from locations where label = $1',
+            ['Binder A']
+        );
+        expect(rows[0].parent_id).toBe(unsorted);
+    });
+});
+
+describe('copies and moves', () => {
+    async function copies() {
+        return query(
+            `select c.oracle_id, c.location_id, c.printing_id, l.kind
+             from copies c left join locations l on l.id = c.location_id
+             where c.user_id = $1 order by c.created_at, c.id`,
+            [me]
+        );
+    }
+    async function moves() {
+        return query(
+            `select m.from_location, m.to_location, m.note
+             from moves m join copies c on c.id = m.copy_id
+             where m.user_id = $1 order by m.id`,
+            [me]
+        );
+    }
+
+    it('records an add as one copy per card, each moved in from outside', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 3,
+        });
+        const rows = await copies();
+        expect(rows).toHaveLength(3);
+        expect(rows.every((r) => r.kind === 'unsorted')).toBe(true);
+        // Printing is unknown until the user picks one.
+        expect(rows.every((r) => r.printing_id === null)).toBe(true);
+        const history = await moves();
+        expect(history).toHaveLength(3);
+        expect(history.every((m) => m.from_location === null)).toBe(true);
+        expect(history.every((m) => m.to_location !== null)).toBe(true);
+    });
+
+    it('creates one Unsorted location per user and reuses it', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        await addManyToCollection(sql, me, [
+            { oracleId: RING, name: 'Sol Ring', delta: 1 },
+        ]);
+        await addToCollection(sql, other, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        const rows = await query(
+            "select user_id from locations where kind = 'unsorted'"
+        );
+        expect(rows).toHaveLength(2);
+    });
+
+    it('adds only the copies that fit under the cap, and none at the cap', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: MAX_QUANTITY - 1,
+        });
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 50,
+        });
+        const atCap = await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 5,
+        });
+        expect(atCap.quantity).toBe(MAX_QUANTITY);
+        expect(await copies()).toHaveLength(MAX_QUANTITY);
+    });
+
+    it('raises a quantity by adding copies and lowers it by removing the newest', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 4,
+        });
+        await setQuantity(sql, me, BOLT, 7);
+        expect(await copies()).toHaveLength(7);
+        await setQuantity(sql, me, BOLT, 2);
+        await setQuantity(sql, me, BOLT, 2);
+        const rows = await copies();
+        // Removed copies stay as rows with no location, so history is kept.
+        expect(rows.filter((r) => r.location_id !== null)).toHaveLength(2);
+        expect(rows).toHaveLength(7);
+        expect((await listCollection(sql, me))[0].quantity).toBe(2);
+        // 4 + 3 moves in, 5 moves out, nothing for the no-op set.
+        const history = await moves();
+        expect(history.filter((m) => m.from_location === null)).toHaveLength(7);
+        expect(history.filter((m) => m.to_location === null)).toHaveLength(5);
+    });
+
+    it('records a removal as a move out of its location, and a re-add starts fresh', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 3,
+        });
+        expect(await removeFromCollection(sql, me, BOLT)).toBe(true);
+        const out = (await moves()).filter((m) => m.to_location === null);
+        expect(out).toHaveLength(3);
+        expect(out.every((m) => m.from_location !== null)).toBe(true);
+        expect(out[0].note).toBe('Removed');
+        expect(await listCollection(sql, me)).toEqual([]);
+        const item = await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        expect(item.quantity).toBe(1);
+    });
+
+    it('shows the latest name for a card', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Old Name',
+            delta: 1,
+        });
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 1,
+        });
+        expect((await listCollection(sql, me))[0].name).toBe('Lightning Bolt');
+    });
+
+    it('counts copies in any location, not only Unsorted', async () => {
+        await addToCollection(sql, me, {
+            oracleId: BOLT,
+            name: 'Lightning Bolt',
+            delta: 2,
+        });
+        const [bag] = await query(
+            "insert into locations (user_id, kind, label) values ($1, 'bulk', 'Shoebox') returning id",
+            [me]
+        );
+        const [copy] = await query(
+            'select id, location_id from copies where user_id = $1 limit 1',
+            [me]
+        );
+        await query('update copies set location_id = $1 where id = $2', [
+            bag.id,
+            copy.id,
+        ]);
+        expect((await listCollection(sql, me))[0].quantity).toBe(2);
+        // Lowering to one takes the copy from Unsorted first, not the shoebox one.
+        await setQuantity(sql, me, BOLT, 1);
+        const rows = await copies();
+        expect(rows.filter((r) => r.location_id === bag.id)).toHaveLength(1);
     });
 });
 
