@@ -92,7 +92,10 @@ export default function CatalogResults({
 
     return (
         <section aria-labelledby="catalog-heading" className="space-y-3">
-            <h3 id="catalog-heading" className="text-subheading">
+            <h3
+                id="catalog-heading"
+                className="sticky top-(--sticky-offset) z-30 bg-background py-2 text-subheading"
+            >
                 Not in collection
             </h3>
 
