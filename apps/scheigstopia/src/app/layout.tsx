@@ -14,7 +14,7 @@ const inter = Inter({
 
 export const metadata: Metadata = createPageMetadata({
     title: 'Scheigstopia',
-    description: 'The apps and tools I build.',
+    description: 'A house for my personal apps and tools.',
 });
 
 // Apps are other origins, so they stay plain anchors; site pages use <Link>.

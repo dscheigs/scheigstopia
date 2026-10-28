@@ -19,8 +19,7 @@ export const apps: HubApp[] = [
         ? [
               {
                   name: 'Grimoire',
-                  description:
-                      'A private Magic: The Gathering collection tracker.',
+                  description: 'A private card collection tracker.',
                   href: grimoireUrl,
                   gnome: 'grimoire' as const,
               },
