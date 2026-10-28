@@ -12,17 +12,22 @@
 
 /*
  * The one place the sticky header's height is defined (SiteHeader uses it too).
- * Anything that sticks below the header uses it as `top`. `--sticky-controls-height`
- * is set by a page that has its own sticky block, so keyboard focus and anchor
- * jumps never land behind the header or that block.
+ * Anything that sticks directly below the header uses it as `top`.
+ * `--sticky-controls-height` is set by a page that has its own sticky block, and
+ * `--sticky-offset` is the header plus that block: where section headings stick.
+ * `--sticky-heading-height` is the page's sticky section heading, if it has one.
+ * Together they keep keyboard focus and anchor jumps from landing behind any of them.
  */
 :root {
     --header-height: 4rem;
+    --sticky-offset: calc(
+        var(--header-height) + var(--sticky-controls-height, 0px)
+    );
 }
 
 html {
     scroll-padding-top: calc(
-        var(--header-height) + var(--sticky-controls-height, 0px)
+        var(--sticky-offset) + var(--sticky-heading-height, 0px)
     );
 }
 

@@ -1,4 +1,10 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CollectionView from '@/components/CollectionView';
@@ -99,17 +105,73 @@ describe('CollectionView controls', () => {
         expect(
             within(block as HTMLElement).getByRole('button', { name: 'Export' })
         ).toBeInTheDocument();
+        // The section heading sticks below the block, not inside it.
         expect(
-            within(block as HTMLElement).getByRole('heading', {
+            within(block as HTMLElement).queryByRole('heading', {
                 name: 'Your collection',
             })
-        ).toBeInTheDocument();
+        ).toBeNull();
         // The list scrolls beneath it, outside the block.
         expect(
             within(block as HTMLElement).queryByRole('button', {
                 name: 'Lightning Bolt, 4 owned',
             })
         ).toBeNull();
+    });
+
+    it('sticks each section heading below the controls, within its own section', async () => {
+        render(<CollectionView />);
+        await userEvent.type(search(), 'lightning');
+        const collectionHeading = screen
+            .getByRole('heading', { name: 'Your collection' })
+            .closest('.sticky');
+        const catalogHeading = await screen.findByRole('heading', {
+            name: 'Not in collection',
+        });
+        for (const sticky of [collectionHeading, catalogHeading]) {
+            expect(sticky).toHaveClass(
+                'sticky',
+                'top-(--sticky-offset)',
+                'z-30',
+                'bg-background'
+            );
+        }
+        // Each heading's container ends with its section, so the next heading takes over.
+        const list = screen.getByRole('button', {
+            name: 'Lightning Bolt, 4 owned',
+        });
+        expect(collectionHeading?.parentElement?.contains(list)).toBe(true);
+        expect(collectionHeading?.parentElement?.contains(catalogHeading)).toBe(
+            false
+        );
+        expect(catalogHeading.closest('section')).not.toBe(
+            collectionHeading?.closest('section')
+        );
+    });
+
+    it('shows the counts in the sticky heading row', () => {
+        render(<CollectionView />);
+        const row = screen
+            .getByRole('heading', { name: 'Your collection' })
+            .closest('.sticky') as HTMLElement;
+        expect(within(row).getByText('2 unique, 5 total')).toBeInTheDocument();
+    });
+
+    it('blurs the search field when a touch scroll starts, but not a tap', async () => {
+        render(<CollectionView />);
+        search().focus();
+        const touch = (type: string, clientY: number) =>
+            fireEvent(
+                document.body,
+                Object.assign(new Event(type, { bubbles: true }), {
+                    touches: [{ clientY }],
+                })
+            );
+        touch('touchstart', 300);
+        touch('touchmove', 296);
+        expect(search()).toHaveFocus();
+        touch('touchmove', 200);
+        expect(search()).not.toHaveFocus();
     });
 
     it('shows a clear button with text; it empties the search and refocuses it', async () => {
@@ -141,19 +203,20 @@ describe('CollectionView controls', () => {
         expect((search() as HTMLInputElement).selectionEnd).toBe('bolt'.length);
     });
 
-    it('publishes the sticky block height for scroll padding, and removes it on unmount', () => {
+    it('publishes the sticky block and heading heights for scroll padding, and removes them on unmount', () => {
+        const names = ['--sticky-controls-height', '--sticky-heading-height'];
         const { unmount } = render(<CollectionView />);
-        expect(
-            document.documentElement.style.getPropertyValue(
-                '--sticky-controls-height'
-            )
-        ).not.toBe('');
+        for (const name of names) {
+            expect(
+                document.documentElement.style.getPropertyValue(name)
+            ).not.toBe('');
+        }
         unmount();
-        expect(
-            document.documentElement.style.getPropertyValue(
-                '--sticky-controls-height'
-            )
-        ).toBe('');
+        for (const name of names) {
+            expect(document.documentElement.style.getPropertyValue(name)).toBe(
+                ''
+            );
+        }
     });
 });
 

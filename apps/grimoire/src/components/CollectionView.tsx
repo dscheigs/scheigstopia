@@ -8,16 +8,13 @@ import ExportMenu from '@/components/ExportMenu';
 import { Search, Spinner, useHotkey } from '@scheigs/sylva-ui';
 import { useCollectionSearch } from '@/lib/useCollectionSearch';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import { useMediaQuery } from '@/lib/useMediaQuery';
+import { useBlurOnTouchScroll } from '@/lib/useBlurOnTouchScroll';
 import { useStickyOffset } from '@/lib/useStickyOffset';
 import { useUrlDialogState } from '@/lib/useUrlDialogState';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
 import { useCardNames, useCollection, useSetQuantity } from '@/lib/queries';
-
-/** Below Tailwind's `sm` breakpoint: a phone, where the sticky block stays small. */
-const PHONE_QUERY = '(max-width: 39.99rem)';
 
 /** The same settle time as the card-list search used before. */
 const SEARCH_DEBOUNCE_MS = 150;
@@ -26,8 +23,12 @@ export default function CollectionView() {
     const [query, setQuery] = useState('');
     const searchRef = useRef<HTMLInputElement>(null);
     const controlsRef = useRef<HTMLDivElement>(null);
-    const isPhone = useMediaQuery(PHONE_QUERY);
+    const headingRef = useRef<HTMLDivElement>(null);
     useStickyOffset(controlsRef);
+    useStickyOffset(headingRef, '--sticky-heading-height');
+    // Scrolling by touch puts the keyboard away. In an installed iOS app a
+    // focused field also leaves the sticky blocks in the wrong place.
+    useBlurOnTouchScroll(searchRef);
     // Cmd+K / Ctrl+K from anywhere on the page. Ignored while the card sheet is open.
     useHotkey('mod+k', () => {
         searchRef.current?.focus();
@@ -108,25 +109,12 @@ export default function CollectionView() {
         if (missing) closeDetail();
     }, [missing, closeDetail]);
 
-    const heading = (
-        <div>
-            <h2 id="collection-heading" className="text-subheading">
-                Your collection
-            </h2>
-            {items && (
-                <p className="text-caption text-text-minimal">
-                    {items.length} unique, {totalCards} total
-                </p>
-            )}
-        </div>
-    );
-
     return (
         <div className="mx-auto max-w-5xl space-y-10 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
             <section aria-labelledby="collection-heading" className="space-y-3">
                 {/* Sticky under the site header: only the cards scroll beneath it.
-                    On a phone it holds just the search and Export; the heading
-                    and counts stay in the page flow below it and scroll away. */}
+                    Each section's heading sticks below it, within its own
+                    section, so the heading always names the cards in view. */}
                 <div
                     ref={controlsRef}
                     className="sticky top-(--header-height) z-40 -mx-4 border-b border-border-minimal bg-background px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
@@ -148,42 +136,51 @@ export default function CollectionView() {
                                 placeholder="Search"
                             />
                         </div>
-                        {isPhone && <ExportMenu />}
+                        <ExportMenu />
                     </div>
-                    {!isPhone && (
-                        <div className="mt-3 flex items-end justify-between gap-3">
-                            {heading}
-                            <ExportMenu />
+                </div>
+
+                <div className="space-y-3">
+                    <div
+                        ref={headingRef}
+                        className="sticky top-(--sticky-offset) z-30 flex items-baseline justify-between gap-3 bg-background py-2"
+                    >
+                        <h2 id="collection-heading" className="text-subheading">
+                            Your collection
+                        </h2>
+                        {items && (
+                            <p className="text-caption text-text-minimal">
+                                {items.length} unique, {totalCards} total
+                            </p>
+                        )}
+                    </div>
+
+                    {items === null && (
+                        <div className="flex justify-center">
+                            <Spinner className="text-text-minimal" />
                         </div>
                     )}
-                </div>
-                {isPhone && heading}
-
-                {items === null && (
-                    <div className="flex justify-center">
-                        <Spinner className="text-text-minimal" />
-                    </div>
-                )}
-                {items !== null && items.length === 0 && (
-                    <p className="text-body text-text-minimal">
-                        Nothing here yet. Search for a card to add it.
-                    </p>
-                )}
-                {items !== null &&
-                    items.length > 0 &&
-                    visibleItems.length === 0 && (
+                    {items !== null && items.length === 0 && (
                         <p className="text-body text-text-minimal">
-                            No cards in your collection match.
+                            Nothing here yet. Search for a card to add it.
                         </p>
                     )}
+                    {items !== null &&
+                        items.length > 0 &&
+                        visibleItems.length === 0 && (
+                            <p className="text-body text-text-minimal">
+                                No cards in your collection match.
+                            </p>
+                        )}
 
-                {visibleItems.length > 0 && (
-                    <CollectionList
-                        items={visibleItems}
-                        imageIds={imageIds}
-                        onOpen={(item) => detail.show(item.oracleId)}
-                    />
-                )}
+                    {visibleItems.length > 0 && (
+                        <CollectionList
+                            items={visibleItems}
+                            imageIds={imageIds}
+                            onOpen={(item) => detail.show(item.oracleId)}
+                        />
+                    )}
+                </div>
 
                 {/* Below the list, never above it: the list measures its offset
                     from the page top once, so nothing above may change height. */}

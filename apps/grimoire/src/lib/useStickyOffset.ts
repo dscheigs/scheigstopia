@@ -1,19 +1,25 @@
 import { useLayoutEffect, type RefObject } from 'react';
 
 /**
- * Publishes the height of a sticky block as `--sticky-controls-height` on the
- * page, which sylva-ui adds to `scroll-padding-top`. A row that takes focus or
- * is scrolled into view then lands below the header and the block, not behind
- * them. The variable is removed when the block unmounts.
+ * Publishes the height of a sticky block as a CSS variable on the page
+ * (`--sticky-controls-height` unless another name is given). sylva-ui adds the
+ * variables to `scroll-padding-top`, so a row that takes focus or is scrolled
+ * into view lands below the header and the sticky blocks, not behind them.
+ * The variable is removed when the block unmounts.
  */
-export function useStickyOffset(ref: RefObject<HTMLElement | null>) {
+export function useStickyOffset(
+    ref: RefObject<HTMLElement | null>,
+    variable:
+        | '--sticky-controls-height'
+        | '--sticky-heading-height' = '--sticky-controls-height'
+) {
     useLayoutEffect(() => {
         const element = ref.current;
         if (!element) return;
         const root = document.documentElement;
         const publish = () =>
             root.style.setProperty(
-                '--sticky-controls-height',
+                variable,
                 `${element.getBoundingClientRect().height}px`
             );
         publish();
@@ -21,14 +27,14 @@ export function useStickyOffset(ref: RefObject<HTMLElement | null>) {
             window.addEventListener('resize', publish);
             return () => {
                 window.removeEventListener('resize', publish);
-                root.style.removeProperty('--sticky-controls-height');
+                root.style.removeProperty(variable);
             };
         }
         const observer = new ResizeObserver(publish);
         observer.observe(element);
         return () => {
             observer.disconnect();
-            root.style.removeProperty('--sticky-controls-height');
+            root.style.removeProperty(variable);
         };
-    }, [ref]);
+    }, [ref, variable]);
 }
