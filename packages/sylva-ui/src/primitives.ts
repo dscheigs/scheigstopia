@@ -22,6 +22,8 @@ export const buttonVariantClasses = {
     primary:
         'bg-neutral-800 font-medium text-neutral-100 hover:bg-neutral-700 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300',
     secondary: 'border border-border-minimal hover:bg-surface-minimal-hover',
+    /** No border or fill until hovered. For a quiet action inside another control, such as clearing a field. */
+    tertiary: 'hover:bg-surface-minimal-hover',
     /** The green call to action: sign-in and the like. Use sparingly, one per screen. */
     brand: 'bg-accent-muted font-medium text-neutral-50 hover:bg-accent-muted-hover',
     /** The red button for actions that delete or lose data, such as Remove. */

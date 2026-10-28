@@ -30,7 +30,7 @@ function KeyHint({ shortcut, apple }: { shortcut: string; apple: boolean }) {
             {shortcut.split('+').map((key) => (
                 <kbd
                     key={key}
-                    className="flex min-w-6 items-center justify-center rounded-thumb border border-border-minimal px-1.5 py-0.5 font-sans text-caption text-text-minimal"
+                    className="flex h-6 min-w-6 items-center justify-center rounded-thumb border border-border-minimal px-1.5 font-sans text-caption text-text-minimal"
                 >
                     {key.toLowerCase() === 'mod' ? (
                         apple ? (
@@ -101,7 +101,7 @@ export default function Search({
     if (onClear && hasText) {
         trailing = (
             <Button
-                variant="secondary"
+                variant="tertiary"
                 size="icon"
                 aria-label="Clear search"
                 disabled={rest.disabled}

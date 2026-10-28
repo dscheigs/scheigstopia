@@ -23,6 +23,14 @@ describe('Button', () => {
         expect(button.className).not.toContain('bg-neutral-800');
     });
 
+    it('renders the tertiary variant with no border or fill', () => {
+        render(<Button variant="tertiary">Go</Button>);
+        const button = screen.getByRole('button', { name: 'Go' });
+        expect(button.className).not.toContain('border-border-minimal');
+        expect(button.className).not.toMatch(/(^| )bg-/);
+        expect(button.className).toContain('hover:bg-surface-minimal-hover');
+    });
+
     it('renders the brand variant in green', () => {
         render(<Button variant="brand">Go</Button>);
         const button = screen.getByRole('button', { name: 'Go' });
@@ -42,6 +50,7 @@ describe('Button', () => {
         for (const variant of [
             'primary',
             'secondary',
+            'tertiary',
             'brand',
             'destructive',
         ] as const) {
@@ -87,6 +96,7 @@ describe('Button', () => {
         for (const variant of [
             'primary',
             'secondary',
+            'tertiary',
             'brand',
             'destructive',
         ] as const) {

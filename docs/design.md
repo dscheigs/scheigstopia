@@ -35,7 +35,7 @@ Architecture), and each PR gets a preview URL from the Vercel bot.
 ## Buttons
 
 Use `Button` from `@scheigs/sylva-ui` with `variant="primary"` (filled, the main action),
-`variant="secondary"` (outlined) or `variant="brand"` (the green call to action, such as
+`variant="secondary"` (outlined), `variant="tertiary"` (no border or fill until hovered, for a quiet action inside another control such as a field's clear button) or `variant="brand"` (the green call to action, such as
 sign-in; one per screen) or `variant="destructive"` (red, for actions that delete or lose
 data, such as Remove; its color is the Sylva feedback error "solid", mapped to
 `bg-destructive`). Its `type` defaults to `button`, so pass
