@@ -3,6 +3,7 @@
 export {
     Check,
     ChevronRight,
+    Command,
     LogOut,
     Pencil,
     Plus,

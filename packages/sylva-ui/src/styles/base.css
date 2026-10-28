@@ -9,3 +9,29 @@
         cursor: pointer;
     }
 }
+
+/*
+ * The one place the sticky header's height is defined (SiteHeader uses it too).
+ * Anything that sticks below the header uses it as `top`. `--sticky-controls-height`
+ * is set by a page that has its own sticky block, so keyboard focus and anchor
+ * jumps never land behind the header or that block.
+ */
+:root {
+    --header-height: 4rem;
+}
+
+html {
+    scroll-padding-top: calc(
+        var(--header-height) + var(--sticky-controls-height, 0px)
+    );
+}
+
+/*
+ * `Search` draws its own clear button (a real `Button`, same everywhere), so
+ * hide the browser's own cancel button, which has no pointer cursor, is tiny
+ * on a phone and does not exist in Firefox.
+ */
+input[type='search']::-webkit-search-cancel-button {
+    appearance: none;
+    display: none;
+}

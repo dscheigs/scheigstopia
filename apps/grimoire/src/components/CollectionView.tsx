@@ -5,14 +5,19 @@ import CardDetailDialog from '@/components/CardDetailDialog';
 import CatalogResults from '@/components/CatalogResults';
 import CollectionList from '@/components/CollectionList';
 import ExportMenu from '@/components/ExportMenu';
-import { Search, Spinner } from '@scheigs/sylva-ui';
+import { Search, Spinner, useHotkey } from '@scheigs/sylva-ui';
 import { useCollectionSearch } from '@/lib/useCollectionSearch';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { useMediaQuery } from '@/lib/useMediaQuery';
+import { useStickyOffset } from '@/lib/useStickyOffset';
 import { useUrlDialogState } from '@/lib/useUrlDialogState';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
 import { useCardNames, useCollection, useSetQuantity } from '@/lib/queries';
+
+/** Below Tailwind's `sm` breakpoint: a phone, where the sticky block stays small. */
+const PHONE_QUERY = '(max-width: 39.99rem)';
 
 /** The same settle time as the card-list search used before. */
 const SEARCH_DEBOUNCE_MS = 150;
@@ -20,6 +25,14 @@ const SEARCH_DEBOUNCE_MS = 150;
 export default function CollectionView() {
     const [query, setQuery] = useState('');
     const searchRef = useRef<HTMLInputElement>(null);
+    const controlsRef = useRef<HTMLDivElement>(null);
+    const isPhone = useMediaQuery(PHONE_QUERY);
+    useStickyOffset(controlsRef);
+    // Cmd+K / Ctrl+K from anywhere on the page. Ignored while the card sheet is open.
+    useHotkey('mod+k', () => {
+        searchRef.current?.focus();
+        searchRef.current?.select();
+    });
     const detail = useUrlDialogState('card');
 
     const collection = useCollection();
@@ -95,33 +108,56 @@ export default function CollectionView() {
         if (missing) closeDetail();
     }, [missing, closeDetail]);
 
+    const heading = (
+        <div>
+            <h2 id="collection-heading" className="text-subheading">
+                Your collection
+            </h2>
+            {items && (
+                <p className="text-caption text-text-minimal">
+                    {items.length} unique, {totalCards} total
+                </p>
+            )}
+        </div>
+    );
+
     return (
         <div className="mx-auto max-w-5xl space-y-10 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
             <section aria-labelledby="collection-heading" className="space-y-3">
-                <label htmlFor="collection-search" className="sr-only">
-                    Search your collection and all cards
-                </label>
-                <Search
-                    id="collection-search"
-                    ref={searchRef}
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search"
-                />
-
-                <div className="flex items-end justify-between gap-3">
-                    <div>
-                        <h2 id="collection-heading" className="text-subheading">
-                            Your collection
-                        </h2>
-                        {items && (
-                            <p className="text-caption text-text-minimal">
-                                {items.length} unique, {totalCards} total
-                            </p>
-                        )}
+                {/* Sticky under the site header: only the cards scroll beneath it.
+                    On a phone it holds just the search and Export; the heading
+                    and counts stay in the page flow below it and scroll away. */}
+                <div
+                    ref={controlsRef}
+                    className="sticky top-(--header-height) z-40 -mx-4 border-b border-border-minimal bg-background px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+                >
+                    <label htmlFor="collection-search" className="sr-only">
+                        Search your collection and all cards
+                    </label>
+                    <div className="flex items-center gap-3">
+                        <div className="min-w-0 flex-1">
+                            <Search
+                                id="collection-search"
+                                ref={searchRef}
+                                value={query}
+                                onChange={(event) =>
+                                    setQuery(event.target.value)
+                                }
+                                onClear={() => setQuery('')}
+                                shortcut="mod+k"
+                                placeholder="Search"
+                            />
+                        </div>
+                        {isPhone && <ExportMenu />}
                     </div>
-                    <ExportMenu />
+                    {!isPhone && (
+                        <div className="mt-3 flex items-end justify-between gap-3">
+                            {heading}
+                            <ExportMenu />
+                        </div>
+                    )}
                 </div>
+                {isPhone && heading}
 
                 {items === null && (
                     <div className="flex justify-center">

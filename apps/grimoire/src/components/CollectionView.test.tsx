@@ -86,6 +86,77 @@ const search = () =>
         name: 'Search your collection and all cards',
     });
 
+describe('CollectionView controls', () => {
+    it('keeps the search field and Export in one sticky block under the header', () => {
+        render(<CollectionView />);
+        const block = search().closest('.sticky');
+        expect(block).not.toBeNull();
+        expect(block).toHaveClass(
+            'top-(--header-height)',
+            'z-40',
+            'bg-background'
+        );
+        expect(
+            within(block as HTMLElement).getByRole('button', { name: 'Export' })
+        ).toBeInTheDocument();
+        expect(
+            within(block as HTMLElement).getByRole('heading', {
+                name: 'Your collection',
+            })
+        ).toBeInTheDocument();
+        // The list scrolls beneath it, outside the block.
+        expect(
+            within(block as HTMLElement).queryByRole('button', {
+                name: 'Lightning Bolt, 4 owned',
+            })
+        ).toBeNull();
+    });
+
+    it('shows a clear button with text; it empties the search and refocuses it', async () => {
+        render(<CollectionView />);
+        expect(
+            screen.queryByRole('button', { name: 'Clear search' })
+        ).toBeNull();
+        await userEvent.type(search(), 'lightning');
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Clear search' })
+        );
+        expect(search()).toHaveValue('');
+        expect(search()).toHaveFocus();
+    });
+
+    it('focuses and selects the search field on Ctrl+K from anywhere', async () => {
+        vi.spyOn(navigator, 'platform', 'get').mockReturnValue('Win32');
+        render(<CollectionView />);
+        await userEvent.type(search(), 'bolt');
+        screen.getByRole('button', { name: 'Export' }).focus();
+        const event = new KeyboardEvent('keydown', {
+            key: 'k',
+            ctrlKey: true,
+            cancelable: true,
+        });
+        window.dispatchEvent(event);
+        expect(event.defaultPrevented).toBe(true);
+        expect(search()).toHaveFocus();
+        expect((search() as HTMLInputElement).selectionEnd).toBe('bolt'.length);
+    });
+
+    it('publishes the sticky block height for scroll padding, and removes it on unmount', () => {
+        const { unmount } = render(<CollectionView />);
+        expect(
+            document.documentElement.style.getPropertyValue(
+                '--sticky-controls-height'
+            )
+        ).not.toBe('');
+        unmount();
+        expect(
+            document.documentElement.style.getPropertyValue(
+                '--sticky-controls-height'
+            )
+        ).toBe('');
+    });
+});
+
 describe('CollectionView search', () => {
     it('has no Add Cards button, and one labelled search field', () => {
         render(<CollectionView />);

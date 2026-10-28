@@ -55,7 +55,7 @@ export default function SiteHeader({
     return (
         <header className="sticky top-0 z-50 bg-surface">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex h-16 items-center justify-between">
+                <div className="flex h-(--header-height) items-center justify-between">
                     <div className="flex items-center gap-3">
                         {/* Always a plain anchor: the site root is another origin from inside an app. */}
                         <a
@@ -129,7 +129,7 @@ export default function SiteHeader({
                         aria-label="Mobile"
                         id="mobile-menu"
                         inert={!isMenuOpen}
-                        className={`absolute left-0 right-0 top-16 z-50 bg-surface shadow-lg transition-all duration-400 ease-in-out md:hidden ${
+                        className={`absolute left-0 right-0 top-(--header-height) z-50 bg-surface shadow-lg transition-all duration-400 ease-in-out md:hidden ${
                             isMenuOpen
                                 ? 'scale-y-100 opacity-100'
                                 : 'scale-y-0 opacity-90'

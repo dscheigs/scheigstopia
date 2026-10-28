@@ -36,6 +36,19 @@ describe('TextField', () => {
         );
     });
 
+    it('pads for a trailing node and keeps it clickable', async () => {
+        const onClick = vi.fn();
+        render(
+            <TextField
+                aria-label="Name"
+                trailing={<button onClick={onClick}>go</button>}
+            />
+        );
+        expect(screen.getByRole('textbox').className).toContain('pr-14');
+        await userEvent.click(screen.getByRole('button', { name: 'go' }));
+        expect(onClick).toHaveBeenCalled();
+    });
+
     it('can be disabled', () => {
         render(<TextField aria-label="Name" disabled />);
         expect(screen.getByRole('textbox')).toBeDisabled();
