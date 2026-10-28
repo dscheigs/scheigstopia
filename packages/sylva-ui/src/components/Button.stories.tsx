@@ -9,7 +9,13 @@ const meta = {
     argTypes: {
         variant: {
             control: 'inline-radio',
-            options: ['primary', 'secondary', 'brand', 'destructive'],
+            options: [
+                'primary',
+                'secondary',
+                'tertiary',
+                'brand',
+                'destructive',
+            ],
         },
         disabled: { control: 'boolean' },
     },
@@ -24,6 +30,9 @@ export const Primary: Story = { args: { variant: 'primary' } };
 /** The outlined button, for everything else. */
 export const Secondary: Story = { args: { variant: 'secondary' } };
 
+/** No border or fill until hovered, for a quiet action inside another control (the clear button in Search). */
+export const Tertiary: Story = { args: { variant: 'tertiary' } };
+
 /** The green call to action, for the one thing you most want pressed (sign in). */
 export const Brand: Story = { args: { variant: 'brand' } };
 
@@ -37,6 +46,7 @@ export const Disabled: Story = {
         <div className="flex gap-3">
             <Button {...args} variant="primary" />
             <Button {...args} variant="secondary" />
+            <Button {...args} variant="tertiary" />
             <Button {...args} variant="brand" />
             <Button {...args} variant="destructive" />
         </div>
@@ -54,6 +64,10 @@ export const AllStates: Story = {
             <Button variant="secondary">Secondary</Button>
             <Button variant="secondary" disabled>
                 Secondary disabled
+            </Button>
+            <Button variant="tertiary">Tertiary</Button>
+            <Button variant="tertiary" disabled>
+                Tertiary disabled
             </Button>
             <Button variant="brand">Brand</Button>
             <Button variant="brand" disabled>

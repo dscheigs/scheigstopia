@@ -74,6 +74,12 @@ describe('Search clear button', () => {
         ).toBeNull();
     });
 
+    it('draws the clear button without a border', () => {
+        render(<Controlled initial="bolt" onClear={() => {}} />);
+        const button = screen.getByRole('button', { name: 'Clear search' });
+        expect(button.className).not.toContain('border');
+    });
+
     it('clears on Escape when there is text, and not when empty', async () => {
         const onClear = vi.fn();
         render(<Controlled initial="bolt" onClear={onClear} />);
@@ -126,6 +132,18 @@ describe('Search shortcut hint', () => {
             'aria-keyshortcuts',
             'Meta+K'
         );
+    });
+
+    it('gives every key the same height and minimum width', () => {
+        mockPlatform('MacIntel');
+        const { container } = render(<Controlled shortcut="mod+k" />);
+        const keys = [...container.querySelectorAll('kbd')];
+        expect(keys).toHaveLength(2);
+        for (const key of keys) {
+            const classes = key.className.split(' ');
+            expect(classes).toContain('h-6');
+            expect(classes).toContain('min-w-6');
+        }
     });
 
     it('is decorative to assistive tech', () => {
