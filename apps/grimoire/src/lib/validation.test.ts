@@ -5,7 +5,10 @@ import {
     MAX_BULK_ITEMS,
     parseAddBody,
     parseBulkBody,
+    parseCreateLocationBody,
+    parseMovesBody,
     parseQuantityBody,
+    parseUpdateLocationBody,
 } from '@/lib/validation';
 
 const ID = '00000000-0000-4000-8000-000000000001';
@@ -115,5 +118,83 @@ describe('parseBulkBody', () => {
     it('accepts the maximum batch size', () => {
         const items = Array.from({ length: MAX_BULK_ITEMS }, () => item);
         expect(parseBulkBody({ items }).ok).toBe(true);
+    });
+});
+
+describe('location and move bodies', () => {
+    const A = '00000000-0000-4000-8000-00000000000a';
+    const B = '00000000-0000-4000-8000-00000000000b';
+    const BOLT = '00000000-0000-4000-8000-000000000001';
+
+    it('parses a new location and trims the label', () => {
+        expect(
+            parseCreateLocationBody({ kind: 'bulk', label: '  Shoebox ' })
+        ).toEqual({
+            ok: true,
+            value: {
+                kind: 'bulk',
+                label: 'Shoebox',
+                note: null,
+                parentId: null,
+            },
+        });
+    });
+
+    it('rejects the unsorted kind, bad kinds, empty labels and bad parents', () => {
+        for (const body of [
+            { kind: 'unsorted', label: 'x' },
+            { kind: 'nope', label: 'x' },
+            { kind: 'bulk', label: '   ' },
+            { kind: 'bulk', label: 'x'.repeat(101) },
+            { kind: 'bulk', label: 'x', parentId: 'not-a-uuid' },
+            { kind: 'bulk', label: 'x', note: 5 },
+            null,
+        ]) {
+            expect(parseCreateLocationBody(body).ok).toBe(false);
+        }
+    });
+
+    it('needs something to change, and checks each field', () => {
+        expect(parseUpdateLocationBody({}).ok).toBe(false);
+        expect(parseUpdateLocationBody({ archived: 'yes' }).ok).toBe(false);
+        expect(parseUpdateLocationBody({ label: '' }).ok).toBe(false);
+        expect(parseUpdateLocationBody({ note: '  ' })).toEqual({
+            ok: true,
+            value: { note: null },
+        });
+        expect(
+            parseUpdateLocationBody({ label: 'New', archived: true })
+        ).toEqual({ ok: true, value: { label: 'New', archived: true } });
+    });
+
+    it('parses a batch of moves', () => {
+        expect(
+            parseMovesBody({
+                moves: [{ oracleId: BOLT, from: A, to: B, quantity: 2 }],
+                note: 'Sorting',
+            })
+        ).toEqual({
+            ok: true,
+            value: {
+                moves: [{ oracleId: BOLT, fromId: A, toId: B, quantity: 2 }],
+                note: 'Sorting',
+            },
+        });
+    });
+
+    it('rejects bad moves and oversized batches', () => {
+        const good = { oracleId: BOLT, from: A, to: B, quantity: 1 };
+        for (const body of [
+            { moves: [] },
+            { moves: [{ ...good, quantity: 0 }] },
+            { moves: [{ ...good, quantity: 1.5 }] },
+            { moves: [{ ...good, from: 'x' }] },
+            { moves: [{ ...good, to: A }] },
+            { moves: Array.from({ length: MAX_BULK_ITEMS + 1 }, () => good) },
+            { moves: [good], note: 'x'.repeat(501) },
+            {},
+        ]) {
+            expect(parseMovesBody(body).ok).toBe(false);
+        }
     });
 });

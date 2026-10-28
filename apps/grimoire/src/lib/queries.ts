@@ -10,11 +10,16 @@ import { normalize } from '@/lib/cardSearch';
 import { lookupScryfallCard } from '@/lib/scryfall';
 import type { CollectionItem } from '@/lib/collection';
 import type { IdentifyResult } from '@/lib/identify';
+import type { HistoryEntry, LocationItem, Placement } from '@/lib/locations';
+import type { LocationKind } from '@/lib/locationKinds';
 import { withItem, withoutItem } from '@/lib/collectionCache';
 
 export const queryKeys = {
     collection: ['collection'] as const,
     cardNames: ['card-names'] as const,
+    locations: ['locations'] as const,
+    placements: (oracleId: string) => ['placements', oracleId] as const,
+    history: (oracleId: string) => ['history', oracleId] as const,
     scryfall: (name: string) => ['scryfall', normalize(name)] as const,
 };
 
@@ -145,5 +150,121 @@ export function useScryfallCard(name: string, enabled: boolean) {
         enabled: enabled && normalize(name).length >= 2,
         staleTime: Infinity,
         retry: false,
+    });
+}
+
+/** The user's locations (archived ones too when asked). */
+export function useLocations(options: { includeArchived?: boolean } = {}) {
+    const includeArchived = options.includeArchived === true;
+    return useQuery({
+        queryKey: [...queryKeys.locations, { includeArchived }] as const,
+        queryFn: async () =>
+            (
+                await apiFetch<{ items: LocationItem[] }>(
+                    includeArchived
+                        ? '/api/locations?archived=1'
+                        : '/api/locations'
+                )
+            ).items,
+    });
+}
+
+/** Create a location (a bag, box, binder or deck). */
+export function useCreateLocation() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (input: {
+            kind: Exclude<LocationKind, 'unsorted'>;
+            label: string;
+            note?: string | null;
+            parentId?: string | null;
+        }) =>
+            apiFetch<{ item: LocationItem }>('/api/locations', {
+                method: 'POST',
+                json: input,
+            }),
+        onSuccess: () =>
+            queryClient.invalidateQueries({ queryKey: queryKeys.locations }),
+    });
+}
+
+/** Rename, change the note of, archive or restore a location. */
+export function useUpdateLocation() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            id,
+            ...changes
+        }: {
+            id: string;
+            label?: string;
+            note?: string | null;
+            archived?: boolean;
+        }) =>
+            apiFetch<{ item: LocationItem }>(`/api/locations/${id}`, {
+                method: 'PATCH',
+                json: changes,
+            }),
+        onSuccess: () =>
+            queryClient.invalidateQueries({ queryKey: queryKeys.locations }),
+    });
+}
+
+/** Move copies between locations, all or nothing. */
+export function useMoveCards() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (input: {
+            moves: {
+                oracleId: string;
+                from: string;
+                to: string;
+                quantity: number;
+            }[];
+            note?: string | null;
+        }) =>
+            apiFetch<{ moved: number }>('/api/moves', {
+                method: 'POST',
+                json: input,
+            }),
+        onSuccess: (_result, { moves }) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.locations });
+            for (const { oracleId } of moves) {
+                queryClient.invalidateQueries({
+                    queryKey: queryKeys.placements(oracleId),
+                });
+                queryClient.invalidateQueries({
+                    queryKey: queryKeys.history(oracleId),
+                });
+            }
+        },
+    });
+}
+
+/** Where the copies of a card are, by location. */
+export function useCardPlacements(oracleId: string, enabled = true) {
+    return useQuery({
+        queryKey: queryKeys.placements(oracleId),
+        queryFn: async () =>
+            (
+                await apiFetch<{ items: Placement[] }>(
+                    `/api/cards/${oracleId}/placements`
+                )
+            ).items,
+        enabled,
+    });
+}
+
+/** The moves of a card's copies, newest first. */
+export function useCardHistory(oracleId: string, enabled = true) {
+    return useQuery({
+        queryKey: queryKeys.history(oracleId),
+        queryFn: async () =>
+            (
+                await apiFetch<{ items: HistoryEntry[] }>(
+                    `/api/cards/${oracleId}/history`
+                )
+            ).items,
+        enabled,
     });
 }
