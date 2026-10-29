@@ -85,11 +85,28 @@ vi.mock('@/lib/queries', () => ({
         },
     }),
     useCommitQueue: () => ({
-        mutate: vi.fn(),
+        mutate: commitMutate,
+        reset: vi.fn(),
         isPending: false,
         error: null,
     }),
+    useLocations: () => ({
+        data: [
+            {
+                id: 'bag-1',
+                kind: 'bulk',
+                label: 'Old bag',
+                note: null,
+                parentId: null,
+                archivedAt: null,
+                createdAt: '2026-10-01T00:00:00.000Z',
+                cardCount: 4,
+            },
+        ],
+    }),
 }));
+
+const commitMutate = vi.hoisted(() => vi.fn());
 
 // The thumbnail reads image blobs from IndexedDB, which jsdom does not have.
 vi.mock('@/lib/scanQueueBlobs', () => ({
@@ -289,6 +306,64 @@ describe('QueueView', () => {
         expect(
             screen.getByRole('button', { name: 'Commit 1 card' })
         ).toBeEnabled();
+    });
+
+    it('asks which bag, defaulting to a new one labelled with today', async () => {
+        const user = userEvent.setup();
+        commitMutate.mockClear();
+        renderQueue([makeItem({ matchedCard: bolt })]);
+        await user.click(screen.getByRole('button', { name: 'Commit 1 card' }));
+        const dialog = await screen.findByRole('dialog');
+        const label = (
+            within(dialog).getByLabelText('Bag label') as HTMLInputElement
+        ).value;
+        expect(label).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        // Nothing is sent until the dialog is confirmed.
+        expect(commitMutate).not.toHaveBeenCalled();
+
+        await user.click(
+            within(dialog).getByRole('button', { name: 'Commit 1 card' })
+        );
+        expect(commitMutate).toHaveBeenCalledTimes(1);
+        expect(commitMutate.mock.calls[0][0]).toMatchObject({
+            items: [{ oracleId: 'o-bolt', name: 'Lightning Bolt', delta: 1 }],
+            destination: { newBag: { label } },
+        });
+    });
+
+    it('commits into an existing bag', async () => {
+        const user = userEvent.setup();
+        commitMutate.mockClear();
+        renderQueue([makeItem({ matchedCard: bolt })]);
+        await user.click(screen.getByRole('button', { name: 'Commit 1 card' }));
+        const dialog = await screen.findByRole('dialog');
+        await user.click(
+            within(dialog).getByRole('radio', { name: 'An existing bag' })
+        );
+        expect(
+            (within(dialog).getByLabelText('Existing bag') as HTMLSelectElement)
+                .value
+        ).toBe('bag-1');
+        await user.click(
+            within(dialog).getByRole('button', { name: 'Commit 1 card' })
+        );
+        expect(commitMutate.mock.calls[0][0]).toMatchObject({
+            destination: { locationId: 'bag-1' },
+        });
+    });
+
+    it('does not send an empty bag label', async () => {
+        const user = userEvent.setup();
+        commitMutate.mockClear();
+        renderQueue([makeItem({ matchedCard: bolt })]);
+        await user.click(screen.getByRole('button', { name: 'Commit 1 card' }));
+        const dialog = await screen.findByRole('dialog');
+        await user.clear(within(dialog).getByLabelText('Bag label'));
+        await user.click(
+            within(dialog).getByRole('button', { name: 'Commit 1 card' })
+        );
+        expect(await within(dialog).findByRole('alert')).toBeTruthy();
+        expect(commitMutate).not.toHaveBeenCalled();
     });
 
     it('removes a row', async () => {

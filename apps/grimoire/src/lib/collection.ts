@@ -105,16 +105,29 @@ export async function addToCollection(
     return toItem(rows[0]);
 }
 
+/** Where a bulk add puts its copies. Without one they go to Unsorted. */
+export type BulkDestination =
+    | { kind: 'existing'; locationId: string }
+    | { kind: 'new'; label: string; note: string | null };
+
+export type AddManyResult =
+    | { status: 'added'; items: CollectionItem[]; locationId: string }
+    /** The location is not the user's, or it is archived. Nothing was added. */
+    | { status: 'bad_location' };
+
 /**
- * Add many cards in one statement, so it applies fully or not at all.
- * Repeated oracle ids are summed first, since one statement cannot treat a
- * card twice. Same cap and result behavior as `addToCollection`.
+ * Add many cards in one statement, so it applies fully or not at all, into an
+ * existing location, a bag created by the same statement, or Unsorted. Each
+ * copy gets a move from outside the collection into that location. Repeated
+ * oracle ids are summed first, since one statement cannot treat a card twice.
+ * Same cap and result behavior as `addToCollection`.
  */
-export async function addManyToCollection(
+export async function addManyToLocation(
     sql: Sql,
     userId: string,
-    cards: { oracleId: string; name: string; delta: number }[]
-): Promise<CollectionItem[]> {
+    cards: { oracleId: string; name: string; delta: number }[],
+    destination?: BulkDestination
+): Promise<AddManyResult> {
     const merged = new Map<
         string,
         { oracle_id: string; name: string; delta: number }
@@ -128,7 +141,13 @@ export async function addManyToCollection(
             delta: Math.min((existing?.delta ?? 0) + card.delta, MAX_QUANTITY),
         });
     }
-    if (merged.size === 0) return [];
+    if (merged.size === 0) {
+        return { status: 'added', items: [], locationId: '' };
+    }
+    const existingId =
+        destination?.kind === 'existing' ? destination.locationId : null;
+    const newLabel = destination?.kind === 'new' ? destination.label : null;
+    const newNote = destination?.kind === 'new' ? destination.note : null;
 
     const rows = await sql`
         with input as (
@@ -157,12 +176,30 @@ export async function addManyToCollection(
             where user_id = ${userId}::uuid and kind = 'unsorted'
             limit 1
         ),
+        new_bag as (
+            insert into locations (user_id, kind, label, note)
+            select ${userId}::uuid, 'bulk', ${newLabel}::text, ${newNote}::text
+            where ${newLabel}::text is not null
+            returning id
+        ),
+        dest as (
+            select id from new_bag
+            union all
+            select id from locations
+            where id = ${existingId}::uuid
+                and user_id = ${userId}::uuid
+                and archived_at is null
+            union all
+            select id from unsorted
+            where ${existingId}::uuid is null and ${newLabel}::text is null
+            limit 1
+        ),
         added as (
             insert into copies (user_id, oracle_id, name, location_id)
-            select ${userId}::uuid, i.oracle_id, i.name, unsorted.id
+            select ${userId}::uuid, i.oracle_id, i.name, dest.id
             from input i
             join cur on cur.oracle_id = i.oracle_id
-            cross join unsorted
+            cross join dest
             cross join lateral generate_series(
                 1,
                 least(i.delta, ${MAX_QUANTITY}::integer - cur.q)
@@ -174,6 +211,7 @@ export async function addManyToCollection(
             select ${userId}::uuid, id, null, location_id from added
         )
         select
+            (select id from dest) as dest_id,
             i.oracle_id,
             i.name,
             cur.q + (select count(*) from added a where a.oracle_id = i.oracle_id) as quantity,
@@ -184,7 +222,22 @@ export async function addManyToCollection(
         from input i
         join cur on cur.oracle_id = i.oracle_id
     `;
-    return rows.map(toItem);
+    if (rows[0].dest_id === null) return { status: 'bad_location' };
+    return {
+        status: 'added',
+        items: rows.map(toItem),
+        locationId: String(rows[0].dest_id),
+    };
+}
+
+/** Add many cards to Unsorted in one all-or-nothing statement. */
+export async function addManyToCollection(
+    sql: Sql,
+    userId: string,
+    cards: { oracleId: string; name: string; delta: number }[]
+): Promise<CollectionItem[]> {
+    const result = await addManyToLocation(sql, userId, cards);
+    return result.status === 'added' ? result.items : [];
 }
 
 export type SetQuantityResult =

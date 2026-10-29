@@ -9,6 +9,7 @@ import type { CardEntry } from '@/lib/cardSearch';
 import { normalize } from '@/lib/cardSearch';
 import { lookupScryfallCard } from '@/lib/scryfall';
 import type { CollectionItem } from '@/lib/collection';
+import type { CommitDestination } from '@/lib/commitBag';
 import type { IdentifyResult } from '@/lib/identify';
 import type { HistoryEntry, LocationItem, Placement } from '@/lib/locations';
 import type { LocationKind } from '@/lib/locationKinds';
@@ -72,18 +73,27 @@ export function useAddCard() {
     });
 }
 
-/** Commit a list of `{ oracleId, name, delta }` in one all-or-nothing request. */
+/**
+ * Commit a list of `{ oracleId, name, delta }` into a bag in one
+ * all-or-nothing request. Without a destination the cards go to Unsorted.
+ */
 export function useCommitQueue() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (
-            items: { oracleId: string; name: string; delta: number }[]
-        ) =>
-            apiFetch<{ items: CollectionItem[] }>('/api/collection/bulk', {
-                method: 'POST',
-                json: { items },
-            }),
+        mutationFn: ({
+            items,
+            destination,
+        }: {
+            items: { oracleId: string; name: string; delta: number }[];
+            destination?: CommitDestination;
+        }) =>
+            apiFetch<{ items: CollectionItem[]; locationId: string }>(
+                '/api/collection/bulk',
+                { method: 'POST', json: { items, destination } }
+            ),
         onSuccess: ({ items }) => {
+            // A new bag, and every bag's count, changed.
+            queryClient.invalidateQueries({ queryKey: queryKeys.locations });
             queryClient.setQueryData<CollectionItem[]>(
                 queryKeys.collection,
                 (current) =>

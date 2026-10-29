@@ -3,6 +3,7 @@ import {
     isLocationKind,
     type LocationKind,
 } from '@/lib/locationKinds';
+import type { BulkDestination } from '@/lib/collection';
 import type { MoveLine } from '@/lib/locations';
 
 export const MAX_QUANTITY = 9999;
@@ -70,8 +71,55 @@ export function parseAddBody(body: unknown): Parsed<AddBody> {
     return { ok: true, value: { oracleId: body.oracleId, name, delta } };
 }
 
-/** Body for committing many cards: { items: [{ oracleId, name, delta }] }. */
-export function parseBulkBody(body: unknown): Parsed<{ items: AddBody[] }> {
+export interface BulkBody {
+    items: AddBody[];
+    /** Absent means Unsorted. */
+    destination?: BulkDestination;
+}
+
+/**
+ * The bag a commit goes to: { locationId } for an existing location, or
+ * { newBag: { label, note? } } to create one in the same request.
+ */
+function parseDestination(value: unknown): Parsed<BulkDestination> {
+    if (!isRecord(value)) {
+        return { ok: false, error: 'destination must be an object.' };
+    }
+    if (value.locationId !== undefined) {
+        if (!isUuid(value.locationId) || value.newBag !== undefined) {
+            return {
+                ok: false,
+                error: 'destination needs a locationId UUID or a newBag, not both.',
+            };
+        }
+        return {
+            ok: true,
+            value: { kind: 'existing', locationId: value.locationId },
+        };
+    }
+    if (!isRecord(value.newBag)) {
+        return {
+            ok: false,
+            error: 'destination needs a locationId or a newBag.',
+        };
+    }
+    const label = parseLabel(value.newBag.label);
+    if (!label.ok) return label;
+    const note = parseNote(
+        value.newBag.note === undefined ? null : value.newBag.note
+    );
+    if (!note.ok) return note;
+    return {
+        ok: true,
+        value: { kind: 'new', label: label.value, note: note.value },
+    };
+}
+
+/**
+ * Body for committing many cards:
+ * { items: [{ oracleId, name, delta }], destination? }.
+ */
+export function parseBulkBody(body: unknown): Parsed<BulkBody> {
     if (!isRecord(body) || !Array.isArray(body.items)) {
         return { ok: false, error: 'items must be an array.' };
     }
@@ -96,7 +144,10 @@ export function parseBulkBody(body: unknown): Parsed<{ items: AddBody[] }> {
         }
         items.push(parsed.value);
     }
-    return { ok: true, value: { items } };
+    if (body.destination === undefined) return { ok: true, value: { items } };
+    const destination = parseDestination(body.destination);
+    if (!destination.ok) return destination;
+    return { ok: true, value: { items, destination: destination.value } };
 }
 
 /** Body for setting an exact quantity: { quantity }. Zero removes the card. */
