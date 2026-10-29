@@ -15,7 +15,14 @@ import {
     rowActions,
 } from '@/lib/queueReview';
 import { discardCopy } from '@/lib/discardMessage';
-import { useCardNames, useCommitQueue } from '@/lib/queries';
+import CommitBagDialog from '@/components/CommitBagDialog';
+import {
+    browserStorage,
+    readLastBag,
+    writeLastBag,
+    type CommitDestination,
+} from '@/lib/commitBag';
+import { useCardNames, useCommitQueue, useLocations } from '@/lib/queries';
 import type { QueueItem } from '@/lib/scanQueueTypes';
 import { useScanQueue } from '@/lib/useScanQueue';
 
@@ -98,6 +105,8 @@ export default function QueueView({ userId }: { userId: string }) {
     const cardNames = useCardNames();
     const commit = useCommitQueue();
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [choosingBag, setChoosingBag] = useState(false);
+    const locations = useLocations();
 
     const index = useMemo(
         () => (cardNames.data ? buildIndex(cardNames.data) : null),
@@ -121,12 +130,19 @@ export default function QueueView({ userId }: { userId: string }) {
         setEditingId(null);
     };
 
-    const commitAll = () => {
+    const commitAll = (destination: CommitDestination) => {
         // Only what was sent leaves the queue, whatever was added meanwhile.
         const sent = plan.ids;
-        commit.mutate(plan.payload, {
-            onSuccess: () => store.getState().removeMany(sent),
-        });
+        commit.mutate(
+            { items: plan.payload, destination },
+            {
+                onSuccess: ({ locationId }) => {
+                    store.getState().removeMany(sent);
+                    writeLastBag(browserStorage(), userId, locationId);
+                    setChoosingBag(false);
+                },
+            }
+        );
     };
 
     const discardText = discardCopy(
@@ -222,15 +238,16 @@ export default function QueueView({ userId }: { userId: string }) {
             {items.length > 0 && (
                 <div className="flex flex-wrap items-center gap-3">
                     <Button
-                        onClick={commitAll}
+                        onClick={() => {
+                            commit.reset();
+                            setChoosingBag(true);
+                        }}
                         disabled={plan.count === 0 || commit.isPending}
                         variant="primary"
                     >
-                        {commit.isPending
-                            ? 'Committing...'
-                            : `Commit ${plan.count} ${
-                                  plan.count === 1 ? 'card' : 'cards'
-                              }`}
+                        {`Commit ${plan.count} ${
+                            plan.count === 1 ? 'card' : 'cards'
+                        }`}
                     </Button>
                     <Button
                         onClick={discard}
@@ -241,6 +258,18 @@ export default function QueueView({ userId }: { userId: string }) {
                     </Button>
                 </div>
             )}
+
+            <CommitBagDialog
+                open={choosingBag}
+                count={plan.count}
+                locations={locations.data ?? []}
+                lastBagId={readLastBag(browserStorage(), userId)}
+                today={new Date()}
+                pending={commit.isPending}
+                error={commit.error ? commit.error.message : null}
+                onCommit={commitAll}
+                onClose={() => setChoosingBag(false)}
+            />
 
             {editing && (
                 <EditCardDialog

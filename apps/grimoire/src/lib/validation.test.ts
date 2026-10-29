@@ -115,6 +115,47 @@ describe('parseBulkBody', () => {
         expect(parseBulkBody(body).ok).toBe(false);
     });
 
+    it('parses a destination: an existing bag or a new one', () => {
+        const items = [{ oracleId: ID, name: 'Sol Ring', delta: 1 }];
+        expect(
+            parseBulkBody({ items, destination: { locationId: ID } })
+        ).toEqual({
+            ok: true,
+            value: {
+                items,
+                destination: { kind: 'existing', locationId: ID },
+            },
+        });
+        expect(
+            parseBulkBody({
+                items,
+                destination: { newBag: { label: ' 2026-10-09 ', note: ' x ' } },
+            })
+        ).toEqual({
+            ok: true,
+            value: {
+                items,
+                destination: {
+                    kind: 'new',
+                    label: '2026-10-09',
+                    note: 'x',
+                },
+            },
+        });
+    });
+
+    it.each([
+        ['a non-object destination', 'bag'],
+        ['an empty destination', {}],
+        ['a bad location id', { locationId: 'nope' }],
+        ['both choices', { locationId: ID, newBag: { label: 'L' } }],
+        ['an empty label', { newBag: { label: ' ' } }],
+        ['a non-string note', { newBag: { label: 'L', note: 5 } }],
+    ])('rejects %s', (_label, destination) => {
+        const items = [{ oracleId: ID, name: 'Sol Ring', delta: 1 }];
+        expect(parseBulkBody({ items, destination }).ok).toBe(false);
+    });
+
     it('accepts the maximum batch size', () => {
         const items = Array.from({ length: MAX_BULK_ITEMS }, () => item);
         expect(parseBulkBody({ items }).ok).toBe(true);
