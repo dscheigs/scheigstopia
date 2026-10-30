@@ -8,6 +8,12 @@ import {
 } from '@scheigs/sylva-ui';
 import { CARD_IMAGE_DIMENSIONS, cardImageUrl } from '@/lib/cardImages';
 import type { CollectionItem } from '@/lib/collection';
+import type { HistoryEntry, Placement } from '@/lib/locations';
+import {
+    describeMove,
+    formatMoveDate,
+    formatPlacements,
+} from '@/lib/placementText';
 import { useDebouncedQuantity } from '@/lib/useDebouncedQuantity';
 
 type CardDetailDialogProps = {
@@ -15,6 +21,10 @@ type CardDetailDialogProps = {
     item: CollectionItem | undefined;
     /** Scryfall image id for the card, if the card list has loaded. */
     imageId: string | undefined;
+    /** Where the copies are; leave out until loaded. */
+    placements?: Placement[];
+    /** The card's moves, newest first; leave out until loaded. */
+    history?: HistoryEntry[];
     /**
      * Saves a quantity and rejects with a displayable message if it fails.
      * The sheet debounces: it is called once, with the final count.
@@ -38,6 +48,8 @@ type CardDetailDialogProps = {
 export default function CardDetailDialog({
     item,
     imageId,
+    placements,
+    history,
     onSaveQuantity,
     onRemove,
     onClose,
@@ -49,6 +61,8 @@ export default function CardDetailDialog({
                 <CardDetailBody
                     item={item}
                     imageId={imageId}
+                    placements={placements}
+                    history={history}
                     onSaveQuantity={onSaveQuantity}
                     onRemove={onRemove}
                 />
@@ -60,6 +74,8 @@ export default function CardDetailDialog({
 function CardDetailBody({
     item,
     imageId,
+    placements,
+    history,
     onSaveQuantity,
     onRemove,
 }: Omit<CardDetailDialogProps, 'item' | 'onClose'> & {
@@ -104,6 +120,47 @@ function CardDetailBody({
                     Remove
                 </Button>
             </div>
+            {placements && placements.length > 0 && (
+                <section aria-labelledby="card-where-heading">
+                    <h3 id="card-where-heading" className="text-subheading">
+                        Where it is
+                    </h3>
+                    <p className="text-body text-text-minimal">
+                        {formatPlacements(placements)}
+                    </p>
+                </section>
+            )}
+            {history && history.length > 0 && (
+                <section aria-labelledby="card-history-heading">
+                    <h3 id="card-history-heading" className="text-subheading">
+                        History
+                    </h3>
+                    <ol className="mt-1 space-y-1">
+                        {history.map((entry) => (
+                            <li
+                                key={entry.id}
+                                className="flex items-baseline justify-between gap-3 text-body"
+                            >
+                                <span className="min-w-0">
+                                    {describeMove(entry)}
+                                    {entry.note && (
+                                        <span className="text-text-minimal">
+                                            {' '}
+                                            · {entry.note}
+                                        </span>
+                                    )}
+                                </span>
+                                <time
+                                    dateTime={entry.createdAt}
+                                    className="shrink-0 text-caption text-text-minimal"
+                                >
+                                    {formatMoveDate(entry.createdAt)}
+                                </time>
+                            </li>
+                        ))}
+                    </ol>
+                </section>
+            )}
             <Dialog
                 open={confirm.open}
                 onClose={confirm.close}

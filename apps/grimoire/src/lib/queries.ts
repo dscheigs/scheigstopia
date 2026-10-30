@@ -11,7 +11,12 @@ import { lookupScryfallCard } from '@/lib/scryfall';
 import type { CollectionItem } from '@/lib/collection';
 import type { CommitDestination } from '@/lib/commitBag';
 import type { IdentifyResult } from '@/lib/identify';
-import type { HistoryEntry, LocationItem, Placement } from '@/lib/locations';
+import type {
+    CardPlacement,
+    HistoryEntry,
+    LocationItem,
+    Placement,
+} from '@/lib/locations';
 import type { LocationKind } from '@/lib/locationKinds';
 import { withItem, withoutItem } from '@/lib/collectionCache';
 
@@ -19,6 +24,7 @@ export const queryKeys = {
     collection: ['collection'] as const,
     cardNames: ['card-names'] as const,
     locations: ['locations'] as const,
+    allPlacements: ['placements', 'all'] as const,
     placements: (oracleId: string) => ['placements', oracleId] as const,
     history: (oracleId: string) => ['history', oracleId] as const,
     scryfall: (name: string) => ['scryfall', normalize(name)] as const,
@@ -69,6 +75,9 @@ export function useAddCard() {
                 queryKeys.collection,
                 (current) => withItem(current ?? [], item)
             );
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.allPlacements,
+            });
         },
     });
 }
@@ -94,6 +103,9 @@ export function useCommitQueue() {
         onSuccess: ({ items }) => {
             // A new bag, and every bag's count, changed.
             queryClient.invalidateQueries({ queryKey: queryKeys.locations });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.allPlacements,
+            });
             queryClient.setQueryData<CollectionItem[]>(
                 queryKeys.collection,
                 (current) =>
@@ -122,6 +134,15 @@ export function useSetQuantity() {
                 { method: 'PATCH', json: { quantity } }
             ),
         onSuccess: (body, { item }) => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.allPlacements,
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.placements(item.oracleId),
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.history(item.oracleId),
+            });
             queryClient.setQueryData<CollectionItem[]>(
                 queryKeys.collection,
                 (current) =>
@@ -239,6 +260,9 @@ export function useMoveCards() {
             }),
         onSuccess: (_result, { moves }) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.locations });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.allPlacements,
+            });
             for (const { oracleId } of moves) {
                 queryClient.invalidateQueries({
                     queryKey: queryKeys.placements(oracleId),
@@ -276,5 +300,15 @@ export function useCardHistory(oracleId: string, enabled = true) {
                 )
             ).items,
         enabled,
+    });
+}
+
+/** Where every owned card is, for the collection list. */
+export function useAllPlacements() {
+    return useQuery({
+        queryKey: queryKeys.allPlacements,
+        queryFn: async () =>
+            (await apiFetch<{ items: CardPlacement[] }>('/api/placements'))
+                .items,
     });
 }

@@ -191,3 +191,62 @@ describe('CardDetailDialog', () => {
         expect(sheet()).not.toHaveAttribute('open');
     });
 });
+
+describe('CardDetailDialog placements and history', () => {
+    it('shows where the copies are and the moves in the order given', () => {
+        render(
+            <CardDetailDialog
+                item={initial[0]}
+                imageId={imageId}
+                placements={[
+                    {
+                        locationId: 'l1',
+                        kind: 'bulk',
+                        label: 'Bag',
+                        quantity: 2,
+                    },
+                    {
+                        locationId: 'l2',
+                        kind: 'keepers',
+                        label: 'Binder A',
+                        quantity: 1,
+                    },
+                ]}
+                history={[
+                    {
+                        id: 3,
+                        fromId: 'l1',
+                        fromLabel: 'Bag',
+                        toId: 'l2',
+                        toLabel: 'Binder A',
+                        quantity: 1,
+                        note: 'Pulled the rare',
+                        createdAt: '2026-10-12T10:00:00.000Z',
+                    },
+                    {
+                        id: 2,
+                        fromId: 'u',
+                        fromLabel: 'Unsorted',
+                        toId: 'l1',
+                        toLabel: 'Bag',
+                        quantity: 3,
+                        note: null,
+                        createdAt: '2026-10-09T10:00:00.000Z',
+                    },
+                ]}
+                onSaveQuantity={async () => {}}
+                onRemove={() => {}}
+                onClose={() => {}}
+            />
+        );
+        const dialog = within(sheet());
+        expect(dialog.getByText('2 in Bag, 1 in Binder A')).toBeTruthy();
+        const lines = dialog
+            .getAllByRole('listitem')
+            .map((li) => li.textContent);
+        expect(lines).toEqual([
+            '1 from Bag to Binder A · Pulled the rare12 Oct 2026',
+            '3 from Unsorted to Bag9 Oct 2026',
+        ]);
+    });
+});

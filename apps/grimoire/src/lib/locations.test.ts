@@ -3,6 +3,7 @@ import { addToCollection, listCollection } from '@/lib/collection';
 import type { Sql } from '@/lib/db';
 import {
     createLocation,
+    listAllPlacements,
     listHistory,
     listLocations,
     listPlacements,
@@ -345,5 +346,31 @@ describe('listHistory', () => {
         expect(await listHistory(sql, me, BOLT)).toHaveLength(1);
         const mine = (await listHistory(sql, me, BOLT))[0];
         expect(mine.quantity).toBe(3);
+    });
+});
+
+describe('listAllPlacements', () => {
+    it('lists every owned card by location, for this user only', async () => {
+        await own(me, RING, 'The One Ring', 1);
+        await own(other, BOLT, 'Lightning Bolt', 5);
+        const id = await bag(me, 'Bag');
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: id, quantity: 2 },
+        ]);
+
+        const all = await listAllPlacements(sql, me);
+        expect(
+            all
+                .map((p) => [p.oracleId, p.label, p.quantity])
+                .sort((a, b) => String(a).localeCompare(String(b)))
+        ).toEqual([
+            [BOLT, 'Bag', 2],
+            [BOLT, 'Unsorted', 1],
+            [RING, 'Unsorted', 1],
+        ]);
+        // Same per-card order as listPlacements.
+        expect(
+            all.filter((p) => p.oracleId === BOLT).map((p) => p.label)
+        ).toEqual((await listPlacements(sql, me, BOLT)).map((p) => p.label));
     });
 });

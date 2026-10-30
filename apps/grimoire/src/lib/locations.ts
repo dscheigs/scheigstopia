@@ -341,6 +341,36 @@ export async function listPlacements(
     }));
 }
 
+/** A placement together with the card it is of. */
+export interface CardPlacement extends Placement {
+    oracleId: string;
+}
+
+/**
+ * Where every owned card is, in one query, for the collection list. Ordered
+ * like `listPlacements`, so each card's placements come out in the same order.
+ */
+export async function listAllPlacements(
+    sql: Sql,
+    userId: string
+): Promise<CardPlacement[]> {
+    const rows = await sql`
+        select c.oracle_id, l.id, l.kind, l.label, count(*)::integer as quantity
+        from copies c
+        join locations l on l.id = c.location_id
+        where c.user_id = ${userId}::uuid
+        group by c.oracle_id, l.id, l.kind, l.label
+        order by c.oracle_id, (l.kind = 'unsorted') desc, lower(l.label), l.id
+    `;
+    return rows.map((row) => ({
+        oracleId: String(row.oracle_id),
+        locationId: String(row.id),
+        kind: row.kind as LocationKind,
+        label: String(row.label),
+        quantity: Number(row.quantity),
+    }));
+}
+
 /**
  * Every move of a card's copies, newest first. Copies moved together in one
  * batch (same time, source, destination and note) are one entry with a
