@@ -14,7 +14,14 @@ import { useUrlDialogState } from '@/lib/useUrlDialogState';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
-import { useCardNames, useCollection, useSetQuantity } from '@/lib/queries';
+import { groupPlacements } from '@/lib/placementText';
+import {
+    useAllPlacements,
+    useCardHistory,
+    useCardNames,
+    useCollection,
+    useSetQuantity,
+} from '@/lib/queries';
 
 /** The same settle time as the card-list search used before. */
 const SEARCH_DEBOUNCE_MS = 150;
@@ -38,6 +45,11 @@ export default function CollectionView() {
 
     const collection = useCollection();
     const cardNames = useCardNames();
+    const allPlacements = useAllPlacements();
+    const placementsByCard = useMemo(
+        () => groupPlacements(allPlacements.data ?? []),
+        [allPlacements.data]
+    );
     // Two mutations so a quantity save and a Remove do not share pending
     // state. Either one's failure is reported by the global toast.
     const saveQuantityMutation = useSetQuantity();
@@ -109,6 +121,11 @@ export default function CollectionView() {
         if (missing) closeDetail();
     }, [missing, closeDetail]);
 
+    const history = useCardHistory(
+        selected?.oracleId ?? '',
+        selected !== undefined
+    );
+
     return (
         <div className="mx-auto max-w-5xl space-y-10 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
             <section aria-labelledby="collection-heading" className="space-y-3">
@@ -177,6 +194,7 @@ export default function CollectionView() {
                         <CollectionList
                             items={visibleItems}
                             imageIds={imageIds}
+                            placements={placementsByCard}
                             onOpen={(item) => detail.show(item.oracleId)}
                         />
                     )}
@@ -201,6 +219,8 @@ export default function CollectionView() {
             <CardDetailDialog
                 item={selected}
                 imageId={selected && imageIds.get(selected.oracleId)}
+                placements={selected && placementsByCard.get(selected.oracleId)}
+                history={selected ? history.data : undefined}
                 onSaveQuantity={saveQuantity}
                 onRemove={(item) =>
                     removeMutation.mutate({ item, quantity: 0 })

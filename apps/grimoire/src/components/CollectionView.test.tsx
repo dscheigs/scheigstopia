@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CollectionView from '@/components/CollectionView';
 import type { CardNameFile } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
+import type { CardPlacement } from '@/lib/locations';
 
 const item = (
     oracleId: string,
@@ -38,6 +39,9 @@ let collection: {
     isError: boolean;
     error: Error | null;
 };
+let placements: {
+    data: CardPlacement[] | undefined;
+};
 let names: {
     data: CardNameFile | undefined;
     isError: boolean;
@@ -48,6 +52,8 @@ const mutate = vi.fn();
 vi.mock('@/lib/queries', () => ({
     useCollection: () => collection,
     useCardNames: () => names,
+    useAllPlacements: () => placements,
+    useCardHistory: () => ({ data: undefined }),
     useSetQuantity: () => ({
         mutate: vi.fn(),
         mutateAsync: vi.fn(),
@@ -74,6 +80,7 @@ beforeEach(() => {
         error: null,
     };
     names = { data: cardList, isError: false, isPending: false };
+    placements = { data: [] };
     mutate.mockReset();
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(
@@ -147,6 +154,40 @@ describe('CollectionView controls', () => {
         expect(catalogHeading.closest('section')).not.toBe(
             collectionHeading?.closest('section')
         );
+    });
+
+    it('shows where a card is under its name', () => {
+        placements = {
+            data: [
+                {
+                    oracleId: 'o-bolt',
+                    locationId: 'l1',
+                    kind: 'bulk',
+                    label: 'Bag 2026-10-09',
+                    quantity: 3,
+                },
+                {
+                    oracleId: 'o-bolt',
+                    locationId: 'l2',
+                    kind: 'keepers',
+                    label: 'Binder A',
+                    quantity: 1,
+                },
+            ],
+        };
+        render(<CollectionView />);
+        expect(
+            screen.getByRole('button', {
+                name: 'Lightning Bolt, 4 owned, 3 in Bag 2026-10-09, 1 in Binder A',
+            })
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText('3 in Bag 2026-10-09, 1 in Binder A')
+        ).toBeInTheDocument();
+        // A card with no placements loaded keeps the plain label.
+        expect(
+            screen.getByRole('button', { name: 'Sol Ring, 1 owned' })
+        ).toBeInTheDocument();
     });
 
     it('shows the counts in the sticky heading row', () => {

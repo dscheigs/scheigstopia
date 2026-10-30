@@ -5,6 +5,8 @@ import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { ChevronRight } from '@scheigs/sylva-ui';
 import CardThumbnail from '@/components/CardThumbnail';
 import type { CollectionItem } from '@/lib/collection';
+import type { Placement } from '@/lib/locations';
+import { formatPlacements } from '@/lib/placementText';
 
 /**
  * A row's height in rem, used only until the row has been measured. Rows are
@@ -28,6 +30,8 @@ type CollectionListProps = {
     items: CollectionItem[];
     /** oracleId -> Scryfall image id; empty until the card list loads. */
     imageIds: Map<string, string>;
+    /** oracleId -> where its copies are; empty until placements load. */
+    placements?: Map<string, Placement[]>;
     /** Called when a row is activated; the caller shows the card's detail. */
     onOpen: (item: CollectionItem) => void;
 };
@@ -43,6 +47,7 @@ type CollectionListProps = {
 export default function CollectionList({
     items,
     imageIds,
+    placements,
     onOpen,
 }: CollectionListProps) {
     const listRef = useRef<HTMLUListElement>(null);
@@ -78,6 +83,9 @@ export default function CollectionList({
         >
             {virtualizer.getVirtualItems().map((row) => {
                 const item = items[row.index];
+                const where = formatPlacements(
+                    placements?.get(item.oracleId) ?? []
+                );
                 return (
                     <li
                         key={row.key}
@@ -97,7 +105,7 @@ export default function CollectionList({
                         <button
                             type="button"
                             aria-haspopup="dialog"
-                            aria-label={`${item.name}, ${item.quantity} owned`}
+                            aria-label={`${item.name}, ${item.quantity} owned${where ? `, ${where}` : ''}`}
                             onClick={() => onOpen(item)}
                             className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-minimal-hover active:bg-surface-minimal-hover"
                         >
@@ -106,11 +114,21 @@ export default function CollectionList({
                                 name={item.name}
                                 interactive={false}
                             />
-                            <span
-                                className="min-w-0 flex-1 truncate text-body"
-                                title={item.name}
-                            >
-                                {item.name}
+                            <span className="min-w-0 flex-1">
+                                <span
+                                    className="block truncate text-body"
+                                    title={item.name}
+                                >
+                                    {item.name}
+                                </span>
+                                {where && (
+                                    <span
+                                        className="block truncate text-caption text-text-minimal"
+                                        title={where}
+                                    >
+                                        {where}
+                                    </span>
+                                )}
                             </span>
                             <span
                                 aria-hidden="true"
