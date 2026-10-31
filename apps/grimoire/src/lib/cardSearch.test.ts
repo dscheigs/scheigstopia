@@ -8,7 +8,10 @@ import {
     COLLECTION_MIN_QUERY_LENGTH,
     buildIndex,
     buildIndexFromEntries,
+    buildRarities,
+    isRareCode,
     toCardEntry,
+    type CardNameFile,
     matchReadName,
     searchCards,
     type CardIndex,
@@ -29,7 +32,7 @@ beforeAll(async () => {
             'utf8'
         )
     );
-    index = buildIndex(slimOracleCards(fixture, 'test'));
+    index = buildIndex(slimOracleCards(fixture, 'test') as CardNameFile);
 });
 
 describe('searchCards', () => {
@@ -132,5 +135,39 @@ describe('search constants and the shared index', () => {
         ]);
         expect(searchCards(index, 'li', 8, 3)).toEqual([]);
         expect(searchCards(index, 'lig', 8, 3)).toHaveLength(1);
+    });
+});
+
+describe('rarity in the card list', () => {
+    const file: CardNameFile = {
+        version: 'v',
+        count: 4,
+        cards: [
+            ['a', 'A'],
+            ['b', 'B', 'img'],
+            ['c', 'C', '', 'r'],
+            ['d', 'D', 'img', 'm'],
+        ],
+    };
+
+    it('reads rarities from the entries that have one', () => {
+        expect([...buildRarities(file)]).toEqual([
+            ['c', 'r'],
+            ['d', 'm'],
+        ]);
+    });
+
+    it('still builds the search index from a list with rarities', () => {
+        const hits = buildIndex(file).search('Dd');
+        expect(buildIndex(file)).toBeDefined();
+        expect(hits).toBeInstanceOf(Array);
+    });
+
+    it('counts only rare and mythic as rares', () => {
+        expect(isRareCode('r')).toBe(true);
+        expect(isRareCode('m')).toBe(true);
+        for (const code of ['c', 'u', 'o', undefined] as const) {
+            expect(isRareCode(code)).toBe(false);
+        }
     });
 });

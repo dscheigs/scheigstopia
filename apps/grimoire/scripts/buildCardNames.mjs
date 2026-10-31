@@ -10,7 +10,15 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
-import { pickOracleCardsEntry, slimOracleCards } from './cardNamesLib.mjs';
+import { createInterface } from 'node:readline';
+import { Readable } from 'node:stream';
+import { createGunzip } from 'node:zlib';
+import {
+    addPrintingRarity,
+    pickOracleCardsEntry,
+    reduceRarities,
+    slimOracleCards,
+} from './cardNamesLib.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const outFile = path.join(scriptDir, '..', 'public', 'data', 'card-names.json');
@@ -44,13 +52,43 @@ async function getJsonl(url) {
         .map((line) => JSON.parse(line));
 }
 
+// The Oracle Cards file carries the rarity of just one printing per card, not
+// the rarest, so rarities come from the Default Cards file (every printing,
+// ~500 MB of gzipped JSON Lines). It is streamed line by line, never held whole.
+async function getRarities(url) {
+    const response = await fetch(url, { headers });
+    if (!response.ok || !response.body) {
+        throw new Error(`${url} responded ${response.status}`);
+    }
+    const rarities = new Map();
+    const lines = createInterface({
+        input: Readable.fromWeb(response.body).pipe(createGunzip()),
+        crlfDelay: Infinity,
+    });
+    for await (const line of lines) {
+        if (line.trim() === '') continue;
+        addPrintingRarity(rarities, JSON.parse(line));
+    }
+    return rarities;
+}
+
 async function load() {
     const fixtureFlag = process.argv.indexOf('--fixture');
     if (fixtureFlag !== -1) {
         const fixturePath = process.argv[fixtureFlag + 1];
         if (!fixturePath) throw new Error('--fixture needs a file path');
         const cards = JSON.parse(await readFile(fixturePath, 'utf8'));
-        return { cards, version: 'fixture' };
+        // Optionally a second file of printings: --printings <file>.
+        const printingsFlag = process.argv.indexOf('--printings');
+        const printingsPath =
+            printingsFlag === -1 ? null : process.argv[printingsFlag + 1];
+        if (printingsFlag !== -1 && !printingsPath) {
+            throw new Error('--printings needs a file path');
+        }
+        const rarities = printingsPath
+            ? reduceRarities(JSON.parse(await readFile(printingsPath, 'utf8')))
+            : undefined;
+        return { cards, version: 'fixture', rarities };
     }
 
     const bulk = await getJson('https://api.scryfall.com/bulk-data');
@@ -58,13 +96,22 @@ async function load() {
     const url = entry.download_uri ?? entry.jsonl_download_uri;
     console.log(`Downloading ${url} ...`);
     const cards = entry.download_uri ? await getJson(url) : await getJsonl(url);
-    return { cards, version: entry.updated_at };
+    const defaultEntry = bulk.data?.find(
+        (item) => item?.type === 'default_cards'
+    );
+    const defaultUrl = defaultEntry?.jsonl_download_uri;
+    if (typeof defaultUrl !== 'string') {
+        throw new Error('Default Cards entry not found in Scryfall bulk-data');
+    }
+    console.log(`Downloading ${defaultUrl} for rarities ...`);
+    const rarities = await getRarities(defaultUrl);
+    return { cards, version: entry.updated_at, rarities };
 }
 
-const { cards, version } = await load();
+const { cards, version, rarities } = await load();
 if (!Array.isArray(cards)) throw new Error('Expected an array of cards');
 
-const slim = slimOracleCards(cards, version);
+const slim = slimOracleCards(cards, version, rarities);
 if (slim.count === 0)
     throw new Error('No cards after filtering; refusing to write');
 
