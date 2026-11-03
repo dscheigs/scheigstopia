@@ -1,7 +1,9 @@
 import {
     LOCATION_KINDS,
     isLocationKind,
+    isRareRule,
     type LocationKind,
+    type RareRule,
 } from '@/lib/locationKinds';
 import type { BulkDestination } from '@/lib/collection';
 import type { MoveLine } from '@/lib/locations';
@@ -323,4 +325,33 @@ export function parseMovesBody(body: unknown): Parsed<MovesBody> {
     const note = parseNote(body.note === undefined ? null : body.note);
     if (!note.ok) return note;
     return { ok: true, value: { moves, note: note.value } };
+}
+
+export interface RareRuleBody {
+    oracleId: string;
+    locationId: string;
+    rule: RareRule | null;
+}
+
+/** Body for a rare override: { oracleId, locationId, rule: "bulk" | "keep" | null }. */
+export function parseRareRuleBody(body: unknown): Parsed<RareRuleBody> {
+    if (
+        !isRecord(body) ||
+        !isUuid(body.oracleId) ||
+        !isUuid(body.locationId) ||
+        !(body.rule === null || isRareRule(body.rule))
+    ) {
+        return {
+            ok: false,
+            error: 'Body must be { oracleId, locationId, rule } with UUIDs and a rule of "bulk", "keep" or null.',
+        };
+    }
+    return {
+        ok: true,
+        value: {
+            oracleId: body.oracleId,
+            locationId: body.locationId,
+            rule: body.rule,
+        },
+    };
 }

@@ -4,7 +4,12 @@ import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { SiteHeader } from '@scheigs/sylva-ui';
 import { siteOrigin } from '@/lib/siteUrl';
-import { ADD_PATH, COLLECTION_PATH, isAddRoute } from '@/lib/addRoutes';
+import {
+    ADD_PATH,
+    ATTENTION_PATH,
+    COLLECTION_PATH,
+    isAddRoute,
+} from '@/lib/addRoutes';
 
 /**
  * The shared header with Grimoire's navigation. It is a client component only
@@ -41,6 +46,12 @@ export default function GrimoireHeader({
                               name: 'Scan Cards',
                               href: ADD_PATH,
                               current: isAddRoute(pathname),
+                              sameApp: true,
+                          },
+                          {
+                              name: 'Needs Attention',
+                              href: ATTENTION_PATH,
+                              current: pathname === ATTENTION_PATH,
                               sameApp: true,
                           },
                       ]

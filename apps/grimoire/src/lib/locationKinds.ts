@@ -27,3 +27,26 @@ export function isLocationKind(value: unknown): value is LocationKind {
 export function isRareSafe(kind: LocationKind): boolean {
     return kind === 'keepers' || kind === 'deck';
 }
+
+/**
+ * A per-copy override of the rare rule. No override (null) follows the card's
+ * rarity: a rare or mythic is expected somewhere rare-safe.
+ *
+ * - `bulk`: this copy never needs attention, wherever it is.
+ * - `keep`: this copy always expects a rare-safe location, whatever its rarity.
+ */
+export const RARE_RULES = ['bulk', 'keep'] as const;
+
+export type RareRule = (typeof RARE_RULES)[number];
+
+export function isRareRule(value: unknown): value is RareRule {
+    return (
+        typeof value === 'string' &&
+        (RARE_RULES as readonly string[]).includes(value)
+    );
+}
+
+/** The location kinds where a rare is flagged. */
+export const RARE_UNSAFE_KINDS = LOCATION_KINDS.filter(
+    (kind) => !isRareSafe(kind)
+);

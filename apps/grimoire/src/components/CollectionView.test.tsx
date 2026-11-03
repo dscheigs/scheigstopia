@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CollectionView from '@/components/CollectionView';
 import type { CardNameFile } from '@/lib/cardSearch';
 import type { CollectionItem } from '@/lib/collection';
-import type { CardPlacement } from '@/lib/locations';
+import type { CardPlacement, RareCandidate } from '@/lib/locations';
 
 const item = (
     oracleId: string,
@@ -29,7 +29,7 @@ const cardList: CardNameFile = {
     cards: [
         ['o-bolt', 'Lightning Bolt'],
         ['o-chain', 'Chain Lightning'],
-        ['o-ring', 'Sol Ring'],
+        ['o-ring', 'Sol Ring', '', 'r'],
         ['o-island', 'Island'],
     ],
 };
@@ -42,6 +42,7 @@ let collection: {
 let placements: {
     data: CardPlacement[] | undefined;
 };
+let rareCandidates: { data: RareCandidate[] | undefined };
 let names: {
     data: CardNameFile | undefined;
     isError: boolean;
@@ -53,6 +54,7 @@ vi.mock('@/lib/queries', () => ({
     useCollection: () => collection,
     useCardNames: () => names,
     useAllPlacements: () => placements,
+    useRareCandidates: () => rareCandidates,
     useCardHistory: () => ({ data: undefined }),
     useSetQuantity: () => ({
         mutate: vi.fn(),
@@ -74,6 +76,7 @@ vi.mock('@/lib/useUrlDialogState', () => ({
 
 // jsdom does no layout: give list rows a height and the list a place on the page.
 beforeEach(() => {
+    rareCandidates = { data: [] };
     collection = {
         data: [item('o-bolt', 'Lightning Bolt', 4), item('o-ring', 'Sol Ring')],
         isError: false,
@@ -154,6 +157,51 @@ describe('CollectionView controls', () => {
         expect(catalogHeading.closest('section')).not.toBe(
             collectionHeading?.closest('section')
         );
+    });
+
+    it('flags a rare that sits in bulk, next to where it is', () => {
+        placements = {
+            data: [
+                {
+                    oracleId: 'o-ring',
+                    locationId: 'l1',
+                    kind: 'bulk',
+                    label: 'Shoebox',
+                    quantity: 1,
+                },
+            ],
+        };
+        rareCandidates = {
+            data: [
+                {
+                    oracleId: 'o-ring',
+                    name: 'Sol Ring',
+                    locationId: 'l1',
+                    kind: 'bulk',
+                    label: 'Shoebox',
+                    rareRule: null,
+                    quantity: 1,
+                },
+                {
+                    oracleId: 'o-bolt',
+                    name: 'Lightning Bolt',
+                    locationId: 'l1',
+                    kind: 'bulk',
+                    label: 'Shoebox',
+                    rareRule: null,
+                    quantity: 1,
+                },
+            ],
+        };
+        render(<CollectionView />);
+        expect(
+            screen.getByRole('button', {
+                name: /Sol Ring.*rare needs attention/,
+            })
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: /Lightning Bolt/ })
+        ).not.toHaveAccessibleName(/needs attention/);
     });
 
     it('shows where a card is under its name', () => {

@@ -32,6 +32,8 @@ type CollectionListProps = {
     imageIds: Map<string, string>;
     /** oracleId -> where its copies are; empty until placements load. */
     placements?: Map<string, Placement[]>;
+    /** oracleIds with a rare in a place it is not expected (see rareAttention). */
+    flagged?: ReadonlySet<string>;
     /** Called when a row is activated; the caller shows the card's detail. */
     onOpen: (item: CollectionItem) => void;
 };
@@ -48,6 +50,7 @@ export default function CollectionList({
     items,
     imageIds,
     placements,
+    flagged,
     onOpen,
 }: CollectionListProps) {
     const listRef = useRef<HTMLUListElement>(null);
@@ -86,6 +89,7 @@ export default function CollectionList({
                 const where = formatPlacements(
                     placements?.get(item.oracleId) ?? []
                 );
+                const needsAttention = flagged?.has(item.oracleId) ?? false;
                 return (
                     <li
                         key={row.key}
@@ -105,7 +109,7 @@ export default function CollectionList({
                         <button
                             type="button"
                             aria-haspopup="dialog"
-                            aria-label={`${item.name}, ${item.quantity} owned${where ? `, ${where}` : ''}`}
+                            aria-label={`${item.name}, ${item.quantity} owned${where ? `, ${where}` : ''}${needsAttention ? ', rare needs attention' : ''}`}
                             onClick={() => onOpen(item)}
                             className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-minimal-hover active:bg-surface-minimal-hover"
                         >
@@ -127,6 +131,12 @@ export default function CollectionList({
                                         title={where}
                                     >
                                         {where}
+                                        {needsAttention && (
+                                            <span className="text-warning">
+                                                {' '}
+                                                · Rare needs a better spot
+                                            </span>
+                                        )}
                                     </span>
                                 )}
                             </span>
