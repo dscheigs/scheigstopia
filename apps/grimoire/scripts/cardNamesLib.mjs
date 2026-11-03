@@ -12,18 +12,77 @@ const EXCLUDED_LAYOUTS = new Set([
     'scheme',
 ]);
 
+// Rarity is stored as one letter per card to keep the file small. Scryfall's
+// special and bonus rarities (and anything unknown) are "o": not a rare.
+export const RARITY_CODES = ['c', 'u', 'r', 'm', 'o'];
+const RARITY_BY_NAME = { common: 'c', uncommon: 'u', rare: 'r', mythic: 'm' };
+// Higher wins when a card has been printed at several rarities.
+const RARITY_RANK = { o: 0, c: 1, u: 2, r: 3, m: 4 };
+
+/**
+ * One-letter code for a Scryfall rarity string: c, u, r or m, and "o" for
+ * special, bonus or anything else. Only rare (r) and mythic (m) count as rares.
+ * @param {unknown} rarity  A Scryfall `rarity` value.
+ * @returns {string}
+ */
+export function rarityCode(rarity) {
+    return (typeof rarity === 'string' && RARITY_BY_NAME[rarity]) || 'o';
+}
+
+/**
+ * Folds one printing into a running oracleId -> rarity code map, keeping the
+ * highest rarity seen (mythic over rare over uncommon over common). Tokens and
+ * other excluded layouts are ignored. Call it per line of the Default Cards
+ * file so the whole ~500 MB file never has to sit in memory.
+ * @param {Map<string, string>} rarities  Mutated in place.
+ * @param {unknown} printing  A Scryfall card object (one printing).
+ */
+export function addPrintingRarity(rarities, printing) {
+    if (typeof printing !== 'object' || printing === null) return;
+    if (EXCLUDED_LAYOUTS.has(printing.layout)) return;
+    const oracleId = oracleIdOf(printing);
+    if (typeof oracleId !== 'string') return;
+    const code = rarityCode(printing.rarity);
+    const seen = rarities.get(oracleId);
+    if (seen === undefined || RARITY_RANK[code] > RARITY_RANK[seen]) {
+        rarities.set(oracleId, code);
+    }
+}
+
+/**
+ * The rarest rarity code per oracle id across all printings.
+ * @param {Iterable<unknown>} printings
+ * @returns {Map<string, string>}
+ */
+export function reduceRarities(printings) {
+    const rarities = new Map();
+    for (const printing of printings) addPrintingRarity(rarities, printing);
+    return rarities;
+}
+
+function oracleIdOf(card) {
+    return card?.oracle_id ?? card?.card_faces?.[0]?.oracle_id;
+}
+
 /**
  * @param {unknown[]} cards  Parsed contents of Scryfall's oracle-cards file.
  * @param {string} version   Scryfall's `updated_at` for the file, or a label.
- * @returns {{ version: string, count: number, cards: ([string, string] | [string, string, string])[] }}
- *   `cards` is [oracleId, name] or [oracleId, name, imageId] entries, sorted by
- *   name. The image id is left off when Scryfall has no image for the card.
+ * @param {Map<string, string>} [rarities]  oracleId -> rarity code from
+ *   `reduceRarities`. When given, every entry is [oracleId, name, imageId,
+ *   rarity] (imageId is "" for a card with no image); without it entries stay
+ *   [oracleId, name] or [oracleId, name, imageId].
+ * @returns {{ version: string, count: number, cards: string[][] }}
+ *   `cards` is sorted by name. The image id is left off when Scryfall has no
+ *   image for the card (unless a rarity follows it).
  */
-export function slimOracleCards(cards, version) {
+export function slimOracleCards(cards, version, rarities) {
     const seen = new Set();
     const pairs = [];
     for (const card of cards) {
-        const pair = slimOracleCard(card);
+        const pair = slimOracleCard(
+            card,
+            rarities?.get(oracleIdOf(card)) ?? (rarities ? 'o' : undefined)
+        );
         if (!pair || seen.has(pair[0])) continue;
         seen.add(pair[0]);
         pairs.push(pair);
@@ -54,18 +113,22 @@ export function scryfallImageId(card) {
  * entry, or null when it is not a collectible card (excluded layout) or lacks
  * an id or name. The build and the app's live Scryfall lookup share this, so
  * both apply the same rules.
+ * With `rarity` (a code from `rarityCode`) the entry is always four long:
+ * [oracleId, name, imageId or "", rarity].
  * @param {unknown} card  A Scryfall card object.
- * @returns {[string, string] | [string, string, string] | null}
+ * @param {string} [rarity]  Rarity code to store; omit for a two/three-entry.
+ * @returns {string[] | null}
  */
-export function slimOracleCard(card) {
+export function slimOracleCard(card, rarity) {
     if (typeof card !== 'object' || card === null) return null;
     if (EXCLUDED_LAYOUTS.has(card.layout)) return null;
 
     // Reversible cards keep their oracle id on the faces, not the card.
-    const oracleId = card.oracle_id ?? card.card_faces?.[0]?.oracle_id;
+    const oracleId = oracleIdOf(card);
     const name = card.name;
     if (typeof oracleId !== 'string' || typeof name !== 'string') return null;
     const imageId = scryfallImageId(card);
+    if (rarity !== undefined) return [oracleId, name, imageId ?? '', rarity];
     return imageId ? [oracleId, name, imageId] : [oracleId, name];
 }
 
@@ -99,6 +162,29 @@ export function assertDeployableCardList(list) {
                 `(expected at least ${MIN_REAL_CARD_COUNT})`
         );
     }
+    // Rarity is optional (lists built before it was added have none), but when
+    // an entry has one it must be a known code.
+    const bad = list.cards.find(
+        (entry) =>
+            Array.isArray(entry) &&
+            entry.length > 3 &&
+            !RARITY_CODES.includes(entry[3])
+    );
+    if (bad) {
+        throw new Error(
+            `card-names.json has an unknown rarity for "${bad[1]}": ${bad[3]}`
+        );
+    }
+}
+
+/**
+ * Share of entries that carry a rarity (0 for a list built before rarities).
+ * @param {{ cards: unknown[][] }} list
+ */
+export function rarityCoverage(list) {
+    if (list.cards.length === 0) return 0;
+    const withRarity = list.cards.filter((entry) => entry.length > 3).length;
+    return withRarity / list.cards.length;
 }
 
 // A refresh may add cards or drop a few, but never lose this share of the list.
@@ -156,7 +242,8 @@ export function pickOracleCardsEntry(bulk) {
 
 /**
  * True if `value` looks like a card list: a count that matches a non-empty
- * array of [oracleId, name] or [oracleId, name, imageId] string entries. This is the shape check only; use
+ * array of [oracleId, name], [oracleId, name, imageId] or
+ * [oracleId, name, imageId, rarity] string entries. This is the shape check only; use
  * `assertDeployableCardList` for the "is it a real Scryfall build" checks.
  * @param {unknown} value
  */
@@ -174,7 +261,10 @@ export function isCardList(value) {
             (pair) =>
                 Array.isArray(pair) &&
                 (pair.length === 2 ||
-                    (pair.length === 3 && typeof pair[2] === 'string')) &&
+                    (pair.length === 3 && typeof pair[2] === 'string') ||
+                    (pair.length === 4 &&
+                        typeof pair[2] === 'string' &&
+                        RARITY_CODES.includes(pair[3]))) &&
                 typeof pair[0] === 'string' &&
                 typeof pair[1] === 'string'
         )
@@ -192,9 +282,10 @@ export function shouldUploadCardList(published, next) {
     if (!isCardList(published)) return true;
     if (published.cards.length !== next.cards.length) return true;
     return published.cards.some(
-        ([oracleId, name, imageId], i) =>
+        ([oracleId, name, imageId, rarity], i) =>
             oracleId !== next.cards[i][0] ||
             name !== next.cards[i][1] ||
-            imageId !== next.cards[i][2]
+            imageId !== next.cards[i][2] ||
+            rarity !== next.cards[i][3]
     );
 }

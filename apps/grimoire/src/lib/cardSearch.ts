@@ -5,11 +5,34 @@ export interface CardNameFile {
     version: string;
     count: number;
     /**
-     * [oracleId, name] or [oracleId, name, imageId]. The image id is Scryfall's
-     * CDN id for the front face (see cardImages.ts); older builds and cards
-     * Scryfall has no image for leave it off.
+     * [oracleId, name], [oracleId, name, imageId] or
+     * [oracleId, name, imageId, rarity]. The image id is Scryfall's CDN id for
+     * the front face (see cardImages.ts); older builds and cards Scryfall has
+     * no image for leave it off ("" when a rarity follows). The rarity is one
+     * letter: c, u, r, m, or o for special and bonus rarities. Rare and
+     * mythic are the rares. Lists built before rarities have none.
      */
-    cards: ([string, string] | [string, string, string])[];
+    cards: (
+        | [string, string]
+        | [string, string, string]
+        | [string, string, string, RarityCode]
+    )[];
+}
+
+export type RarityCode = 'c' | 'u' | 'r' | 'm' | 'o';
+
+/** oracleId -> rarity code, for the cards in the list that have one. */
+export function buildRarities(file: CardNameFile): Map<string, RarityCode> {
+    const rarities = new Map<string, RarityCode>();
+    for (const entry of file.cards) {
+        if (entry.length === 4) rarities.set(entry[0], entry[3]);
+    }
+    return rarities;
+}
+
+/** True for the cards that count as rares: rare and mythic. */
+export function isRareCode(code: RarityCode | undefined): boolean {
+    return code === 'r' || code === 'm';
 }
 
 export interface CardEntry {

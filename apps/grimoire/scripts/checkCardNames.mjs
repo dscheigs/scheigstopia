@@ -5,7 +5,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assertDeployableCardList } from './cardNamesLib.mjs';
+import { assertDeployableCardList, rarityCoverage } from './cardNamesLib.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const file = path.join(scriptDir, '..', 'public', 'data', 'card-names.json');
@@ -28,3 +28,10 @@ try {
     process.exit(1);
 }
 console.log(`Card list OK: ${list.count} cards (version ${list.version})`);
+const coverage = rarityCoverage(list);
+if (coverage < 1) {
+    console.warn(
+        `Rarity on ${Math.round(coverage * 100)}% of cards; ` +
+            'rebuild with `pnpm nx run grimoire:card-names`.'
+    );
+}

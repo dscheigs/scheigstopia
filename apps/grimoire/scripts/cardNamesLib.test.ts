@@ -3,10 +3,14 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
     MIN_REAL_CARD_COUNT,
+    addPrintingRarity,
     assertDeployableCardList,
     assertSaneRefresh,
     isCardList,
     pickOracleCardsEntry,
+    rarityCode,
+    rarityCoverage,
+    reduceRarities,
     scryfallImageId,
     shouldUploadCardList,
     slimOracleCards,
@@ -256,5 +260,124 @@ describe('card list entries with image ids', () => {
                 { cards: [['a', 'A', id]] }
             )
         ).toBe(false);
+    });
+});
+
+describe('rarity', () => {
+    const printing = (
+        oracle_id: string,
+        rarity: string,
+        layout = 'normal'
+    ) => ({ oracle_id, rarity, layout });
+
+    it('maps Scryfall rarities to one letter, and special or bonus to "o"', () => {
+        expect(rarityCode('common')).toBe('c');
+        expect(rarityCode('uncommon')).toBe('u');
+        expect(rarityCode('rare')).toBe('r');
+        expect(rarityCode('mythic')).toBe('m');
+        expect(rarityCode('special')).toBe('o');
+        expect(rarityCode('bonus')).toBe('o');
+        expect(rarityCode(undefined)).toBe('o');
+    });
+
+    it('keeps the rarest rarity of a card reprinted at several rarities', () => {
+        const rarities = reduceRarities([
+            printing('bolt', 'common'),
+            printing('bolt', 'uncommon'),
+            printing('bolt', 'rare'),
+            printing('bolt', 'common'),
+            printing('mox', 'rare'),
+            printing('mox', 'mythic'),
+            printing('mox', 'special'),
+            printing('promo', 'special'),
+            printing('promo', 'bonus'),
+        ]);
+        expect(rarities.get('bolt')).toBe('r');
+        expect(rarities.get('mox')).toBe('m');
+        expect(rarities.get('promo')).toBe('o');
+    });
+
+    it('reads the oracle id from faces and skips tokens and junk', () => {
+        const rarities = new Map<string, string>();
+        addPrintingRarity(rarities, {
+            rarity: 'mythic',
+            card_faces: [{ oracle_id: 'face' }],
+        });
+        addPrintingRarity(rarities, printing('tok', 'rare', 'token'));
+        addPrintingRarity(rarities, null);
+        addPrintingRarity(rarities, { rarity: 'rare' });
+        expect([...rarities]).toEqual([['face', 'm']]);
+    });
+
+    it('adds a rarity to every entry when given a rarity map', async () => {
+        const slim = slimOracleCards(
+            await loadFixture(),
+            'test',
+            new Map([['not-in-fixture', 'm']])
+        );
+        expect(slim.cards.length).toBeGreaterThan(0);
+        for (const entry of slim.cards) {
+            expect(entry).toHaveLength(4);
+            expect(entry[3]).toBe('o');
+        }
+        expect(isCardList(slim)).toBe(true);
+    });
+
+    it('stores "" for the image id of a card with no image', () => {
+        const slim = slimOracleCards(
+            [{ oracle_id: 'a', name: 'A', layout: 'normal', rarity: 'rare' }],
+            'v',
+            new Map([['a', 'r']])
+        );
+        expect(slim.cards).toEqual([['a', 'A', '', 'r']]);
+    });
+
+    it('accepts known rarity codes and rejects unknown ones', () => {
+        const base = { version: 'v', count: 1 };
+        expect(isCardList({ ...base, cards: [['a', 'A', '', 'r']] })).toBe(
+            true
+        );
+        expect(isCardList({ ...base, cards: [['a', 'A', '', 'z']] })).toBe(
+            false
+        );
+    });
+
+    it('uploads when only a rarity changed', () => {
+        const base = { version: 'v', count: 1 };
+        expect(
+            shouldUploadCardList(
+                { ...base, cards: [['a', 'A', '', 'c']] },
+                { cards: [['a', 'A', '', 'r']] }
+            )
+        ).toBe(true);
+    });
+
+    it('rejects a full-size list with an unknown rarity', () => {
+        const cards = Array.from({ length: MIN_REAL_CARD_COUNT }, (_, i) => [
+            `id${i}`,
+            `Card ${i}`,
+            '',
+            'c',
+        ]);
+        cards[5][3] = 'z';
+        expect(() =>
+            assertDeployableCardList({
+                version: 'v',
+                count: cards.length,
+                cards,
+            })
+        ).toThrow(/unknown rarity/);
+    });
+
+    it('reports how much of a list has rarities', () => {
+        expect(rarityCoverage({ cards: [['a', 'A']] })).toBe(0);
+        expect(
+            rarityCoverage({
+                cards: [
+                    ['a', 'A', '', 'r'],
+                    ['b', 'B'],
+                ],
+            })
+        ).toBe(0.5);
     });
 });
