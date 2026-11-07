@@ -12,7 +12,8 @@ import { useBlurOnTouchScroll } from '@/lib/useBlurOnTouchScroll';
 import { useStickyOffset } from '@/lib/useStickyOffset';
 import { useUrlDialogState } from '@/lib/useUrlDialogState';
 import { buildImageIds } from '@/lib/cardImages';
-import { buildIndex } from '@/lib/cardSearch';
+import { buildIndex, buildRarities } from '@/lib/cardSearch';
+import { flaggedKeys } from '@/lib/rareAttention';
 import type { CollectionItem } from '@/lib/collection';
 import { groupPlacements } from '@/lib/placementText';
 import {
@@ -20,6 +21,7 @@ import {
     useCardHistory,
     useCardNames,
     useCollection,
+    useRareCandidates,
     useSetQuantity,
 } from '@/lib/queries';
 
@@ -50,6 +52,16 @@ export default function CollectionView() {
         () => groupPlacements(allPlacements.data ?? []),
         [allPlacements.data]
     );
+    const rareCandidates = useRareCandidates();
+    // oracleIds with a rare in Unsorted or bulk; empty until both loads finish.
+    const flaggedCards = useMemo(() => {
+        if (!rareCandidates.data || !cardNames.data) return new Set<string>();
+        const keys = flaggedKeys(
+            rareCandidates.data,
+            buildRarities(cardNames.data)
+        );
+        return new Set([...keys].map((key) => key.split(':')[0]));
+    }, [rareCandidates.data, cardNames.data]);
     // Two mutations so a quantity save and a Remove do not share pending
     // state. Either one's failure is reported by the global toast.
     const saveQuantityMutation = useSetQuantity();
@@ -195,6 +207,7 @@ export default function CollectionView() {
                             items={visibleItems}
                             imageIds={imageIds}
                             placements={placementsByCard}
+                            flagged={flaggedCards}
                             onOpen={(item) => detail.show(item.oracleId)}
                         />
                     )}

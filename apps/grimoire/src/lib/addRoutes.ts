@@ -1,5 +1,6 @@
 export const COLLECTION_PATH = '/';
 export const ADD_PATH = '/add';
+export const ATTENTION_PATH = '/attention';
 /** Opens Add Cards on the queue: `/add?view=queue`. */
 export const ADD_QUEUE_URL = `${ADD_PATH}?view=queue`;
 

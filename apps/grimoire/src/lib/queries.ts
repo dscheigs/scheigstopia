@@ -13,11 +13,12 @@ import type { CommitDestination } from '@/lib/commitBag';
 import type { IdentifyResult } from '@/lib/identify';
 import type {
     CardPlacement,
+    RareCandidate,
     HistoryEntry,
     LocationItem,
     Placement,
 } from '@/lib/locations';
-import type { LocationKind } from '@/lib/locationKinds';
+import type { LocationKind, RareRule } from '@/lib/locationKinds';
 import { withItem, withoutItem } from '@/lib/collectionCache';
 
 export const queryKeys = {
@@ -25,6 +26,7 @@ export const queryKeys = {
     cardNames: ['card-names'] as const,
     locations: ['locations'] as const,
     allPlacements: ['placements', 'all'] as const,
+    rareCandidates: ['rare-candidates'] as const,
     placements: (oracleId: string) => ['placements', oracleId] as const,
     history: (oracleId: string) => ['history', oracleId] as const,
     scryfall: (name: string) => ['scryfall', normalize(name)] as const,
@@ -78,6 +80,9 @@ export function useAddCard() {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.allPlacements,
             });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.rareCandidates,
+            });
         },
     });
 }
@@ -105,6 +110,9 @@ export function useCommitQueue() {
             queryClient.invalidateQueries({ queryKey: queryKeys.locations });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.allPlacements,
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.rareCandidates,
             });
             queryClient.setQueryData<CollectionItem[]>(
                 queryKeys.collection,
@@ -136,6 +144,9 @@ export function useSetQuantity() {
         onSuccess: (body, { item }) => {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.allPlacements,
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.rareCandidates,
             });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.placements(item.oracleId),
@@ -263,6 +274,9 @@ export function useMoveCards() {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.allPlacements,
             });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.rareCandidates,
+            });
             for (const { oracleId } of moves) {
                 queryClient.invalidateQueries({
                     queryKey: queryKeys.placements(oracleId),
@@ -310,5 +324,35 @@ export function useAllPlacements() {
         queryFn: async () =>
             (await apiFetch<{ items: CardPlacement[] }>('/api/placements'))
                 .items,
+    });
+}
+
+/** Copies in a bag or Unsorted that might be rares in the wrong place. */
+export function useRareCandidates() {
+    return useQuery({
+        queryKey: queryKeys.rareCandidates,
+        queryFn: async () =>
+            (await apiFetch<{ items: RareCandidate[] }>('/api/rare-candidates'))
+                .items,
+    });
+}
+
+/** Set or clear the rare override on a card's copies in one location. */
+export function useSetRareRule() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (input: {
+            oracleId: string;
+            locationId: string;
+            rule: RareRule | null;
+        }) =>
+            apiFetch<{ changed: number }>('/api/rare-rules', {
+                method: 'PUT',
+                json: input,
+            }),
+        onSuccess: () =>
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.rareCandidates,
+            }),
     });
 }

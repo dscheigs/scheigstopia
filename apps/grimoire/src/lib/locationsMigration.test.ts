@@ -13,7 +13,7 @@ async function legacyDb() {
         (await pg.query(text, params)).rows as Record<string, unknown>[];
     const all = await loadMigrations();
     const before = all.filter((m) => m.name < '0003');
-    const after = all.filter((m) => m.name >= '0003');
+    const after = all.filter((m) => m.name >= '0003' && m.name < '0004');
     await runMigrations({ query, migrations: before });
 
     const [a] = await query(

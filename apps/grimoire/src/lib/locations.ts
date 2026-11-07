@@ -1,5 +1,9 @@
 import type { Sql } from '@/lib/db';
-import type { LocationKind } from '@/lib/locationKinds';
+import {
+    RARE_UNSAFE_KINDS,
+    type LocationKind,
+    type RareRule,
+} from '@/lib/locationKinds';
 
 /*
  * Locations, moves and the questions the UI asks about them (issue #85). The
@@ -410,4 +414,79 @@ export async function listHistory(
         note: row.note === null ? null : String(row.note),
         createdAt: iso(row.created_at),
     }));
+}
+
+/**
+ * Copies of one card in one location where a rare is not expected, with the
+ * override they share. Copies with an override of `bulk` are left out, since
+ * they never need attention.
+ */
+export interface RareCandidate {
+    oracleId: string;
+    name: string;
+    locationId: string;
+    kind: LocationKind;
+    label: string;
+    /** Null follows the rarity rule; `keep` always expects a rare-safe place. */
+    rareRule: RareRule | null;
+    quantity: number;
+}
+
+/**
+ * The groups of copies that might need attention: in a location that is not
+ * rare-safe and not overridden to `bulk`. Rarity is not known here (it is in
+ * the card list), so the caller decides with `needsAttention`.
+ */
+export async function listRareCandidates(
+    sql: Sql,
+    userId: string
+): Promise<RareCandidate[]> {
+    const rows = await sql`
+        select c.oracle_id, max(c.name) as name, l.id, l.kind, l.label,
+            c.rare_rule, count(*)::integer as quantity
+        from copies c
+        join locations l on l.id = c.location_id
+        where c.user_id = ${userId}::uuid
+            and l.kind in (
+                select jsonb_array_elements_text(
+                    ${JSON.stringify(RARE_UNSAFE_KINDS)}::jsonb
+                )
+            )
+            and c.rare_rule is distinct from 'bulk'
+        group by c.oracle_id, l.id, l.kind, l.label, c.rare_rule
+        order by lower(max(c.name)), lower(l.label), l.id
+    `;
+    return rows.map((row) => ({
+        oracleId: String(row.oracle_id),
+        name: String(row.name),
+        locationId: String(row.id),
+        kind: row.kind as LocationKind,
+        label: String(row.label),
+        rareRule: row.rare_rule === null ? null : (row.rare_rule as RareRule),
+        quantity: Number(row.quantity),
+    }));
+}
+
+/**
+ * Set (or with null, clear) the rare override on a card's copies in one
+ * location. Returns how many copies changed; 0 when the user has none there.
+ * The override stays with each copy when it moves.
+ */
+export async function setRareRule(
+    sql: Sql,
+    userId: string,
+    input: { oracleId: string; locationId: string; rule: RareRule | null }
+): Promise<number> {
+    const rows = await sql`
+        with changed as (
+            update copies
+            set rare_rule = ${input.rule}::text
+            where user_id = ${userId}::uuid
+                and oracle_id = ${input.oracleId}::uuid
+                and location_id = ${input.locationId}::uuid
+            returning 1
+        )
+        select count(*)::integer as changed from changed
+    `;
+    return Number(rows[0].changed);
 }

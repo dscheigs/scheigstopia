@@ -7,7 +7,9 @@ import {
     listHistory,
     listLocations,
     listPlacements,
+    listRareCandidates,
     recordMoves,
+    setRareRule,
     updateLocation,
 } from '@/lib/locations';
 import { upsertUser } from '@/lib/users';
@@ -372,5 +374,94 @@ describe('listAllPlacements', () => {
         expect(
             all.filter((p) => p.oracleId === BOLT).map((p) => p.label)
         ).toEqual((await listPlacements(sql, me, BOLT)).map((p) => p.label));
+    });
+});
+
+describe('rare candidates and override', () => {
+    it('lists copies in Unsorted and bulk, not in keepers or decks', async () => {
+        const binder = await bag(me, 'Binder A', 'keepers');
+        const deck = await bag(me, 'Frame', 'deck');
+        const shoebox = await bag(me, 'Shoebox');
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: shoebox, quantity: 1 },
+            { oracleId: BOLT, fromId: unsorted, toId: binder, quantity: 1 },
+        ]);
+        let groups = await listRareCandidates(sql, me);
+        expect(groups.map((g) => [g.label, g.quantity])).toEqual([
+            ['Shoebox', 1],
+            ['Unsorted', 1],
+        ]);
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: deck, quantity: 1 },
+            { oracleId: BOLT, fromId: shoebox, toId: binder, quantity: 1 },
+        ]);
+        groups = await listRareCandidates(sql, me);
+        expect(groups).toEqual([]);
+    });
+
+    it('drops copies overridden to bulk and keeps those marked keep', async () => {
+        const shoebox = await bag(me, 'Shoebox');
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: shoebox, quantity: 1 },
+        ]);
+        expect(
+            await setRareRule(sql, me, {
+                oracleId: BOLT,
+                locationId: shoebox,
+                rule: 'bulk',
+            })
+        ).toBe(1);
+        let groups = await listRareCandidates(sql, me);
+        expect(groups.map((g) => g.label)).toEqual(['Unsorted']);
+
+        await setRareRule(sql, me, {
+            oracleId: BOLT,
+            locationId: unsorted,
+            rule: 'keep',
+        });
+        groups = await listRareCandidates(sql, me);
+        expect(groups.map((g) => [g.label, g.rareRule])).toEqual([
+            ['Unsorted', 'keep'],
+        ]);
+
+        await setRareRule(sql, me, {
+            oracleId: BOLT,
+            locationId: shoebox,
+            rule: null,
+        });
+        groups = await listRareCandidates(sql, me);
+        expect(groups.map((g) => g.label)).toEqual(['Shoebox', 'Unsorted']);
+    });
+
+    it('keeps the override with the copy when it moves', async () => {
+        const shoebox = await bag(me, 'Shoebox');
+        const box2 = await bag(me, 'Box 2');
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: shoebox, quantity: 3 },
+        ]);
+        await setRareRule(sql, me, {
+            oracleId: BOLT,
+            locationId: shoebox,
+            rule: 'bulk',
+        });
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: shoebox, toId: box2, quantity: 3 },
+        ]);
+        expect(await listRareCandidates(sql, me)).toEqual([]);
+    });
+
+    it("never touches or lists another user's copies", async () => {
+        await own(other, BOLT, 'Lightning Bolt', 1);
+        const theirs = await unsortedOf(other);
+        expect(
+            await setRareRule(sql, me, {
+                oracleId: BOLT,
+                locationId: theirs,
+                rule: 'bulk',
+            })
+        ).toBe(0);
+        const groups = await listRareCandidates(sql, me);
+        expect(groups.map((g) => g.quantity)).toEqual([3]);
+        expect((await listRareCandidates(sql, other))[0].rareRule).toBeNull();
     });
 });
