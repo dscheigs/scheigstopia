@@ -154,4 +154,117 @@ describe('addManyToLocation', () => {
         expect(bags).toHaveLength(0);
         expect(await listCollection(sql, me)).toEqual([]);
     });
+
+    describe('keepers routing', () => {
+        const lines = [
+            { oracleId: BOLT, name: 'Lightning Bolt', delta: 2 },
+            { oracleId: RING, name: 'Sol Ring', delta: 1, keep: true },
+        ];
+        const bulk = { kind: 'new', label: 'Bag', note: null } as const;
+
+        async function copiesIn(locationId: string) {
+            return query(
+                'select oracle_id from copies where location_id = $1',
+                [locationId]
+            );
+        }
+
+        async function makeKeepers(userId: string, kind = 'keepers') {
+            const [row] = await query(
+                `insert into locations (user_id, kind, label)
+                 values ($1, $2, 'Binder A') returning id`,
+                [userId, kind]
+            );
+            return String(row.id);
+        }
+
+        it('splits the bulk and the rares in one request, with moves', async () => {
+            const result = await addManyToLocation(sql, me, lines, bulk, {
+                kind: 'new',
+                label: 'Binder A',
+                note: null,
+            });
+            expect(result.status).toBe('added');
+            if (result.status !== 'added') return;
+            expect(result.keepersLocationId).not.toBeNull();
+            expect(result.keepersLocationId).not.toBe(result.locationId);
+
+            const kept = await copiesIn(result.keepersLocationId!);
+            expect(kept.map((c) => c.oracle_id)).toEqual([RING]);
+            expect(await copiesIn(result.locationId)).toHaveLength(2);
+
+            const [binder] = await query(
+                'select kind from locations where id = $1',
+                [result.keepersLocationId]
+            );
+            expect(binder.kind).toBe('keepers');
+            expect(await query('select 1 from moves')).toHaveLength(3);
+            const owned = await listCollection(sql, me);
+            expect(owned.map((c) => [c.name, c.quantity]).sort()).toEqual([
+                ['Lightning Bolt', 2],
+                ['Sol Ring', 1],
+            ]);
+        });
+
+        it('uses an existing keepers location or deck', async () => {
+            for (const kind of ['keepers', 'deck']) {
+                const id = await makeKeepers(me, kind);
+                const result = await addManyToLocation(sql, me, lines, bulk, {
+                    kind: 'existing',
+                    locationId: id,
+                });
+                expect(result).toMatchObject({ keepersLocationId: id });
+                expect(await copiesIn(id)).toHaveLength(1);
+            }
+        });
+
+        it('sends nothing to keepers when no line asks for it', async () => {
+            const result = await addManyToLocation(sql, me, cards, bulk);
+            expect(result).toMatchObject({
+                status: 'added',
+                keepersLocationId: null,
+            });
+        });
+
+        it.each([
+            ['no keepers destination', async () => null],
+            ['a bulk bag as keepers', async () => makeBag(me)],
+            ['another user’s keepers', async () => makeKeepers(other)],
+            ['a missing location', async () => MISSING],
+        ])('refuses %s and changes nothing', async (_label, getId) => {
+            const id = await getId();
+            const before = await query('select 1 from locations');
+            const result = await addManyToLocation(
+                sql,
+                me,
+                lines,
+                bulk,
+                id ? { kind: 'existing', locationId: id } : undefined
+            );
+            expect(result).toEqual({ status: 'bad_location' });
+            expect(await query('select 1 from copies')).toHaveLength(0);
+            expect(await query('select 1 from moves')).toHaveLength(0);
+            // No new bag was left behind.
+            expect(await query('select 1 from locations')).toHaveLength(
+                before.length
+            );
+        });
+
+        it('creates no keepers location when the bag is refused', async () => {
+            const result = await addManyToLocation(
+                sql,
+                me,
+                lines,
+                { kind: 'existing', locationId: MISSING },
+                { kind: 'new', label: 'Binder A', note: null }
+            );
+            expect(result).toEqual({ status: 'bad_location' });
+            expect(
+                await query(
+                    "select 1 from locations where user_id = $1 and kind = 'keepers'",
+                    [me]
+                )
+            ).toHaveLength(0);
+        });
+    });
 });

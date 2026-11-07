@@ -8,9 +8,11 @@ import { parseBulkBody } from '@/lib/validation';
 export const dynamic = 'force-dynamic';
 
 /**
- * Add many cards at once: { items: [{ oracleId, name, delta }], destination? }.
+ * Add many cards at once:
+ * { items: [{ oracleId, name, delta, destination? }], destination?, keepersDestination? }.
  * The copies go into the destination bag (an existing location, or a new bag
- * created by this request) or Unsorted, each recorded as a move from outside
+ * created by this request) or Unsorted; a line with destination "keepers" goes
+ * to keepersDestination instead. Each copy is recorded as a move from outside
  * the collection. All or nothing.
  */
 export async function POST(request: Request) {
@@ -26,7 +28,8 @@ export async function POST(request: Request) {
         getSql(),
         userId,
         parsed.value.items,
-        parsed.value.destination
+        parsed.value.destination,
+        parsed.value.keepersDestination
     );
     if (result.status === 'bad_location') {
         return badRequest('That location is not available.');
@@ -34,5 +37,6 @@ export async function POST(request: Request) {
     return NextResponse.json({
         items: result.items,
         locationId: result.locationId,
+        keepersLocationId: result.keepersLocationId,
     });
 }

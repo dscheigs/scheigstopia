@@ -173,6 +173,22 @@ describe('planCommit', () => {
         expect(plan.count).toBe(3);
     });
 
+    it('reports the rares among the planned cards', () => {
+        const a = item({ status: 'identified', matchedCard: bolt });
+        const b = item({ status: 'identified', matchedCard: elves });
+        const c = item({ status: 'identified', matchedCard: elves });
+        const plan = planCommit(
+            [a, b, c],
+            new Map([
+                [bolt.oracleId, 'c'],
+                [elves.oracleId, 'm'],
+            ])
+        );
+        expect([...plan.rareIds]).toEqual([elves.oracleId]);
+        expect(plan.rareCount).toBe(2);
+        expect(planCommit([a, b]).rareCount).toBe(0);
+    });
+
     it('skips items that are not identified, and includes fixed ones', () => {
         const flagged = item({
             status: 'flagged',
