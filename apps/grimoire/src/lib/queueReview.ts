@@ -1,7 +1,7 @@
 // Pure helpers for the queue review screen: ordering, labels and what a
 // commit sends. Kept free of React and the store so they are easy to test.
 
-import type { CardEntry } from '@/lib/cardSearch';
+import { isRareCode, type CardEntry, type RarityCode } from '@/lib/cardSearch';
 import type {
     FlagReason,
     MatchedCard,
@@ -162,10 +162,17 @@ export interface CommitPlan {
     ids: string[];
     /** Number of cards (queue items), counting duplicates. */
     count: number;
+    /** Oracle ids in the payload that are rares or mythics. */
+    rareIds: Set<string>;
+    /** Number of cards (queue items) that are rares, counting duplicates. */
+    rareCount: number;
 }
 
 /** The identified items with a matched card, merged by card. */
-export function planCommit(items: QueueItem[]): CommitPlan {
+export function planCommit(
+    items: QueueItem[],
+    rarities: ReadonlyMap<string, RarityCode> = new Map()
+): CommitPlan {
     const byCard = new Map<
         string,
         { oracleId: string; name: string; delta: number }
@@ -179,7 +186,16 @@ export function planCommit(items: QueueItem[]): CommitPlan {
         if (entry) entry.delta += 1;
         else byCard.set(oracleId, { oracleId, name, delta: 1 });
     }
-    return { payload: [...byCard.values()], ids, count: ids.length };
+    const payload = [...byCard.values()];
+    const rareIds = new Set(
+        payload
+            .filter((line) => isRareCode(rarities.get(line.oracleId)))
+            .map((line) => line.oracleId)
+    );
+    const rareCount = payload
+        .filter((line) => rareIds.has(line.oracleId))
+        .reduce((sum, line) => sum + line.delta, 0);
+    return { payload, ids, count: ids.length, rareIds, rareCount };
 }
 
 export interface QueueCounts {

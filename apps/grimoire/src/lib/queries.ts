@@ -9,7 +9,7 @@ import type { CardEntry } from '@/lib/cardSearch';
 import { normalize } from '@/lib/cardSearch';
 import { lookupScryfallCard } from '@/lib/scryfall';
 import type { CollectionItem } from '@/lib/collection';
-import type { CommitDestination } from '@/lib/commitBag';
+import type { CommitDestination, CommitLine } from '@/lib/commitBag';
 import type { IdentifyResult } from '@/lib/identify';
 import type {
     CardPlacement,
@@ -97,14 +97,20 @@ export function useCommitQueue() {
         mutationFn: ({
             items,
             destination,
+            keepersDestination,
         }: {
-            items: { oracleId: string; name: string; delta: number }[];
+            items: CommitLine[];
             destination?: CommitDestination;
+            keepersDestination?: CommitDestination;
         }) =>
-            apiFetch<{ items: CollectionItem[]; locationId: string }>(
-                '/api/collection/bulk',
-                { method: 'POST', json: { items, destination } }
-            ),
+            apiFetch<{
+                items: CollectionItem[];
+                locationId: string;
+                keepersLocationId: string | null;
+            }>('/api/collection/bulk', {
+                method: 'POST',
+                json: { items, destination, keepersDestination },
+            }),
         onSuccess: ({ items }) => {
             // A new bag, and every bag's count, changed.
             queryClient.invalidateQueries({ queryKey: queryKeys.locations });

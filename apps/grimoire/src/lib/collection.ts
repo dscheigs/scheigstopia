@@ -110,8 +110,22 @@ export type BulkDestination =
     | { kind: 'existing'; locationId: string }
     | { kind: 'new'; label: string; note: string | null };
 
+/** A card line of a bulk add. `keep` sends its copies to the keepers location. */
+export interface BulkCard {
+    oracleId: string;
+    name: string;
+    delta: number;
+    keep?: boolean;
+}
+
 export type AddManyResult =
-    | { status: 'added'; items: CollectionItem[]; locationId: string }
+    | {
+          status: 'added';
+          items: CollectionItem[];
+          locationId: string;
+          /** Where the `keep` lines went; null when no line asked for it. */
+          keepersLocationId: string | null;
+      }
     /** The location is not the user's, or it is archived. Nothing was added. */
     | { status: 'bad_location' };
 
@@ -125,12 +139,13 @@ export type AddManyResult =
 export async function addManyToLocation(
     sql: Sql,
     userId: string,
-    cards: { oracleId: string; name: string; delta: number }[],
-    destination?: BulkDestination
+    cards: BulkCard[],
+    destination?: BulkDestination,
+    keepersDestination?: BulkDestination
 ): Promise<AddManyResult> {
     const merged = new Map<
         string,
-        { oracle_id: string; name: string; delta: number }
+        { oracle_id: string; name: string; delta: number; keep: boolean }
     >();
     for (const card of cards) {
         const existing = merged.get(card.oracleId);
@@ -139,20 +154,69 @@ export async function addManyToLocation(
             // The last name wins, like repeated single adds.
             name: card.name,
             delta: Math.min((existing?.delta ?? 0) + card.delta, MAX_QUANTITY),
+            // A card is one line in the statement, so any keep wins.
+            keep: (existing?.keep ?? false) || card.keep === true,
         });
     }
     if (merged.size === 0) {
-        return { status: 'added', items: [], locationId: '' };
+        return {
+            status: 'added',
+            items: [],
+            locationId: '',
+            keepersLocationId: null,
+        };
     }
+    const wantsKeepers = [...merged.values()].some((card) => card.keep);
+    if (wantsKeepers && !keepersDestination) return { status: 'bad_location' };
+    const keepersExistingId =
+        wantsKeepers && keepersDestination?.kind === 'existing'
+            ? keepersDestination.locationId
+            : null;
+    const keepersNewLabel =
+        wantsKeepers && keepersDestination?.kind === 'new'
+            ? keepersDestination.label
+            : null;
+    const keepersNewNote =
+        wantsKeepers && keepersDestination?.kind === 'new'
+            ? keepersDestination.note
+            : null;
     const existingId =
         destination?.kind === 'existing' ? destination.locationId : null;
     const newLabel = destination?.kind === 'new' ? destination.label : null;
     const newNote = destination?.kind === 'new' ? destination.note : null;
 
+    // A new bag is created by the statement itself, so a bad existing location
+    // is caught first: nothing may be left behind when the request is refused.
+    const wanted = [existingId, keepersExistingId].filter(
+        (id): id is string => id !== null
+    );
+    if (wanted.length > 0) {
+        const found = await sql`
+            select id, kind from locations
+            where user_id = ${userId}::uuid
+                and archived_at is null
+                and id = any(${wanted}::uuid[])
+        `;
+        const kindOf = new Map(
+            found.map((r) => [String(r.id), String(r.kind)])
+        );
+        const keepersKind = keepersExistingId
+            ? kindOf.get(keepersExistingId)
+            : null;
+        if (
+            (existingId !== null && !kindOf.has(existingId)) ||
+            (keepersExistingId !== null &&
+                keepersKind !== 'keepers' &&
+                keepersKind !== 'deck')
+        ) {
+            return { status: 'bad_location' };
+        }
+    }
+
     const rows = await sql`
         with input as (
             select * from jsonb_to_recordset(${JSON.stringify([...merged.values()])}::jsonb)
-                as c(oracle_id uuid, name text, delta integer)
+                as c(oracle_id uuid, name text, delta integer, keep boolean)
         ),
         cur as (
             select i.oracle_id, count(c.id)::integer as q
@@ -194,12 +258,31 @@ export async function addManyToLocation(
             where ${existingId}::uuid is null and ${newLabel}::text is null
             limit 1
         ),
+        new_keepers as (
+            insert into locations (user_id, kind, label, note)
+            select ${userId}::uuid, 'keepers', ${keepersNewLabel}::text, ${keepersNewNote}::text
+            where ${keepersNewLabel}::text is not null
+            returning id
+        ),
+        kdest as (
+            select id from new_keepers
+            union all
+            select id from locations
+            where id = ${keepersExistingId}::uuid
+                and user_id = ${userId}::uuid
+                and archived_at is null
+                and kind in ('keepers', 'deck')
+            limit 1
+        ),
         added as (
             insert into copies (user_id, oracle_id, name, location_id)
-            select ${userId}::uuid, i.oracle_id, i.name, dest.id
+            select ${userId}::uuid, i.oracle_id, i.name, target.id
             from input i
             join cur on cur.oracle_id = i.oracle_id
-            cross join dest
+            cross join lateral (
+                select case when i.keep then (select id from kdest)
+                    else (select id from dest) end as id
+            ) target
             cross join lateral generate_series(
                 1,
                 least(i.delta, ${MAX_QUANTITY}::integer - cur.q)
@@ -212,6 +295,7 @@ export async function addManyToLocation(
         )
         select
             (select id from dest) as dest_id,
+            (select id from kdest) as keepers_id,
             i.oracle_id,
             i.name,
             cur.q + (select count(*) from added a where a.oracle_id = i.oracle_id) as quantity,
@@ -223,10 +307,15 @@ export async function addManyToLocation(
         join cur on cur.oracle_id = i.oracle_id
     `;
     if (rows[0].dest_id === null) return { status: 'bad_location' };
+    if (wantsKeepers && rows[0].keepers_id === null) {
+        return { status: 'bad_location' };
+    }
     return {
         status: 'added',
         items: rows.map(toItem),
         locationId: String(rows[0].dest_id),
+        keepersLocationId:
+            rows[0].keepers_id === null ? null : String(rows[0].keepers_id),
     };
 }
 

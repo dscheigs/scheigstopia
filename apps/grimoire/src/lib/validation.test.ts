@@ -115,6 +115,45 @@ describe('parseBulkBody', () => {
         expect(parseBulkBody(body).ok).toBe(false);
     });
 
+    it('parses per-line keepers routing with a keepers destination', () => {
+        const base = { oracleId: ID, name: 'Sol Ring', delta: 1 };
+        expect(
+            parseBulkBody({
+                items: [base, { ...base, destination: 'keepers' }],
+                keepersDestination: { newBag: { label: 'Binder A' } },
+            })
+        ).toEqual({
+            ok: true,
+            value: {
+                items: [base, { ...base, keep: true }],
+                keepersDestination: {
+                    kind: 'new',
+                    label: 'Binder A',
+                    note: null,
+                },
+            },
+        });
+    });
+
+    it('needs a keepers destination for a keepers line, and knows only "keepers"', () => {
+        const base = { oracleId: ID, name: 'Sol Ring', delta: 1 };
+        expect(
+            parseBulkBody({ items: [{ ...base, destination: 'keepers' }] }).ok
+        ).toBe(false);
+        expect(
+            parseBulkBody({
+                items: [{ ...base, destination: 'elsewhere' }],
+                keepersDestination: { locationId: ID },
+            }).ok
+        ).toBe(false);
+        expect(
+            parseBulkBody({
+                items: [base],
+                keepersDestination: { locationId: 'nope' },
+            }).ok
+        ).toBe(false);
+    });
+
     it('parses a destination: an existing bag or a new one', () => {
         const items = [{ oracleId: ID, name: 'Sol Ring', delta: 1 }];
         expect(

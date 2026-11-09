@@ -3,7 +3,11 @@ import {
     bagOptions,
     defaultBagLabel,
     initialChoice,
+    initialKeepersChoice,
+    keepersOptions,
     readLastBag,
+    routeLines,
+    toKeepersDestination,
     toDestination,
     writeLastBag,
 } from '@/lib/commitBag';
@@ -131,5 +135,53 @@ describe('last bag storage', () => {
         expect(readLastBag(broken, 'u1')).toBeNull();
         expect(() => writeLastBag(broken, 'u1', 'x')).not.toThrow();
         expect(() => writeLastBag(null, 'u1', 'x')).not.toThrow();
+    });
+});
+
+describe('keepers routing', () => {
+    it('offers only open keepers locations', () => {
+        const binder = location({ id: 'k1', kind: 'keepers' });
+        const options = keepersOptions([
+            binder,
+            location({ id: 'b1', kind: 'bulk' }),
+            location({ id: 'k2', kind: 'keepers', archivedAt: 'x' }),
+        ]);
+        expect(options).toEqual([binder]);
+        expect(initialKeepersChoice(options)).toEqual({
+            mode: 'existing',
+            locationId: 'k1',
+        });
+        expect(initialKeepersChoice([])).toEqual({ mode: 'skip' });
+    });
+
+    it('turns a choice into a destination, and skipping never blocks', () => {
+        expect(toKeepersDestination({ mode: 'skip' })).toEqual({
+            ok: true,
+            destination: undefined,
+        });
+        expect(
+            toKeepersDestination({ mode: 'existing', locationId: 'k1' })
+        ).toEqual({ ok: true, destination: { locationId: 'k1' } });
+        expect(
+            toKeepersDestination({ mode: 'new', label: ' Binder A ' })
+        ).toEqual({
+            ok: true,
+            destination: { newBag: { label: 'Binder A' } },
+        });
+        expect(toKeepersDestination({ mode: 'new', label: ' ' }).ok).toBe(
+            false
+        );
+    });
+
+    it('marks only the rares, and only when there is a keepers location', () => {
+        const payload = [
+            { oracleId: 'a', name: 'A', delta: 2 },
+            { oracleId: 'b', name: 'B', delta: 1 },
+        ];
+        expect(routeLines(payload, new Set(['b']), true)).toEqual([
+            payload[0],
+            { ...payload[1], destination: 'keepers' },
+        ]);
+        expect(routeLines(payload, new Set(['b']), false)).toEqual(payload);
     });
 });

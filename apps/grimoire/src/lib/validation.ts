@@ -74,9 +74,11 @@ export function parseAddBody(body: unknown): Parsed<AddBody> {
 }
 
 export interface BulkBody {
-    items: AddBody[];
+    items: (AddBody & { keep?: boolean })[];
     /** Absent means Unsorted. */
     destination?: BulkDestination;
+    /** Where the lines marked `keep` go; required when any line is. */
+    keepersDestination?: BulkDestination;
 }
 
 /**
@@ -131,7 +133,7 @@ export function parseBulkBody(body: unknown): Parsed<BulkBody> {
             error: `items must have 1-${MAX_BULK_ITEMS} entries.`,
         };
     }
-    const items: AddBody[] = [];
+    const items: (AddBody & { keep?: boolean })[] = [];
     for (const [index, raw] of body.items.entries()) {
         // Unlike the single add, delta is required: a queue always has one.
         if (!isRecord(raw) || raw.delta === undefined) {
@@ -144,12 +146,38 @@ export function parseBulkBody(body: unknown): Parsed<BulkBody> {
         if (!parsed.ok) {
             return { ok: false, error: `items[${index}]: ${parsed.error}` };
         }
-        items.push(parsed.value);
+        // Optional per-line destination: "keepers" or absent (the main bag).
+        if (raw.destination !== undefined && raw.destination !== 'keepers') {
+            return {
+                ok: false,
+                error: `items[${index}].destination must be "keepers" when given.`,
+            };
+        }
+        items.push({
+            ...parsed.value,
+            ...(raw.destination === 'keepers' ? { keep: true } : {}),
+        });
     }
-    if (body.destination === undefined) return { ok: true, value: { items } };
-    const destination = parseDestination(body.destination);
-    if (!destination.ok) return destination;
-    return { ok: true, value: { items, destination: destination.value } };
+    const value: BulkBody = { items };
+    if (body.destination !== undefined) {
+        const destination = parseDestination(body.destination);
+        if (!destination.ok) return destination;
+        value.destination = destination.value;
+    }
+    if (body.keepersDestination !== undefined) {
+        const keepers = parseDestination(body.keepersDestination);
+        if (!keepers.ok) {
+            return { ok: false, error: `keepersDestination: ${keepers.error}` };
+        }
+        value.keepersDestination = keepers.value;
+    }
+    if (items.some((item) => item.keep) && !value.keepersDestination) {
+        return {
+            ok: false,
+            error: 'keepersDestination is required when a line goes to "keepers".',
+        };
+    }
+    return { ok: true, value };
 }
 
 /** Body for setting an exact quantity: { quantity }. Zero removes the card. */

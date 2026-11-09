@@ -20,8 +20,10 @@ import {
     browserStorage,
     readLastBag,
     writeLastBag,
-    type CommitDestination,
+    routeLines,
+    type CommitRequest,
 } from '@/lib/commitBag';
+import { buildRarities } from '@/lib/cardSearch';
 import { useCardNames, useCommitQueue, useLocations } from '@/lib/queries';
 import type { QueueItem } from '@/lib/scanQueueTypes';
 import { useScanQueue } from '@/lib/useScanQueue';
@@ -121,7 +123,11 @@ export default function QueueView({ userId }: { userId: string }) {
         [cardNames.data]
     );
     const groups = useMemo(() => groupQueue(items), [items]);
-    const plan = useMemo(() => planCommit(items), [items]);
+    const rarities = useMemo(
+        () => (cardNames.data ? buildRarities(cardNames.data) : undefined),
+        [cardNames.data]
+    );
+    const plan = useMemo(() => planCommit(items, rarities), [items, rarities]);
 
     const editing = items.find((item) => item.id === editingId) ?? null;
 
@@ -130,11 +136,19 @@ export default function QueueView({ userId }: { userId: string }) {
         setEditingId(null);
     };
 
-    const commitAll = (destination: CommitDestination) => {
+    const commitAll = ({ destination, keepersDestination }: CommitRequest) => {
         // Only what was sent leaves the queue, whatever was added meanwhile.
         const sent = plan.ids;
         commit.mutate(
-            { items: plan.payload, destination },
+            {
+                items: routeLines(
+                    plan.payload,
+                    plan.rareIds,
+                    keepersDestination !== undefined
+                ),
+                destination,
+                keepersDestination,
+            },
             {
                 onSuccess: ({ locationId }) => {
                     store.getState().removeMany(sent);
@@ -262,6 +276,7 @@ export default function QueueView({ userId }: { userId: string }) {
             <CommitBagDialog
                 open={choosingBag}
                 count={plan.count}
+                rareCount={plan.rareCount}
                 locations={locations.data ?? []}
                 lastBagId={readLastBag(browserStorage(), userId)}
                 today={new Date()}
