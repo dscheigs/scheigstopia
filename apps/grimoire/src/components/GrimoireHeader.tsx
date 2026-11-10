@@ -10,6 +10,7 @@ import {
     COLLECTION_PATH,
     isAddRoute,
 } from '@/lib/addRoutes';
+import { LOCATIONS_PATH, isLocationsRoute } from '@/lib/locationsPage';
 
 /**
  * The shared header with Grimoire's navigation. It is a client component only
@@ -46,6 +47,12 @@ export default function GrimoireHeader({
                               name: 'Scan Cards',
                               href: ADD_PATH,
                               current: isAddRoute(pathname),
+                              sameApp: true,
+                          },
+                          {
+                              name: 'Locations',
+                              href: LOCATIONS_PATH,
+                              current: isLocationsRoute(pathname),
                               sameApp: true,
                           },
                           {

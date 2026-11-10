@@ -5,6 +5,7 @@ import {
     createLocation,
     listAllPlacements,
     listHistory,
+    listLocationContents,
     listLocations,
     listPlacements,
     listRareCandidates,
@@ -159,6 +160,25 @@ describe('locations', () => {
         expect((await listLocations(sql, other)).map((l) => l.label)).toContain(
             'Their box'
         );
+    });
+});
+
+describe('listLocationContents', () => {
+    it('lists the cards in a location sorted by name, with quantities', async () => {
+        await own(me, RING, 'Arcane Signet', 2);
+        const contents = await listLocationContents(sql, me, unsorted);
+        expect(contents?.location.label).toBe('Unsorted');
+        expect(contents?.cards).toEqual([
+            { oracleId: RING, name: 'Arcane Signet', quantity: 2 },
+            { oracleId: BOLT, name: 'Lightning Bolt', quantity: 3 },
+        ]);
+    });
+
+    it("is empty for a new location and null for another user's", async () => {
+        const box = await bag(me, 'Shoebox');
+        expect((await listLocationContents(sql, me, box))?.cards).toEqual([]);
+        expect(await listLocationContents(sql, other, box)).toBeNull();
+        expect(await listLocationContents(sql, me, MISSING)).toBeNull();
     });
 });
 
