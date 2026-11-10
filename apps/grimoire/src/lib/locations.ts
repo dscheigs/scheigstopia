@@ -323,6 +323,53 @@ export async function recordMoves(
     return { status: 'moved', moved: Number(row.moved) };
 }
 
+/** One card in a location, with how many copies are there. */
+export interface LocationCard {
+    oracleId: string;
+    name: string;
+    quantity: number;
+}
+
+/**
+ * What is in one of the user's locations, sorted by name. Null when the
+ * location is not the user's (or does not exist).
+ */
+export async function listLocationContents(
+    sql: Sql,
+    userId: string,
+    locationId: string
+): Promise<{ location: LocationItem; cards: LocationCard[] } | null> {
+    const found = await sql`
+        select
+            l.id, l.kind, l.label, l.note, l.parent_id, l.archived_at,
+            l.created_at,
+            (select count(*) from copies c where c.location_id = l.id)::integer
+                as card_count
+        from locations l
+        where l.id = ${locationId}::uuid and l.user_id = ${userId}::uuid
+    `;
+    if (found.length === 0) return null;
+    const rows = await sql`
+        select c.oracle_id,
+            (array_agg(c.name order by c.created_at desc, c.id))[1] as name,
+            count(*)::integer as quantity
+        from copies c
+        where c.location_id = ${locationId}::uuid
+            and c.user_id = ${userId}::uuid
+        group by c.oracle_id
+        order by lower((array_agg(c.name order by c.created_at desc, c.id))[1]),
+            c.oracle_id
+    `;
+    return {
+        location: toLocation(found[0]),
+        cards: rows.map((row) => ({
+            oracleId: String(row.oracle_id),
+            name: String(row.name),
+            quantity: Number(row.quantity),
+        })),
+    };
+}
+
 /** Where the copies of a card are now, by location. */
 export async function listPlacements(
     sql: Sql,

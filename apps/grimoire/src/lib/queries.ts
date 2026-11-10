@@ -15,6 +15,7 @@ import type {
     CardPlacement,
     RareCandidate,
     HistoryEntry,
+    LocationCard,
     LocationItem,
     Placement,
 } from '@/lib/locations';
@@ -214,6 +215,17 @@ export function useLocations(options: { includeArchived?: boolean } = {}) {
                         : '/api/locations'
                 )
             ).items,
+    });
+}
+
+/** One location and the cards in it, sorted by name. */
+export function useLocationContents(id: string) {
+    return useQuery({
+        queryKey: [...queryKeys.locations, 'contents', id] as const,
+        queryFn: () =>
+            apiFetch<{ location: LocationItem; cards: LocationCard[] }>(
+                `/api/locations/${id}/cards`
+            ),
     });
 }
 
