@@ -1,11 +1,8 @@
 'use client';
 
-import {
-    Button,
-    Dialog,
-    QuantityStepper,
-    useDialogState,
-} from '@scheigs/sylva-ui';
+import { useState } from 'react';
+import { Button, Dialog, useDialogState } from '@scheigs/sylva-ui';
+import MoveCardsDialog from '@/components/MoveCardsDialog';
 import { CARD_IMAGE_DIMENSIONS, cardImageUrl } from '@/lib/cardImages';
 import type { CollectionItem } from '@/lib/collection';
 import type { HistoryEntry, Placement } from '@/lib/locations';
@@ -14,7 +11,6 @@ import {
     formatMoveDate,
     formatPlacements,
 } from '@/lib/placementText';
-import { useDebouncedQuantity } from '@/lib/useDebouncedQuantity';
 
 type CardDetailDialogProps = {
     /** The card to show, or undefined to keep the sheet closed. */
@@ -25,32 +21,23 @@ type CardDetailDialogProps = {
     placements?: Placement[];
     /** The card's moves, newest first; leave out until loaded. */
     history?: HistoryEntry[];
-    /**
-     * Saves a quantity and rejects with a displayable message if it fails.
-     * The sheet debounces: it is called once, with the final count.
-     */
-    onSaveQuantity: (
-        item: CollectionItem,
-        quantity: number
-    ) => Promise<unknown>;
     onRemove: (item: CollectionItem) => void;
     onClose: () => void;
 };
 
 /**
- * What a collection row opens: the large card image, the quantity stepper and
- * Remove, in a bottom sheet on a phone and a centered dialog on desktop. It
- * shows whatever `item` it is given on each render and a removed card (item
- * undefined) closes it. The count changes at once on every click and is saved
- * once, after the user stops (see `useDebouncedQuantity`). Remove asks first,
- * in a second dialog stacked on top of the sheet.
+ * What a collection row opens: the large card image, where the copies are,
+ * Move and Remove, in a bottom sheet on a phone and a centered dialog on
+ * desktop. Copies change place by moving them, not by a counter. It shows
+ * whatever `item` it is given on each render and a removed card (item
+ * undefined) closes it. Remove asks first, in a second dialog stacked on top
+ * of the sheet.
  */
 export default function CardDetailDialog({
     item,
     imageId,
     placements,
     history,
-    onSaveQuantity,
     onRemove,
     onClose,
 }: CardDetailDialogProps) {
@@ -63,7 +50,6 @@ export default function CardDetailDialog({
                     imageId={imageId}
                     placements={placements}
                     history={history}
-                    onSaveQuantity={onSaveQuantity}
                     onRemove={onRemove}
                 />
             )}
@@ -76,16 +62,12 @@ function CardDetailBody({
     imageId,
     placements,
     history,
-    onSaveQuantity,
     onRemove,
 }: Omit<CardDetailDialogProps, 'item' | 'onClose'> & {
     item: CollectionItem;
 }) {
     const confirm = useDialogState();
-    const counter = useDebouncedQuantity({
-        saved: item.quantity,
-        save: (quantity) => onSaveQuantity(item, quantity),
-    });
+    const [moving, setMoving] = useState(false);
     const { width, height } = CARD_IMAGE_DIMENSIONS.normal;
     const imageUrl = imageId ? cardImageUrl(imageId, 'normal') : null;
 
@@ -102,23 +84,22 @@ function CardDetailBody({
                 />
             )}
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <QuantityStepper
-                    value={counter.quantity}
-                    onChange={counter.setQuantity}
-                    min={1}
-                    editable
-                    decrementLabel={`Remove one ${item.name}`}
-                    incrementLabel={`Add one ${item.name}`}
-                    valueLabel={`${counter.quantity} owned`}
-                />
-                {/* Not while a save is pending: it could land after the remove. */}
-                <Button
-                    variant="destructive"
-                    disabled={counter.pending}
-                    onClick={() => confirm.show()}
-                >
-                    Remove
-                </Button>
+                <p className="text-body">{item.quantity} owned</p>
+                <div className="flex gap-2">
+                    <Button
+                        variant="secondary"
+                        disabled={!placements || placements.length === 0}
+                        onClick={() => setMoving(true)}
+                    >
+                        Move
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        onClick={() => confirm.show()}
+                    >
+                        Remove
+                    </Button>
+                </div>
             </div>
             {placements && placements.length > 0 && (
                 <section aria-labelledby="card-where-heading">
@@ -161,6 +142,14 @@ function CardDetailBody({
                     </ol>
                 </section>
             )}
+            {moving && placements && (
+                <MoveCardsDialog
+                    oracleId={item.oracleId}
+                    name={item.name}
+                    sources={placements}
+                    onClose={() => setMoving(false)}
+                />
+            )}
             <Dialog
                 open={confirm.open}
                 onClose={confirm.close}
@@ -169,7 +158,6 @@ function CardDetailBody({
                     <Button
                         variant="destructive"
                         onClick={() => {
-                            counter.cancel();
                             confirm.close();
                             onRemove(item);
                         }}
