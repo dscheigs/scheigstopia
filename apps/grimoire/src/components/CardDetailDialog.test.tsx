@@ -1,9 +1,27 @@
 import { useState } from 'react';
-import { act, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useDialogState } from '@scheigs/sylva-ui';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CardDetailDialog from '@/components/CardDetailDialog';
+
+// The real dialog fetches locations; here only its props matter.
+vi.mock('@/components/MoveCardsDialog', () => ({
+    default: ({
+        name,
+        sources,
+        onClose,
+    }: {
+        name: string;
+        sources: { label: string }[];
+        onClose: () => void;
+    }) => (
+        <div role="group" aria-label={`Move ${name}`}>
+            {sources.map((source) => source.label).join(',')}
+            <button onClick={onClose}>Close move</button>
+        </div>
+    ),
+}));
 import type { CollectionItem } from '@/lib/collection';
 
 const imageId = '11bf83bb-c95b-4b4f-9a56-ce7a1816307a';
@@ -14,13 +32,7 @@ const initial: CollectionItem[] = [
 ];
 
 /** Like CollectionView: keeps only the id and looks the card up each render. */
-function Harness({
-    onRemoveSpy,
-    onSave,
-}: {
-    onRemoveSpy?: (id: string) => void;
-    onSave?: (id: string, quantity: number) => Promise<void>;
-}) {
+function Harness({ onRemoveSpy }: { onRemoveSpy?: (id: string) => void }) {
     const [items, setItems] = useState(initial);
     const detail = useDialogState<string>();
     const selected = items.find((item) => item.oracleId === detail.value);
@@ -30,16 +42,6 @@ function Harness({
             <CardDetailDialog
                 item={selected}
                 imageId={imageId}
-                onSaveQuantity={async (item, quantity) => {
-                    await onSave?.(item.oracleId, quantity);
-                    setItems((all) =>
-                        all.map((other) =>
-                            other.oracleId === item.oracleId
-                                ? { ...other, quantity }
-                                : other
-                        )
-                    );
-                }}
                 onRemove={(item) => {
                     onRemoveSpy?.(item.oracleId);
                     setItems((all) =>
@@ -56,8 +58,6 @@ const sheet = () => document.querySelector('dialog') as HTMLDialogElement;
 
 beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
 afterEach(() => vi.useRealTimers());
-
-const settle = () => act(() => vi.advanceTimersByTimeAsync(600));
 
 async function openSheet() {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -81,58 +81,13 @@ describe('CardDetailDialog', () => {
             'src',
             expect.stringContaining('/normal/front/')
         );
-        expect(dialog.getByLabelText('3 owned')).toHaveValue('3');
+        expect(dialog.getByText('3 owned')).toBeTruthy();
+        // The count is not editable here: copies change place by moving.
+        expect(dialog.queryByRole('button', { name: /^Add one/ })).toBeNull();
+        expect(
+            dialog.queryByRole('button', { name: /^Remove one/ })
+        ).toBeNull();
         expect(dialog.getByRole('button', { name: 'Remove' })).toBeTruthy();
-    });
-
-    it('shows clicks at once and saves the final count once', async () => {
-        const saved = vi.fn().mockResolvedValue(undefined);
-        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-        render(<Harness onSave={saved} />);
-        await user.click(screen.getByRole('button', { name: 'Open Island' }));
-
-        const add = screen.getByRole('button', { name: 'Add one Island' });
-        await user.click(add);
-        await user.click(add);
-        await user.click(screen.getByRole('button', { name: /^Remove one/ }));
-        expect(screen.getByLabelText('4 owned')).toHaveValue('4');
-        expect(saved).not.toHaveBeenCalled();
-        // Neither the buttons nor Remove are locked by the save, except Remove.
-        expect(add).toBeEnabled();
-
-        await settle();
-        expect(saved).toHaveBeenCalledTimes(1);
-        expect(saved).toHaveBeenCalledWith('a', 4);
-        expect(screen.getByLabelText('4 owned')).toHaveValue('4');
-    });
-
-    it('rolls the count back when the save fails', async () => {
-        const saved = vi.fn().mockRejectedValue(new Error('Could not save.'));
-        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-        render(<Harness onSave={saved} />);
-        await user.click(screen.getByRole('button', { name: 'Open Island' }));
-        await user.click(
-            screen.getByRole('button', { name: 'Add one Island' })
-        );
-        await settle();
-
-        expect(screen.getByLabelText('3 owned')).toHaveValue('3');
-        // The error itself is the global toast's job, not the sheet's.
-        expect(screen.queryByRole('alert')).toBeNull();
-    });
-
-    it('holds Remove while a save is pending', async () => {
-        const user = await openSheet();
-        await user.click(
-            screen.getByRole('button', { name: 'Add one Island' })
-        );
-        expect(
-            within(sheet()).getByRole('button', { name: 'Remove' })
-        ).toBeDisabled();
-        await settle();
-        expect(
-            within(sheet()).getByRole('button', { name: 'Remove' })
-        ).toBeEnabled();
     });
 
     it('closes from the close button, the backdrop and the browser (Escape)', async () => {
@@ -192,6 +147,52 @@ describe('CardDetailDialog', () => {
     });
 });
 
+describe('CardDetailDialog moving', () => {
+    const placements = [
+        { locationId: 'l1', kind: 'bulk' as const, label: 'Bag', quantity: 2 },
+        {
+            locationId: 'l2',
+            kind: 'unsorted' as const,
+            label: 'Unsorted',
+            quantity: 1,
+        },
+    ];
+
+    it('keeps Move off until the placements have loaded', () => {
+        render(
+            <CardDetailDialog
+                item={initial[0]}
+                imageId={imageId}
+                onRemove={() => {}}
+                onClose={() => {}}
+            />
+        );
+        expect(
+            within(sheet()).getByRole('button', { name: 'Move' })
+        ).toBeDisabled();
+    });
+
+    it('opens the move dialog with where the copies are, and closes it again', async () => {
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+        render(
+            <CardDetailDialog
+                item={initial[0]}
+                imageId={imageId}
+                placements={placements}
+                onRemove={() => {}}
+                onClose={() => {}}
+            />
+        );
+        await user.click(within(sheet()).getByRole('button', { name: 'Move' }));
+        const move = screen.getByRole('group', { name: 'Move Island' });
+        expect(move).toHaveTextContent('Bag,Unsorted');
+        await user.click(
+            within(move).getByRole('button', { name: 'Close move' })
+        );
+        expect(screen.queryByRole('group', { name: 'Move Island' })).toBeNull();
+    });
+});
+
 describe('CardDetailDialog placements and history', () => {
     it('shows where the copies are and the moves in the order given', () => {
         render(
@@ -234,7 +235,6 @@ describe('CardDetailDialog placements and history', () => {
                         createdAt: '2026-10-09T10:00:00.000Z',
                     },
                 ]}
-                onSaveQuantity={async () => {}}
                 onRemove={() => {}}
                 onClose={() => {}}
             />

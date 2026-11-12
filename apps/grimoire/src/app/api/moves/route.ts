@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';
 import { badRequest, readJson, unauthorized } from '@/lib/http';
-import { recordMoves } from '@/lib/locations';
+import { listRecentMoves, recordMoves } from '@/lib/locations';
 import { getUserId } from '@/lib/session';
 import { parseMovesBody } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
+
+/** The latest moves between locations, for the recent-moves list. */
+export async function GET() {
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
+
+    const items = await listRecentMoves(getSql(), userId);
+    return NextResponse.json({ items });
+}
 
 /**
  * Move copies between locations:

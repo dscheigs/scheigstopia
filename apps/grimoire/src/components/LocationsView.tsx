@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button, Spinner } from '@scheigs/sylva-ui';
 import LocationFormDialog from '@/components/LocationFormDialog';
+import RecentMoves from '@/components/RecentMoves';
 import { useCreateLocation, useLocations } from '@/lib/queries';
 import { cardCountText, groupByKind, locationPath } from '@/lib/locationsPage';
 
@@ -63,6 +64,7 @@ export default function LocationsView() {
                     </ul>
                 </section>
             ))}
+            <RecentMoves />
             {creating && (
                 <LocationFormDialog
                     mode="create"

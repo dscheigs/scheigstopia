@@ -14,7 +14,6 @@ import { useUrlDialogState } from '@/lib/useUrlDialogState';
 import { buildImageIds } from '@/lib/cardImages';
 import { buildIndex, buildRarities } from '@/lib/cardSearch';
 import { flaggedKeys } from '@/lib/rareAttention';
-import type { CollectionItem } from '@/lib/collection';
 import { groupPlacements } from '@/lib/placementText';
 import {
     useAllPlacements,
@@ -62,9 +61,7 @@ export default function CollectionView() {
         );
         return new Set([...keys].map((key) => key.split(':')[0]));
     }, [rareCandidates.data, cardNames.data]);
-    // Two mutations so a quantity save and a Remove do not share pending
-    // state. Either one's failure is reported by the global toast.
-    const saveQuantityMutation = useSetQuantity();
+    // A failed Remove is reported by the global toast.
     const removeMutation = useSetQuantity();
 
     // null while loading; a failed load shows the error and an empty list.
@@ -115,11 +112,8 @@ export default function CollectionView() {
         [items]
     );
 
-    const saveQuantity = (item: CollectionItem, quantity: number) =>
-        saveQuantityMutation.mutateAsync({ item, quantity });
-
-    // Only the id is kept; the card is looked up on each render, so a quantity
-    // change shows in the open sheet at once and a removed card closes it.
+    // Only the id is kept; the card is looked up on each render, so a change
+    // shows in the open sheet at once and a removed card closes it.
     const selected =
         detail.value === null
             ? undefined
@@ -234,7 +228,6 @@ export default function CollectionView() {
                 imageId={selected && imageIds.get(selected.oracleId)}
                 placements={selected && placementsByCard.get(selected.oracleId)}
                 history={selected ? history.data : undefined}
-                onSaveQuantity={saveQuantity}
                 onRemove={(item) =>
                     removeMutation.mutate({ item, quantity: 0 })
                 }
