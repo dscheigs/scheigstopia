@@ -18,6 +18,7 @@ import type {
     LocationCard,
     LocationItem,
     Placement,
+    RecentMove,
 } from '@/lib/locations';
 import type { LocationKind, RareRule } from '@/lib/locationKinds';
 import { withItem, withoutItem } from '@/lib/collectionCache';
@@ -28,6 +29,7 @@ export const queryKeys = {
     locations: ['locations'] as const,
     allPlacements: ['placements', 'all'] as const,
     rareCandidates: ['rare-candidates'] as const,
+    recentMoves: ['recent-moves'] as const,
     placements: (oracleId: string) => ['placements', oracleId] as const,
     history: (oracleId: string) => ['history', oracleId] as const,
     scryfall: (name: string) => ['scryfall', normalize(name)] as const,
@@ -115,6 +117,7 @@ export function useCommitQueue() {
         onSuccess: ({ items }) => {
             // A new bag, and every bag's count, changed.
             queryClient.invalidateQueries({ queryKey: queryKeys.locations });
+            queryClient.invalidateQueries({ queryKey: queryKeys.recentMoves });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.allPlacements,
             });
@@ -149,6 +152,7 @@ export function useSetQuantity() {
                 { method: 'PATCH', json: { quantity } }
             ),
         onSuccess: (body, { item }) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.recentMoves });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.allPlacements,
             });
@@ -274,6 +278,8 @@ export function useUpdateLocation() {
 export function useMoveCards() {
     const queryClient = useQueryClient();
     return useMutation({
+        // The move dialog shows a refusal itself, so no toast as well.
+        meta: { toast: false },
         mutationFn: (input: {
             moves: {
                 oracleId: string;
@@ -289,6 +295,7 @@ export function useMoveCards() {
             }),
         onSuccess: (_result, { moves }) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.locations });
+            queryClient.invalidateQueries({ queryKey: queryKeys.recentMoves });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.allPlacements,
             });
@@ -303,6 +310,42 @@ export function useMoveCards() {
                     queryKey: queryKeys.history(oracleId),
                 });
             }
+        },
+    });
+}
+
+/** The latest moves between locations, newest first. */
+export function useRecentMoves() {
+    return useQuery({
+        queryKey: queryKeys.recentMoves,
+        queryFn: async () =>
+            (await apiFetch<{ items: RecentMove[] }>('/api/moves')).items,
+    });
+}
+
+/** Undo one batch of moves. A refusal (409) comes back as the error message. */
+export function useUndoMove() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (move: RecentMove) =>
+            apiFetch<{ undone: number }>(`/api/moves/${move.id}/undo`, {
+                method: 'POST',
+            }),
+        onSettled: (_result, _error, move) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.recentMoves });
+            queryClient.invalidateQueries({ queryKey: queryKeys.locations });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.allPlacements,
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.rareCandidates,
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.placements(move.oracleId),
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.history(move.oracleId),
+            });
         },
     });
 }

@@ -323,6 +323,176 @@ export async function recordMoves(
     return { status: 'moved', moved: Number(row.moved) };
 }
 
+/** One batch of copies of a card moved between two locations. */
+export interface RecentMove {
+    /** The newest move row in the batch; what `undoMove` takes. */
+    id: number;
+    oracleId: string;
+    name: string;
+    fromId: string;
+    fromLabel: string;
+    toId: string;
+    toLabel: string;
+    quantity: number;
+    note: string | null;
+    createdAt: string;
+    /**
+     * True while every copy in the batch is still where the move put it and
+     * the place it came from is open. Once a copy has moved on (including by
+     * an undo), the batch cannot be undone.
+     */
+    undoable: boolean;
+}
+
+const RECENT_MOVES_LIMIT = 20;
+
+/**
+ * The latest moves between locations, newest first. Copies of one card moved
+ * together (same time, source, destination and note) are one entry. Adds and
+ * removals are left out: they have no other place to go back to.
+ */
+export async function listRecentMoves(
+    sql: Sql,
+    userId: string
+): Promise<RecentMove[]> {
+    const rows = await sql`
+        select
+            max(m.id)::integer as id,
+            c.oracle_id, max(c.name) as name,
+            m.from_location, f.label as from_label,
+            m.to_location, t.label as to_label,
+            count(*)::integer as quantity,
+            m.note, m.created_at,
+            (
+                bool_and(not exists (
+                    select 1 from moves n
+                    where n.copy_id = m.copy_id and n.id > m.id
+                ))
+                and f.archived_at is null
+            ) as undoable
+        from moves m
+        join copies c on c.id = m.copy_id
+        join locations f on f.id = m.from_location
+        join locations t on t.id = m.to_location
+        where m.user_id = ${userId}::uuid and c.user_id = ${userId}::uuid
+        group by m.created_at, c.oracle_id, m.from_location, f.label,
+            f.archived_at, m.to_location, t.label, m.note
+        order by m.created_at desc, max(m.id) desc
+        limit ${RECENT_MOVES_LIMIT}
+    `;
+    return rows.map((row) => ({
+        id: Number(row.id),
+        oracleId: String(row.oracle_id),
+        name: String(row.name),
+        fromId: String(row.from_location),
+        fromLabel: String(row.from_label),
+        toId: String(row.to_location),
+        toLabel: String(row.to_label),
+        quantity: Number(row.quantity),
+        note: row.note === null ? null : String(row.note),
+        createdAt: iso(row.created_at),
+        undoable: row.undoable === true,
+    }));
+}
+
+export type UndoMoveResult =
+    | { status: 'undone'; undone: number }
+    | { status: 'not_found' }
+    /** An add or a removal: there is no earlier location to return to. */
+    | { status: 'not_undoable' }
+    /** A copy has moved since, so putting it back would be wrong. */
+    | { status: 'moved_on' }
+    /** The place the copies came from is archived or gone. */
+    | { status: 'bad_location' };
+
+/**
+ * Undo a batch by recording a compensating move: the copies go back to where
+ * they came from, and both the original and the undo stay in the history. The
+ * batch is the one `moveId` belongs to (same time, card, source, destination
+ * and note). It is refused when any copy has moved since.
+ */
+export async function undoMove(
+    sql: Sql,
+    userId: string,
+    moveId: number
+): Promise<UndoMoveResult> {
+    const rows = await sql`
+        with target as (
+            select m.created_at, m.from_location, m.to_location, m.note,
+                c.oracle_id
+            from moves m
+            join copies c on c.id = m.copy_id
+            where m.id = ${moveId}::bigint
+                and m.user_id = ${userId}::uuid
+                and c.user_id = ${userId}::uuid
+        ),
+        grp as (
+            select m.id, m.copy_id, m.from_location, m.to_location
+            from moves m
+            join copies c on c.id = m.copy_id
+            cross join target t
+            where m.user_id = ${userId}::uuid
+                and c.user_id = ${userId}::uuid
+                and c.oracle_id = t.oracle_id
+                and m.created_at = t.created_at
+                and m.from_location is not distinct from t.from_location
+                and m.to_location is not distinct from t.to_location
+                and m.note is not distinct from t.note
+        ),
+        locked as (
+            select c.id from copies c
+            where c.id in (select copy_id from grp)
+            for update
+        ),
+        stale as (
+            select g.id from grp g
+            join locked l on l.id = g.copy_id
+            where exists (
+                select 1 from moves n
+                where n.copy_id = g.copy_id and n.id > g.id
+            )
+        ),
+        open_ended as (
+            select 1 from target t
+            where t.from_location is null or t.to_location is null
+        ),
+        dest as (
+            select 1 from target t
+            join locations l on l.id = t.from_location
+            where l.user_id = ${userId}::uuid and l.archived_at is null
+        ),
+        ok as (
+            select 1
+            where not exists (select 1 from open_ended)
+                and exists (select 1 from dest)
+                and not exists (select 1 from stale)
+        ),
+        moved as (
+            update copies c
+            set location_id = g.from_location
+            from grp g
+            where c.id = g.copy_id and exists (select 1 from ok)
+            returning c.id, g.from_location as back_to, g.to_location as left_from
+        ),
+        mv as (
+            insert into moves (user_id, copy_id, from_location, to_location, note)
+            select ${userId}::uuid, id, left_from, back_to, 'Undo' from moved
+        )
+        select
+            (select count(*) from target)::integer as found,
+            (select count(*) from open_ended)::integer as open_ended,
+            (select count(*) from stale)::integer as stale,
+            (select count(*) from dest)::integer as dest_ok,
+            (select count(*) from moved)::integer as moved
+    `;
+    const row = rows[0];
+    if (Number(row.found) === 0) return { status: 'not_found' };
+    if (Number(row.open_ended) > 0) return { status: 'not_undoable' };
+    if (Number(row.stale) > 0) return { status: 'moved_on' };
+    if (Number(row.dest_ok) === 0) return { status: 'bad_location' };
+    return { status: 'undone', undone: Number(row.moved) };
+}
+
 /** One card in a location, with how many copies are there. */
 export interface LocationCard {
     oracleId: string;

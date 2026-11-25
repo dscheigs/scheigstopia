@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { Button, Dialog, Spinner, useDialogState } from '@scheigs/sylva-ui';
 import LocationFormDialog from '@/components/LocationFormDialog';
+import MoveCardsDialog from '@/components/MoveCardsDialog';
 import { useLocationContents, useUpdateLocation } from '@/lib/queries';
+import type { LocationCard } from '@/lib/locations';
 import {
     LOCATIONS_PATH,
     archiveBlocker,
@@ -16,6 +18,7 @@ export default function LocationDetail({ id }: { id: string }) {
     const contents = useLocationContents(id);
     const update = useUpdateLocation();
     const [renaming, setRenaming] = useState(false);
+    const [moving, setMoving] = useState<LocationCard | null>(null);
     const archive = useDialogState();
 
     const location = contents.data?.location;
@@ -109,9 +112,31 @@ export default function LocationDetail({ id }: { id: string }) {
                                     <span className="text-body text-text-minimal">
                                         {card.quantity}
                                     </span>
+                                    <Button
+                                        variant="secondary"
+                                        aria-label={`Move ${card.name}`}
+                                        onClick={() => setMoving(card)}
+                                    >
+                                        Move
+                                    </Button>
                                 </li>
                             ))}
                         </ul>
+                    )}
+                    {moving && (
+                        <MoveCardsDialog
+                            oracleId={moving.oracleId}
+                            name={moving.name}
+                            sources={[
+                                {
+                                    locationId: location.id,
+                                    kind: location.kind,
+                                    label: location.label,
+                                    quantity: moving.quantity,
+                                },
+                            ]}
+                            onClose={() => setMoving(null)}
+                        />
                     )}
                     {renaming && (
                         <LocationFormDialog

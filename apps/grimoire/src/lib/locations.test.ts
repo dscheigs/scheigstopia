@@ -9,8 +9,10 @@ import {
     listLocations,
     listPlacements,
     listRareCandidates,
+    listRecentMoves,
     recordMoves,
     setRareRule,
+    undoMove,
     updateLocation,
 } from '@/lib/locations';
 import { upsertUser } from '@/lib/users';
@@ -483,5 +485,128 @@ describe('rare candidates and override', () => {
         const groups = await listRareCandidates(sql, me);
         expect(groups.map((g) => g.quantity)).toEqual([3]);
         expect((await listRareCandidates(sql, other))[0].rareRule).toBeNull();
+    });
+});
+
+describe('recent moves and undo', () => {
+    it('lists moves between locations, newest first, and leaves out adds', async () => {
+        const a = await bag(me, 'A');
+        const b = await bag(me, 'B');
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: a, quantity: 2 },
+        ]);
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: b, quantity: 1 },
+        ]);
+        const recent = await listRecentMoves(sql, me);
+        expect(
+            recent.map((m) => [m.fromLabel, m.toLabel, m.quantity, m.undoable])
+        ).toEqual([
+            ['Unsorted', 'B', 1, true],
+            ['Unsorted', 'A', 2, true],
+        ]);
+        expect(recent[0].name).toBe('Lightning Bolt');
+    });
+
+    it("does not show another user's moves", async () => {
+        const mine = await bag(me, 'A');
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: mine, quantity: 1 },
+        ]);
+        expect(await listRecentMoves(sql, other)).toEqual([]);
+    });
+
+    it('undoes a move with a compensating move and keeps both in the history', async () => {
+        const a = await bag(me, 'A');
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: a, quantity: 2 },
+        ]);
+        const [move] = await listRecentMoves(sql, me);
+        expect(await undoMove(sql, me, move.id)).toEqual({
+            status: 'undone',
+            undone: 2,
+        });
+        expect(
+            (await listPlacements(sql, me, BOLT)).map((p) => [
+                p.label,
+                p.quantity,
+            ])
+        ).toEqual([['Unsorted', 3]]);
+        const history = await listHistory(sql, me, BOLT);
+        expect(history.map((h) => [h.fromLabel, h.toLabel, h.note])).toEqual([
+            ['A', 'Unsorted', 'Undo'],
+            ['Unsorted', 'A', null],
+            [null, 'Unsorted', null],
+        ]);
+        // The original is no longer undoable; the undo itself can be.
+        const recent = await listRecentMoves(sql, me);
+        expect(recent.map((m) => m.undoable)).toEqual([true, false]);
+    });
+
+    it('refuses to undo once the cards have moved on', async () => {
+        const a = await bag(me, 'A');
+        const b = await bag(me, 'B');
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: a, quantity: 2 },
+        ]);
+        const [first] = await listRecentMoves(sql, me);
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: a, toId: b, quantity: 1 },
+        ]);
+        expect(await undoMove(sql, me, first.id)).toEqual({
+            status: 'moved_on',
+        });
+        // Nothing changed.
+        expect(
+            (await listPlacements(sql, me, BOLT)).map((p) => [
+                p.label,
+                p.quantity,
+            ])
+        ).toEqual([
+            ['Unsorted', 1],
+            ['A', 1],
+            ['B', 1],
+        ]);
+        const recent = await listRecentMoves(sql, me);
+        expect(recent.find((m) => m.id === first.id)?.undoable).toBe(false);
+    });
+
+    it("refuses to undo an add, a missing move, or another user's move", async () => {
+        const first = await query(
+            'select id::int as id from moves where from_location is null limit 1'
+        );
+        expect(await undoMove(sql, me, Number(first[0].id))).toEqual({
+            status: 'not_undoable',
+        });
+        expect(await undoMove(sql, me, 999999)).toEqual({
+            status: 'not_found',
+        });
+        const a = await bag(me, 'A');
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: a, quantity: 1 },
+        ]);
+        const [move] = await listRecentMoves(sql, me);
+        expect(await undoMove(sql, other, move.id)).toEqual({
+            status: 'not_found',
+        });
+    });
+
+    it('refuses to undo into a location that has since been archived', async () => {
+        const a = await bag(me, 'A');
+        const b = await bag(me, 'B');
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: unsorted, toId: a, quantity: 1 },
+        ]);
+        await recordMoves(sql, me, [
+            { oracleId: BOLT, fromId: a, toId: b, quantity: 1 },
+        ]);
+        const [latest] = await listRecentMoves(sql, me);
+        // A is empty now, so it can be archived.
+        await updateLocation(sql, me, a, { archived: true });
+        expect(await undoMove(sql, me, latest.id)).toEqual({
+            status: 'bad_location',
+        });
+        expect(latest.undoable).toBe(true);
+        expect((await listRecentMoves(sql, me))[0].undoable).toBe(false);
     });
 });
