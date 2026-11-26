@@ -1,11 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-import { Button, Dialog, Spinner, useDialogState } from '@scheigs/sylva-ui';
+import { useMemo, useState } from 'react';
+import {
+    Button,
+    Dialog,
+    Spinner,
+    secondaryButtonClasses,
+    useDialogState,
+} from '@scheigs/sylva-ui';
+import ExportLink from '@/components/ExportLink';
 import LocationFormDialog from '@/components/LocationFormDialog';
 import MoveCardsDialog from '@/components/MoveCardsDialog';
 import { useLocationContents, useUpdateLocation } from '@/lib/queries';
 import type { LocationCard } from '@/lib/locations';
+import {
+    formatLocationSheet,
+    locationSheetFilename,
+} from '@/lib/locationSheet';
 import {
     LOCATIONS_PATH,
     archiveBlocker,
@@ -22,12 +33,33 @@ export default function LocationDetail({ id }: { id: string }) {
     const archive = useDialogState();
 
     const location = contents.data?.location;
+    const sheet = useMemo(
+        () =>
+            contents.data
+                ? formatLocationSheet(
+                      contents.data.location,
+                      contents.data.cards,
+                      new Date()
+                  )
+                : '',
+        [contents.data]
+    );
+    const sheetUrl = useMemo(
+        () =>
+            sheet
+                ? `data:text/plain;charset=utf-8,${encodeURIComponent(sheet)}`
+                : '',
+        [sheet]
+    );
     const blocker = location ? archiveBlocker(location) : null;
     const archived = location?.archivedAt != null;
 
     return (
         <div className="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-            <a href={LOCATIONS_PATH} className="text-caption text-text-minimal">
+            <a
+                href={LOCATIONS_PATH}
+                className="text-caption text-text-minimal print:hidden"
+            >
                 All locations
             </a>
             {contents.isError && (
@@ -42,7 +74,7 @@ export default function LocationDetail({ id }: { id: string }) {
             )}
             {location && contents.data && (
                 <>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
                         <div className="min-w-0">
                             <h1 className="truncate text-subheading">
                                 {location.label}
@@ -58,49 +90,68 @@ export default function LocationDetail({ id }: { id: string }) {
                                 </p>
                             )}
                         </div>
-                        {location.kind !== 'unsorted' && (
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => setRenaming(true)}
-                                >
-                                    Rename
-                                </Button>
-                                {archived ? (
+                        <div className="flex gap-2">
+                            <ExportLink
+                                href={sheetUrl}
+                                filename={locationSheetFilename(location.label)}
+                                type="text/plain"
+                                className={secondaryButtonClasses}
+                            >
+                                Download
+                            </ExportLink>
+                            <Button
+                                variant="secondary"
+                                onClick={() => window.print()}
+                            >
+                                Print
+                            </Button>
+                            {location.kind !== 'unsorted' && (
+                                <>
                                     <Button
                                         variant="secondary"
-                                        disabled={update.isPending}
-                                        onClick={() =>
-                                            update.mutate({
-                                                id,
-                                                archived: false,
-                                            })
-                                        }
+                                        onClick={() => setRenaming(true)}
                                     >
-                                        Restore
+                                        Rename
                                     </Button>
-                                ) : (
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() => archive.show()}
-                                    >
-                                        Archive
-                                    </Button>
-                                )}
-                            </div>
-                        )}
+                                    {archived ? (
+                                        <Button
+                                            variant="secondary"
+                                            disabled={update.isPending}
+                                            onClick={() =>
+                                                update.mutate({
+                                                    id,
+                                                    archived: false,
+                                                })
+                                            }
+                                        >
+                                            Restore
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            variant="secondary"
+                                            onClick={() => archive.show()}
+                                        >
+                                            Archive
+                                        </Button>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </div>
+                    <pre className="hidden whitespace-pre-wrap text-body print:block">
+                        {sheet}
+                    </pre>
                     {update.isError && !renaming && !archive.open && (
                         <p role="alert" className="text-body text-error">
                             {update.error.message}
                         </p>
                     )}
                     {contents.data.cards.length === 0 ? (
-                        <p className="text-body text-text-minimal">
+                        <p className="text-body text-text-minimal print:hidden">
                             No cards here.
                         </p>
                     ) : (
-                        <ul className="divide-y divide-border-minimal rounded-surface border border-border-minimal">
+                        <ul className="divide-y divide-border-minimal rounded-surface border border-border-minimal print:hidden">
                             {contents.data.cards.map((card) => (
                                 <li
                                     key={card.oracleId}
